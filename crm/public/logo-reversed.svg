@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" role="img" aria-labelledby="title">
+  <title id="title">dataleasers logo, reversed for dark backgrounds</title>
+  <rect width="480" height="120" fill="#0B1F2A"/>
+  <rect x="8" y="8" width="104" height="104" rx="24" fill="#2DD4BF"/>
+  <rect x="28" y="30" width="64" height="14" rx="7" fill="#0B1F2A"/>
+  <rect x="28" y="53" width="48" height="14" rx="7" fill="#0B1F2A" fill-opacity="0.85"/>
+  <rect x="28" y="76" width="32" height="14" rx="7" fill="#0B1F2A" fill-opacity="0.7"/>
+  <circle cx="90" cy="83" r="10" fill="#B45309"/>
+  <text x="132" y="78" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="46" font-weight="700" letter-spacing="-1" fill="#E6F4F3">data<tspan fill="#2DD4BF">leasers</tspan></text>
+</svg>

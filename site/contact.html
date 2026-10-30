@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book a call | dataleasers</title>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html"><img class="logo" src="../logo.svg" alt="dataleasers"></a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="data-owners.html">For companies</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="ai-buyers.html">Mode</a>
+      <a href="contact.html" aria-current="page">Book a call</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero ink">
+    <div class="wrap">
+      <h1>Book a call</h1>
+      <p class="lead">Tell us a little about your company. We will reply to arrange a short conversation.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap reveal">
+      <p class="notice-ok" id="form-sent" hidden>Thank you. We will reply to arrange a call.</p>
+      <p class="notice-err" id="form-error" hidden>Something went wrong, or a field was not valid. Please check and try again.</p>
+      <form action="https://app.dataleasers.com/api/leads" method="post">
+        <label>Name
+          <input type="text" name="name" autocomplete="name" required maxlength="200">
+        </label>
+        <label>Work email
+          <input type="email" name="email" autocomplete="email" required maxlength="320">
+        </label>
+        <label>Company
+          <input type="text" name="company" autocomplete="organization" required maxlength="200">
+        </label>
+        <label>Your role
+          <input type="text" name="role" maxlength="200">
+        </label>
+        <label>What kind of data does your company generate?
+          <textarea name="data" maxlength="2000"></textarea>
+        </label>
+        <div class="hp" aria-hidden="true">
+          <label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <p><button class="btn" type="submit">Request a call</button></p>
+      </form>
+      <p class="muted small-note">We use these details only to reply to your enquiry. See <a href="trust.html">How we handle your data</a>.</p>
+      <script>
+        (function () {
+          var q = new URLSearchParams(location.search);
+          if (q.get('sent')) document.getElementById('form-sent').hidden = false;
+          if (q.get('error')) document.getElementById('form-error').hidden = false;
+        })();
+      </script>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <img class="icon" src="../logo-icon.svg" alt="">
+    <div class="small">
+      <p>[Legal entity name] &middot; <a href="index.html">Home</a> &middot; <a href="data-owners.html">For companies</a></p>
+    </div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

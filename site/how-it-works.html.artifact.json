@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "site/how-it-works.html",
+  "entry": "site/how-it-works.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-10-30T16:17:01.381Z",
+  "updatedAt": "2026-10-30T16:17:01.381Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
