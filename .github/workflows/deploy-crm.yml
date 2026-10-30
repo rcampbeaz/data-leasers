@@ -1,0 +1,69 @@
+name: Deploy CRM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crm/**"
+      - ".github/workflows/deploy-crm.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-crm
+  cancel-in-progress: false
+
+env:
+  REMOTE_DIR: /home/dataleasers/domains/app.dataleasers.com/crm
+  PM2_NAME: dl-crm
+  APP_PORT: "3000"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Copy CRM source to server
+        # Excludes .env so the server copy of secrets is never overwritten.
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -avz --delete \
+            --exclude '.env' --exclude '.env.*' \
+            --exclude 'node_modules/' --exclude '.next/' \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
+            crm/ "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
+
+      - name: Install, build, and (re)start on server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" bash -s <<'REMOTE'
+          set -euo pipefail
+          cd "$REMOTE_DIR"
+          test -f .env || { echo "Missing $REMOTE_DIR/.env on server. Create it first."; exit 1; }
+          npm ci
+          npm run build
+          if npx --yes pm2 describe "$PM2_NAME" >/dev/null 2>&1; then
+            npx --yes pm2 restart "$PM2_NAME" --update-env
+          else
+            npx --yes pm2 start npm --name "$PM2_NAME" -- start -- -p "$APP_PORT"
+          fi
+          npx --yes pm2 save
+          REMOTE
+        env:
+          REMOTE_DIR: /home/dataleasers/domains/app.dataleasers.com/crm
+          PM2_NAME: dl-crm
+          APP_PORT: "3000"
