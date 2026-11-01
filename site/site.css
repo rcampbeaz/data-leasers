@@ -105,6 +105,15 @@ textarea { min-height: 120px; }
 .checklist strong { display: block; }
 .link-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); }
 .link-row a { font-weight: 700; }
+/* Icons */
+.icon-tile { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--dl-mist); color: var(--dl-teal); margin: 0 0 var(--space-4); }
+.icon-tile svg, .hero-icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.section.ink .icon-tile, .hero.ink .icon-tile { background: #12303F; color: var(--dl-dark-accent); }
+.teal-soft .icon-tile { background: var(--dl-paper); }
+.hero-icon { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius-md); background: #12303F; color: var(--dl-dark-accent); margin: 0 0 var(--space-4); }
+.hero-icon svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.steps li .icon-tile { margin-bottom: var(--space-3); }
+.card .icon-tile { margin-top: 0; }
 .faq { max-width: 68ch; }
 .faq details { border-bottom: 1px solid var(--color-border); padding: var(--space-4) 0; }
 .faq summary { cursor: pointer; font-weight: 700; list-style: none; }
