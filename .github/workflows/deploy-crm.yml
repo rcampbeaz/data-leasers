@@ -50,7 +50,8 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" bash -s <<'REMOTE'
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "REMOTE_DIR=${REMOTE_DIR} PM2_NAME=${PM2_NAME} APP_PORT=${APP_PORT} bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$REMOTE_DIR"
           test -f .env || { echo "Missing $REMOTE_DIR/.env on server. Create it first."; exit 1; }
@@ -63,7 +64,3 @@ jobs:
           fi
           npx --yes pm2 save
           REMOTE
-        env:
-          REMOTE_DIR: /home/dataleasers/domains/app.dataleasers.com/crm
-          PM2_NAME: dl-crm
-          APP_PORT: "3000"
