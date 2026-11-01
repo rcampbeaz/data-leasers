@@ -105,6 +105,15 @@ textarea { min-height: 120px; }
 .checklist strong { display: block; }
 .link-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); }
 .link-row a { font-weight: 700; }
+.faq { max-width: 68ch; }
+.faq details { border-bottom: 1px solid var(--color-border); padding: var(--space-4) 0; }
+.faq summary { cursor: pointer; font-weight: 700; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; float: right; color: var(--dl-teal); font-weight: 700; }
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p { margin: var(--space-3) 0 0; }
+.inline-cards { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+@media (min-width: 720px) { .inline-cards { grid-template-columns: repeat(2, 1fr); } }
 .split { display: grid; gap: var(--space-6); }
 @media (min-width: 720px) {
   .split { grid-template-columns: 1fr 1fr; align-items: start; }
