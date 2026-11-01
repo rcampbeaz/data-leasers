@@ -1,0 +1,83 @@
+/* dataleasers brand tokens. Shared by the website and the CRM. */
+:root {
+  /* Core palette */
+  --dl-ink: #0B1F2A;
+  --dl-teal: #0F7C7A;
+  --dl-amber: #B45309;
+  --dl-slate: #4B5563;
+  --dl-mist: #F3F6F7;
+  --dl-paper: #FFFFFF;
+  --dl-border: #D5DCE0;
+
+  /* Semantic states (CRM) */
+  --dl-approved-bg: #D7EFEE;
+  --dl-approved-fg: #0A5654;
+  --dl-review-bg: #FBEBD6;
+  --dl-review-fg: #7A3A05;
+  --dl-blocked-bg: #FDE2E0;
+  --dl-blocked-fg: #8A1C14;
+
+  /* Dark mode */
+  --dl-dark-bg: #0B1F2A;
+  --dl-dark-fg: #E6F4F3;
+  --dl-dark-accent: #2DD4BF;
+
+  /* Semantic aliases */
+  --color-text: var(--dl-ink);
+  --color-text-muted: var(--dl-slate);
+  --color-bg: var(--dl-paper);
+  --color-surface: var(--dl-mist);
+  --color-border: var(--dl-border);
+  --color-primary: var(--dl-teal);
+  --color-primary-text: var(--dl-paper);
+  --color-accent: var(--dl-amber);
+
+  /* Type scale */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --text-xs: 13px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 40px;
+  --leading-body: 1.6;
+  --leading-heading: 1.2;
+
+  /* Spacing (8px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  /* Logo clear space = 1/4 of the mark tile height */
+  --logo-clear-space: 30px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-text: var(--dl-dark-fg);
+    --color-bg: var(--dl-dark-bg);
+    --color-primary: var(--dl-dark-accent);
+    --color-primary-text: var(--dl-dark-bg);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-text: var(--dl-dark-fg);
+  --color-bg: var(--dl-dark-bg);
+  --color-primary: var(--dl-dark-accent);
+  --color-primary-text: var(--dl-dark-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
