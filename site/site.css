@@ -94,6 +94,22 @@ textarea { min-height: 120px; }
   .site-footer .wrap { grid-template-columns: auto 1fr; align-items: start; }
 }
 
+/* Editorial sections */
+.kicker { font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dl-teal); margin: 0 0 var(--space-2); }
+.section.ink .kicker { color: var(--dl-dark-accent); }
+.examples { list-style: none; padding: 0; margin: var(--space-4) 0 0; display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--color-text-muted); }
+.examples li::before { content: "\2014\00a0"; color: var(--dl-teal); }
+.section.ink .examples { color: #B8D9D6; }
+.checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); max-width: 68ch; }
+.checklist li { border-left: 3px solid var(--dl-amber); padding: var(--space-2) 0 var(--space-2) var(--space-4); }
+.checklist strong { display: block; }
+.link-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); }
+.link-row a { font-weight: 700; }
+.split { display: grid; gap: var(--space-6); }
+@media (min-width: 720px) {
+  .split { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+
 /* Motion and decoration (progressive: content is visible without JS or motion) */
 .hero.ink {
   position: relative;
