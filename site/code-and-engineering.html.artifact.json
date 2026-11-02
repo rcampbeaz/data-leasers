@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/code-and-engineering.html",
+  "entry": "Data Leasers/site/code-and-engineering.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:41:58.756Z",
+  "updatedAt": "2026-11-01T19:41:58.756Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

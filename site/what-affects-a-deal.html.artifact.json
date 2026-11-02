@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/what-affects-a-deal.html",
+  "entry": "Data Leasers/site/what-affects-a-deal.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:30:15.761Z",
+  "updatedAt": "2026-11-01T19:30:15.761Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

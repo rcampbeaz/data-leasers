@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/customer-support.html",
+  "entry": "Data Leasers/site/customer-support.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:41:49.989Z",
+  "updatedAt": "2026-11-01T19:41:49.989Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

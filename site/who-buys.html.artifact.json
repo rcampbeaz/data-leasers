@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/who-buys.html",
+  "entry": "Data Leasers/site/who-buys.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:42:22.365Z",
+  "updatedAt": "2026-11-01T19:42:22.365Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

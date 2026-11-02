@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/sales-and-crm.html",
+  "entry": "Data Leasers/site/sales-and-crm.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:42:03.227Z",
+  "updatedAt": "2026-11-01T19:42:03.227Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/documents.html",
+  "entry": "Data Leasers/site/documents.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:41:54.515Z",
+  "updatedAt": "2026-11-01T19:41:54.515Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

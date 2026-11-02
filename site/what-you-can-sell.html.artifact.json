@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/what-you-can-sell.html",
+  "entry": "Data Leasers/site/what-you-can-sell.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-01T19:30:10.429Z",
+  "updatedAt": "2026-11-01T19:30:10.429Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
