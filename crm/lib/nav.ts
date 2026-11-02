@@ -7,8 +7,12 @@ export const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/leads', label: 'Leads', roles: ['admin', 'introducer', 'viewer'] },
   { href: '/pipeline', label: 'Pipeline', roles: ['admin', 'introducer', 'viewer'] },
   { href: '/companies', label: 'Companies', roles: ['admin', 'introducer', 'viewer'] },
+  { href: '/tasks', label: 'Tasks', roles: ['admin', 'introducer', 'viewer'] },
+  { href: '/import', label: 'Import', roles: ['admin', 'introducer'] },
+  { href: '/agents', label: 'Agents', roles: ['admin', 'introducer'] },
   { href: '/review', label: 'Review queue', roles: ['admin', 'reviewer'] },
   { href: '/audit', label: 'Activity log', roles: ['admin', 'reviewer'] },
+  { href: '/privacy-requests', label: 'Privacy requests', roles: ['admin'] },
   { href: '/admin/staff', label: 'Staff', roles: ['admin'] },
 ];
 
