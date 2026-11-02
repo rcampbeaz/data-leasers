@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "Data Leasers/site/consent.html",
+  "entry": "Data Leasers/site/consent.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-02T22:30:49.762Z",
+  "updatedAt": "2026-11-02T22:30:49.762Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}
