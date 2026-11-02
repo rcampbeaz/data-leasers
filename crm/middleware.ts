@@ -47,14 +47,10 @@ export async function middleware(request: NextRequest) {
     return path.startsWith('/login') ? response : redirect('/login');
   }
 
-  // 2. Two-factor not yet verified for this session
-  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal?.currentLevel !== 'aal2') {
-    return path.startsWith('/mfa') ? response : redirect('/mfa');
-  }
+  // Two-factor is off for now. Re-enable step 2 here before launch if needed.
 
-  // Signed in and verified: keep them off the sign-in and set-up screens
-  if (path.startsWith('/mfa') || path.startsWith('/login')) {
+  // Signed in: keep them off the sign-in screen
+  if (path.startsWith('/login')) {
     return redirect('/leads');
   }
 
