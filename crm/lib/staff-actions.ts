@@ -59,6 +59,9 @@ export async function addStaff(formData: FormData) {
   });
   if (error) fail(path, 'Could not add them. They may already be on the staff list.');
 
+  // Store the email on the profile so the staff list can show it.
+  await supabase.from('crm_staff_profiles').upsert({ user_id: userId, email: email.toLowerCase() });
+
   await logAudit(supabase, 'added', userId as string, { role, full_name: fullName });
   revalidatePath(path);
   redirect(path);
@@ -81,6 +84,60 @@ export async function changeRole(formData: FormData) {
   if (error) fail(path, 'Could not change the role.');
 
   await logAudit(supabase, 'role_changed', userId, { role });
+  revalidatePath(path);
+  redirect(path);
+}
+
+const PROFILE_FIELDS = [
+  'fullName', 'jobTitle', 'email', 'phone',
+  'addressLine1', 'addressLine2', 'city', 'region', 'postcode', 'country', 'notes',
+] as const;
+
+// Admin edits a staff member's name, role and contact details.
+export async function updateStaffProfile(formData: FormData) {
+  const path = '/admin/staff';
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (me?.role !== 'admin') fail(path, 'Only admins can edit staff details.');
+
+  const userId = String(formData.get('userId') ?? '');
+  if (!userId) fail(path, 'Choose a staff member.');
+
+  const val = (key: string, max: number) => String(formData.get(key) ?? '').trim().slice(0, max);
+  const fullName = val('fullName', 200);
+  const role = String(formData.get('role') ?? '');
+  const email = val('email', 320).toLowerCase();
+  if (!fullName) fail(path, 'Enter the person\u2019s name.');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail(path, 'Enter a valid email address.');
+  if (!(ROLES as readonly string[]).includes(role)) fail(path, 'Choose a valid role.');
+  if (userId === me.user_id && role !== 'admin') {
+    fail(path, 'You cannot remove your own admin role. Ask another admin.');
+  }
+
+  const { error: staffError } = await supabase
+    .from('crm_staff')
+    .update({ full_name: fullName, role })
+    .eq('user_id', userId);
+  if (staffError) fail(path, 'Could not save the name or role.');
+
+  const { error: profileError } = await supabase.from('crm_staff_profiles').upsert({
+    user_id: userId,
+    email: email || null,
+    job_title: val('jobTitle', 200) || null,
+    phone: val('phone', 40) || null,
+    address_line1: val('addressLine1', 200) || null,
+    address_line2: val('addressLine2', 200) || null,
+    city: val('city', 100) || null,
+    region: val('region', 100) || null,
+    postcode: val('postcode', 20) || null,
+    country: val('country', 100) || null,
+    notes: val('notes', 2000) || null,
+    updated_at: new Date().toISOString(),
+  });
+  if (profileError) fail(path, 'Could not save the contact details.');
+
+  // Log which fields changed, not their values, so personal data is not copied into the log.
+  await logAudit(supabase, 'profile_updated', userId, { fields: PROFILE_FIELDS.length });
   revalidatePath(path);
   redirect(path);
 }
