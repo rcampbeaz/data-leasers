@@ -11,7 +11,7 @@
 <meta property="og:description" content="dataleasers introduces companies to Mode, which takes data licensing for AI forward. Book a call to learn more.">
 <meta property="og:url" content="https://dataleasers.com/">
 <meta name="description" content="dataleasers introduces companies to Mode, which takes data licensing for AI forward. Book a call to learn more.">
-<link rel="stylesheet" href="site.css?v=3">
+<link rel="stylesheet" href="site.css?v=4">
 </head>
 <body class="home">
 <header class="site-header">
@@ -35,7 +35,50 @@
       <img class="hero-logo" src="logo-reversed.svg" alt="dataleasers">
       <h1>Your data may be worth more than you think.</h1>
       <p class="lead">The conversations, documents and tickets behind everyday work show AI how real work gets done. dataleasers introduces companies to Mode, which takes data licensing for AI forward. We start with a conversation about what you hold.</p>
-      <p><a class="btn" href="contact.html">Book a call</a></p>
+      <div class="doors">
+        <a class="door" href="#fit">
+          <span class="door-label">I have data to sell</span>
+          <span class="door-text">Check whether your company may fit, then book a short call.</span>
+          <span class="door-cta">Check my fit &rarr;</span>
+        </a>
+        <a class="door" href="refer.html">
+          <span class="door-label">I know a company that should</span>
+          <span class="door-text">Introduce a company to us and see how referral terms work.</span>
+          <span class="door-cta">Refer a company &rarr;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section mist" id="fit">
+    <div class="wrap">
+      <p class="kicker reveal">Quick check</p>
+      <h2 class="reveal">Four questions, about a minute.</h2>
+      <p class="reveal">Mode works with companies that meet its criteria. Answer these to see whether a call is worth having. Nothing you enter here is stored.</p>
+      <form class="qualifier reveal" id="qualifier" novalidate>
+        <fieldset>
+          <legend>1. Does your company have 20 or more full-time staff in U.S. offices, or is it an accounting or law firm?</legend>
+          <label class="q-option"><input type="radio" name="q1" value="yes" required> Yes</label>
+          <label class="q-option"><input type="radio" name="q1" value="no"> No</label>
+        </fieldset>
+        <fieldset>
+          <legend>2. Has your company operated for at least 3 years?</legend>
+          <label class="q-option"><input type="radio" name="q2" value="yes"> Yes</label>
+          <label class="q-option"><input type="radio" name="q2" value="no"> No</label>
+        </fieldset>
+        <fieldset>
+          <legend>3. Does your business activity sit in several systems, such as email, CRM, support or document tools?</legend>
+          <label class="q-option"><input type="radio" name="q3" value="yes"> Yes</label>
+          <label class="q-option"><input type="radio" name="q3" value="no"> No</label>
+        </fieldset>
+        <fieldset>
+          <legend>4. Do your staff work from U.S. offices?</legend>
+          <label class="q-option"><input type="radio" name="q4" value="yes"> Yes</label>
+          <label class="q-option"><input type="radio" name="q4" value="no"> No</label>
+        </fieldset>
+        <p><button class="btn" type="submit">See my result</button></p>
+      </form>
+      <div class="q-result" id="q-result" role="status" aria-live="polite" hidden></div>
     </div>
   </section>
 
@@ -136,5 +179,35 @@
   </div>
 </footer>
 <script src="site.js" defer></script>
+<script>
+  (function () {
+    var form = document.getElementById('qualifier');
+    var out = document.getElementById('q-result');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var answers = {};
+      var missing = false;
+      ['q1', 'q2', 'q3', 'q4'].forEach(function (name) {
+        var checked = form.querySelector('input[name="' + name + '"]:checked');
+        if (!checked) missing = true;
+        answers[name] = checked ? checked.value : null;
+      });
+      out.hidden = false;
+      if (missing) {
+        out.className = 'q-result q-review';
+        out.textContent = 'Please answer all four questions.';
+        return;
+      }
+      var fit = Object.keys(answers).every(function (k) { return answers[k] === 'yes'; });
+      if (fit) {
+        out.className = 'q-result q-fit';
+        out.innerHTML = '<strong>You may fit our criteria.</strong> The next step is a short call to see what your company holds. <a class="btn" href="contact.html">Book a call</a>';
+      } else {
+        out.className = 'q-result q-review';
+        out.innerHTML = '<strong>You may not fit yet.</strong> Mode&rsquo;s criteria are strict, so a call may not be the right next step. If you know a company that does fit, you can <a href="refer.html">refer it to us</a>.';
+      }
+    });
+  })();
+</script>
 </body>
 </html>
