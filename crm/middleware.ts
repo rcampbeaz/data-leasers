@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
 
   // Signed in: keep them off the sign-in screen
   if (path.startsWith('/login')) {
-    return redirect('/leads');
+    return redirect('/dashboard');
   }
 
   // 3. Must be on the staff list

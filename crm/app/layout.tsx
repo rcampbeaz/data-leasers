@@ -1,23 +1,48 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import { createStaffClient } from '@/lib/supabase';
+import { currentStaff } from '@/lib/data';
+import { navFor, ROLE_LABELS, type Role } from '@/lib/nav';
+import { signOut } from '@/lib/staff-actions';
 
 export const metadata: Metadata = {
   title: 'dataleasers CRM',
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createStaffClient();
+  const staff = await currentStaff(supabase);
+
+  // Signed-out pages (sign-in, no access) render without the CRM shell.
+  if (!staff) {
+    return (
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    );
+  }
+
+  const items = navFor(staff.role);
   return (
     <html lang="en">
       <body>
         <div className="shell">
           <nav className="sidebar" aria-label="CRM">
             <img className="logo" src="/logo-reversed.svg" alt="dataleasers" />
-            <Link href="/leads">Leads</Link>
-            <Link href="/pipeline">Pipeline</Link>
-            <Link href="/companies">Companies</Link>
-            <Link href="/review">Review queue</Link>
+            {items.map((item) => (
+              <Link key={item.href} href={item.href}>{item.label}</Link>
+            ))}
+            <div className="sidebar-foot">
+              <div className="who">
+                {staff.full_name}
+                <span>{ROLE_LABELS[staff.role as Role] ?? staff.role}</span>
+              </div>
+              <form action={signOut}>
+                <button type="submit" className="sidebar-signout">Sign out</button>
+              </form>
+            </div>
           </nav>
           <div className="content">{children}</div>
         </div>

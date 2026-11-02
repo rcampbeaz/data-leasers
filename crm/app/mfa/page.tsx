@@ -12,7 +12,7 @@ async function verifyCode(formData: FormData) {
   if (error) {
     redirect('/mfa?error=1');
   }
-  redirect('/leads');
+  redirect('/dashboard');
 }
 
 export default async function MfaPage({

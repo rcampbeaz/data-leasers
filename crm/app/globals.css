@@ -78,3 +78,21 @@ h1 { font-size: 28px; margin: 0 0 8px; }
   .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; }
   .sidebar .logo { width: 120px; margin: 0 12px 0 0; }
 }
+
+/* Sidebar footer, charts, KPIs */
+.sidebar-foot { margin-top: auto; border-top: 1px solid #1F4A5C; padding-top: 12px; display: grid; gap: 8px; }
+.sidebar .who { font-size: 14px; font-weight: 700; padding: 0 10px; }
+.sidebar .who span { display: block; font-weight: 400; color: #B8D9D6; font-size: 12px; }
+.sidebar-signout { background: none; border: 1px solid #2DD4BF; color: #2DD4BF; border-radius: var(--radius-sm); padding: 8px 10px; cursor: pointer; font: inherit; text-align: left; }
+.sidebar-signout:hover { background: #12303F; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi { background: var(--dl-paper); border: 1px solid var(--dl-border); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+.kpi span { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dl-slate); }
+.kpi strong { font-size: 28px; }
+.chart { width: 100%; height: auto; display: block; }
+.donut { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 14px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+.prose { max-width: 760px; }
+.prose h2 { margin-top: 28px; font-size: 20px; }
+.prose ul { padding-left: 20px; }

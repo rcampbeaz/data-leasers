@@ -63,7 +63,7 @@ async function signInWithPassword(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect('/login?error=1');
   // Middleware sends staff to /mfa for two-factor setup or verification.
-  redirect('/leads');
+  redirect('/dashboard');
 }
 
 export default async function LoginPage({
