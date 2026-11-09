@@ -631,7 +631,8 @@ textarea { min-height: 120px; }
   .flow-num::after { content: ""; width: 18px; height: 1px; background: var(--dl-teal-bright); opacity: 0.6; }
 }
 
-/* ---------- Sticky call bar on small screens ---------- */
+/* ---------- Sticky call bar on small screens: appears after the hero,
+   so it never covers the hero's own buttons ---------- */
 .cta-bar { display: none; }
 @media (max-width: 719px) {
   .cta-bar {
@@ -639,14 +640,22 @@ textarea { min-height: 120px; }
     padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
     background: rgba(10, 30, 51, 0.97); border-top: 1px solid var(--dl-border-dark);
     backdrop-filter: blur(6px);
+    transform: translateY(110%); transition: transform 0.22s ease;
   }
+  .cta-bar.is-visible { transform: none; }
   .cta-bar .btn { flex: 1; padding: 11px var(--space-3); font-size: var(--text-sm); }
   .cta-bar .btn-ghost { color: #FFFFFF; border-color: rgba(255, 255, 255, 0.42); }
   .cta-bar .btn-ghost:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.1); }
-  body { padding-bottom: 78px; }
+  .site-footer { padding-bottom: calc(var(--space-8) + 78px); }
 }
 
+@media (min-width: 560px) {
+  .ticker { grid-template-columns: repeat(2, 1fr); }
+}
 @media (min-width: 720px) {
   .ticker { grid-template-columns: repeat(4, 1fr); }
   .ticker-item + .ticker-item { border-left: 1px solid var(--color-border); padding-left: var(--space-6); }
+}
+@media (max-width: 560px) {
+  .announce-inner { padding: 7px var(--space-4); gap: 2px var(--space-3); font-size: 12px; }
 }
