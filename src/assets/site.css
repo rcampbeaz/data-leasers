@@ -661,3 +661,76 @@ textarea { min-height: 120px; }
   .announce-inner { padding: 7px var(--space-4); gap: 2px var(--space-3); font-size: 12px; }
   .announce-note { display: none; }
 }
+
+/* ---------- Numbered path rail (guides) ---------- */
+.path { list-style: none; margin: var(--space-6) 0 0; padding: 0; display: grid; gap: var(--space-6); counter-reset: path; }
+.path li { position: relative; padding-left: var(--space-12); }
+.path li::before {
+  counter-increment: path; content: counter(path);
+  position: absolute; left: 0; top: 2px; width: 32px; height: 32px;
+  display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--color-border); background: var(--dl-paper);
+  color: var(--dl-teal-ink); font-size: var(--text-sm); font-weight: 700;
+}
+.path li::after {
+  content: ""; position: absolute; left: 16px; top: 40px; bottom: calc(-1 * var(--space-6));
+  width: 1px; background: var(--color-border);
+}
+.path li:last-child::after { display: none; }
+.path h3 { margin-bottom: var(--space-2); }
+.path p { margin: 0; color: var(--color-text-muted); }
+@media (min-width: 900px) {
+  .path { grid-template-columns: repeat(3, 1fr); gap: var(--space-8); }
+  .path li { padding-left: 0; padding-top: var(--space-12); }
+  .path li::after { left: 40px; right: calc(-1 * var(--space-8)); top: 16px; bottom: auto; width: auto; height: 1px; }
+  .path li:last-child::after { display: none; }
+}
+
+/* ---------- Data tables ---------- */
+.table-wrap {
+  overflow-x: auto; margin: var(--space-8) 0; background: var(--dl-paper);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+}
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table th, .table td { text-align: left; padding: var(--space-4); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.table th {
+  font-size: var(--text-xs); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--color-text-muted); background: var(--dl-cream); font-weight: 700;
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table td:first-child { font-weight: 650; }
+.section.ink .table-wrap { background: rgba(255, 255, 255, 0.04); border-color: var(--dl-border-dark); }
+.section.ink .table th { background: rgba(255, 255, 255, 0.06); color: var(--dl-dark-muted); }
+.section.ink .table th, .section.ink .table td { border-color: var(--dl-border-dark); color: var(--dl-dark-fg); }
+
+/* ---------- Related links ---------- */
+.related { margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-border); }
+.related h2 { font-family: var(--font-sans); font-size: var(--text-lg); font-weight: 650; letter-spacing: -0.01em; margin-bottom: var(--space-4); }
+.related ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+.related a { font-weight: 650; }
+.related span { display: block; font-size: var(--text-sm); color: var(--color-text-muted); }
+@media (min-width: 720px) { .related ul { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---------- Criteria strip ---------- */
+.criteria-strip { display: grid; gap: var(--space-4); margin: var(--space-6) 0; }
+.criteria-item {
+  background: var(--dl-paper, #fff); border: 1px solid var(--color-border, #dde3ea);
+  border-radius: var(--radius-md, 10px); padding: var(--space-5);
+}
+.criteria-item strong {
+  display: block; font-family: var(--font-serif, Georgia, serif); font-size: 34px;
+  line-height: 1.05; letter-spacing: -0.02em; color: var(--dl-teal-ink, #0d5c5c);
+}
+.criteria-item span {
+  display: block; margin-top: var(--space-2); font-size: var(--text-sm, 0.875rem);
+  line-height: 1.5; color: var(--color-text-muted, #5b6b7c);
+}
+@media (min-width: 760px) { .criteria-strip { grid-template-columns: repeat(4, 1fr); } }
+.section.ink .criteria-item { background: rgba(255, 255, 255, 0.05); border-color: var(--dl-border-dark, rgba(255,255,255,0.16)); }
+.section.ink .criteria-item strong { color: var(--dl-teal-bright, #6fd6c8); }
+.section.ink .criteria-item span { color: var(--dl-dark-muted, #c9d3de); }
+
+/* Footer gains a guides column. */
+@media (min-width: 900px) {
+  .site-footer .footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1.15fr; }
+}

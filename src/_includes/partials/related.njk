@@ -1,0 +1,12 @@
+{%- set self = page.fileSlug + ".html" -%}
+<nav class="related reveal" aria-label="Related pages">
+  <h2>Related</h2>
+  <ul>
+{%- for item in related.dataTypes %}{% if item.href != self %}
+    <li><a href="{{ item.href }}">{{ item.label }}</a><span>{{ item.blurb }}</span></li>
+{%- endif %}{% endfor %}
+{%- for item in related.guides %}{% if item.href != self %}
+    <li><a href="{{ item.href }}">{{ item.label }}</a><span>{{ item.blurb }}</span></li>
+{%- endif %}{% endfor %}
+  </ul>
+</nav>

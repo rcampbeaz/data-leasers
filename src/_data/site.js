@@ -6,7 +6,7 @@ export default {
   name: "dataleasers",
   url: "https://dataleasers.com",
   // Bump when site.css or brand-tokens.css changes so browsers fetch fresh CSS.
-  assetVersion: "11",
+  assetVersion: "12",
 
   // `key` is matched against a page's `navKey` front matter to set aria-current.
   nav: [
@@ -34,6 +34,12 @@ export default {
       { href: "faq.html", label: "FAQ" },
       { href: "privacy.html", label: "Privacy" },
       { href: "consent.html", label: "Consent" },
+    ],
+    guides: [
+      { href: "can-i-sell-my-data.html", label: "Can I sell my data?" },
+      { href: "data-licensing-checklist.html", label: "Licensing checklist" },
+      { href: "what-data-do-ai-teams-buy.html", label: "What AI teams buy" },
+      { href: "is-my-customer-data-sellable.html", label: "Is customer data sellable?" },
     ],
   },
 };

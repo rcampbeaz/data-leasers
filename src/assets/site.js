@@ -1,6 +1,6 @@
 (function () {
   document.documentElement.classList.add('js');
-  var items = document.querySelectorAll('.reveal, .steps li');
+  var items = document.querySelectorAll('.reveal, .steps li, .path li');
   if (!('IntersectionObserver' in window)) {
     items.forEach(function (el) { el.classList.add('in'); });
     return;
@@ -26,4 +26,45 @@
   };
   window.addEventListener('scroll', toggle, { passive: true });
   toggle();
+})();
+
+/* Conversion events. Everything is pushed onto window.dataLayer so a tag
+   manager or analytics provider can pick it up; nothing is sent anywhere
+   until a provider is configured in _data/analytics.js. */
+(function () {
+  window.dataLayer = window.dataLayer || [];
+  function track(name, detail) {
+    var payload = { event: name, page: window.location.pathname };
+    if (detail) {
+      Object.keys(detail).forEach(function (k) { payload[k] = detail[k]; });
+    }
+    window.dataLayer.push(payload);
+  }
+  window.dlTrack = track;
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (href.indexOf('contact.html') === 0) {
+      track('book_call_click', { link_text: (a.textContent || '').trim() });
+    } else if (href.indexOf('refer.html') === 0) {
+      track('refer_click', { link_text: (a.textContent || '').trim() });
+    } else if (a.closest('.related')) {
+      track('related_link_click', { link_url: href });
+    }
+  }, { passive: true });
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    track('form_submit', { form_id: form.id || form.getAttribute('name') || 'unnamed' });
+  }, true);
+
+  var fit = document.querySelector('.fit-panel');
+  if (fit) {
+    document.addEventListener('change', function (e) {
+      if (!fit.contains(e.target)) return;
+      track('fit_check_started', { question: e.target.name || '' });
+    }, true);
+  }
 })();
