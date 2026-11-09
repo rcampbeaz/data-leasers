@@ -16,3 +16,7 @@ out/
 
 # OS
 .DS_Store
+# Build and editor leftovers
+*.tsbuildinfo
+*.swp
+crm/supabase/.temp/
