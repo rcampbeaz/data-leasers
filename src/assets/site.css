@@ -1011,3 +1011,33 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   .site-header .logo { height: 40px; }
   .nav { gap: 20px; }
 }
+
+/* ---------- Questions: graphic beside the list ---------- */
+.faq-layout { display: grid; gap: var(--space-8); align-items: start; }
+.faq-layout .faq { max-width: none; }
+@media (min-width: 900px) {
+  .faq-layout { grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.45fr); gap: var(--space-8); }
+}
+.faq-aside {
+  position: relative; overflow: hidden; isolation: isolate;
+  max-width: 420px; margin: 0 auto; padding: var(--space-6) var(--space-6) 0;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(155deg, #143456 0%, var(--dl-navy) 46%, var(--dl-navy-deep) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 20px 45px rgba(15, 42, 71, 0.18);
+}
+.faq-aside::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-image: url("bg-grain.svg"); background-size: 220px 220px;
+  opacity: 0.5; mix-blend-mode: soft-light; pointer-events: none;
+}
+.faq-aside::after {
+  content: ""; position: absolute; z-index: -1; width: 260px; height: 260px; right: -70px; top: -80px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.26), transparent 68%);
+  pointer-events: none;
+}
+.faq-aside svg { position: relative; display: block; width: 100%; height: auto; }
+.faq-aside .faq-float-a { animation: floaty 16s ease-in-out infinite; }
+.faq-aside .faq-float-b { animation: floaty 12s ease-in-out infinite reverse; }
+.faq-aside .faq-float-c { animation: floaty 19s ease-in-out infinite; }
+@media (max-width: 899px) { .faq-aside { margin-top: var(--space-2); } }
