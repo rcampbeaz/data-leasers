@@ -975,3 +975,10 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .refer-band a:not(.btn) { color: var(--dl-gold); }
 .refer-band a:not(.btn):hover { color: #FFFFFF; text-decoration-thickness: 2px; }
 .refer-band .refer-terms { color: var(--dl-dark-muted); font-size: var(--text-sm); }
+
+/* ---------- Long CTA label, short where space is tight ---------- */
+.label-short { display: none; }
+@media (max-width: 560px) {
+  .label-long { display: none; }
+  .label-short { display: inline; }
+}

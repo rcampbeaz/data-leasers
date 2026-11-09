@@ -35,7 +35,6 @@ export default {
     { key: "how-it-works", href: "how-it-works.html", label: "How it works" },
     { key: "ai-buyers", href: "ai-buyers.html", label: "The buyer" },
     { key: "refer", href: "refer.html", label: "Refer a company" },
-    { key: "contact", href: "contact.html", label: "Book a call" },
   ],
 
   footer: {
@@ -45,7 +44,7 @@ export default {
       { href: "how-it-works.html", label: "How it works" },
       { href: "ai-buyers.html", label: "The buyer" },
       { href: "refer.html", label: "Refer a company" },
-      { href: "contact.html", label: "Book a call" },
+      { href: "contact.html", label: "Request a call back" },
     ],
     secondary: [
       { href: "what-affects-a-deal.html", label: "What affects a deal" },
