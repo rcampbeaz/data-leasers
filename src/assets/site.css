@@ -540,9 +540,10 @@ textarea { min-height: 120px; }
 .mock-head { flex-wrap: wrap; }
 
 /* ---------- Section labels carry a leading rule ---------- */
-.kicker { display: flex; align-items: center; gap: var(--space-3); }
-.kicker::before { content: ""; width: 26px; height: 1px; background: currentColor; opacity: 0.5; flex: 0 0 auto; }
-.cta-band .kicker { justify-content: center; }
+.kicker { display: block; }
+.kicker::before { content: ""; display: inline-block; width: 26px; height: 1px; background: currentColor;
+  opacity: 0.5; vertical-align: middle; margin-right: var(--space-3); }
+.kicker-num::after { content: "\00a0/\00a0"; }
 
 /* ---------- Announcement bar ---------- */
 .announce { background: var(--dl-navy-deep); color: #E6EFF6; }
