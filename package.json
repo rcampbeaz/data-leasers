@@ -2,6 +2,7 @@
   "name": "data-leasers-site",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@10.9.4",
   "type": "module",
   "description": "dataleasers.com marketing site, built from Nunjucks templates with Eleventy.",
   "scripts": {

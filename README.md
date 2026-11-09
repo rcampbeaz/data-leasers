@@ -21,7 +21,7 @@ _site/                        build output (gitignored) — the only thing that 
 ## Commands
 
 ```bash
-npm install       # once
+npm install       # once (lockfile is generated with npm 10 to match CI)
 npm run build     # writes _site/
 npm run dev       # local server with live reload at http://localhost:8080
 ```
