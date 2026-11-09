@@ -1003,3 +1003,11 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   margin: 0 0 var(--space-6);
 }
 @media (min-width: 900px) { .hero-brand { width: 360px; margin-bottom: var(--space-8); } }
+
+/* ---------- Header at desktop widths ---------- */
+/* With the wider wordmark, 44px plus six nav items and the CTA came within a
+   few pixels of the 1120px container, so it would wrap. */
+@media (min-width: 900px) {
+  .site-header .logo { height: 40px; }
+  .nav { gap: 20px; }
+}
