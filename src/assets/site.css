@@ -966,3 +966,12 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .hero.ink::before { top: -34%; right: -44%; width: 700px; height: 700px; opacity: 0.15; }
 
 .hero.ink .lead, .hero-home .lead, .hero-note { color: #C6D6E4; }
+
+/* ---------- Referral band: quiet text on navy ----------
+   The band is dark, but .muted and .kicker kept their light-surface colours,
+   so the supporting copy sat at roughly 1.8:1 against the navy. */
+.refer-band .muted, .refer-band .small-note { color: var(--dl-dark-muted); }
+.refer-band .kicker, .refer-band .kicker-num { color: var(--dl-teal-bright); }
+.refer-band a:not(.btn) { color: var(--dl-gold); }
+.refer-band a:not(.btn):hover { color: #FFFFFF; text-decoration-thickness: 2px; }
+.refer-band .refer-terms { color: var(--dl-dark-muted); font-size: var(--text-sm); }
