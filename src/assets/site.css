@@ -982,3 +982,17 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   .label-long { display: none; }
   .label-short { display: inline; }
 }
+
+/* ---------- Card and step headings keep their size as h2 ---------- */
+.card h2, .steps li h2, .criteria-item h2 {
+  font-family: var(--font-sans); font-size: var(--text-lg); font-weight: 650;
+  letter-spacing: -0.01em; margin: 0 0 var(--space-2);
+}
+.section.ink .card h2, .section.ink .steps li h2 { color: #FFFFFF; }
+
+/* Visible to screen readers, not on screen. */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
