@@ -538,7 +538,7 @@ textarea { min-height: 120px; }
 
 @media (max-width: 560px) {
   .header-inner { gap: var(--space-3); min-height: 60px; }
-  .site-header .logo { height: 32px; }
+  .site-header .logo { height: 30px; }
   .header-actions { gap: var(--space-2); min-width: 0; }
   .header-actions .btn { padding: 8px 12px; font-size: 13px; }
   .nav-toggle { padding: 8px 10px; font-size: 13px; }

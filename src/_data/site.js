@@ -8,7 +8,14 @@ import { readFileSync } from "node:fs";
  */
 function stampAssets() {
   const hash = createHash("sha256");
-  for (const file of ["src/assets/brand-tokens.css", "src/assets/site.css", "src/assets/site.js"]) {
+  for (const file of [
+    "src/assets/brand-tokens.css",
+    "src/assets/site.css",
+    "src/assets/site.js",
+    "src/assets/logo.svg",
+    "src/assets/logo-reversed.svg",
+    "src/assets/logo-icon.svg",
+  ]) {
     try {
       hash.update(readFileSync(file));
     } catch {
