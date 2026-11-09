@@ -154,17 +154,23 @@ inlineScript: |
 
   <section class="section ink" id="what-you-can-sell">
     <div class="wrap">
-      <div class="section-head reveal">
-        <p class="kicker"><span class="kicker-num">02</span>What you can sell</p>
-        <h2>The records your team already keeps may be useful to AI teams.</h2>
-        <p>AI teams look for real work: how problems were solved, how decisions were made, how projects moved. Much of it already sits in tools you use every day.</p>
+      <div class="section-head section-head--split reveal">
+        <div>
+          <p class="kicker"><span class="kicker-num">02</span>What you can sell</p>
+          <h2>The records your team already keeps may be useful to AI teams.</h2>
+          <p>AI teams look for real work: how problems were solved, how decisions were made, how projects moved. Much of it already sits in tools you use every day.</p>
+        </div>
+        <p class="head-link"><a href="what-you-can-sell.html">See every data type</a></p>
       </div>
-      <div class="cards">
+      <div class="cards cards-feature">
         <div class="card reveal">
-          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-chat"/></svg></span>
-          <h3>Conversations</h3>
-          <ul class="examples"><li>Chat and call threads</li><li>Shared inboxes</li><li>Decision threads</li></ul>
-          <div class="mock" aria-hidden="true">
+          <div class="card-top">
+            <span class="card-cat" style="--cat: #4C7BD9">Conversations</span>
+            <span class="app-chips" aria-hidden="true"><span class="app-chip">SL</span><span class="app-chip">GM</span><span class="app-chip">TM</span></span>
+          </div>
+          <h3>Threads that end in a decision.</h3>
+          <p class="card-line">Chat and call threads, shared inboxes, decision threads.</p>
+          <div class="mock tint-blue" aria-hidden="true">
             <div class="mock-head"><span>#customer-success</span><span class="mock-tag">Illustrative</span></div>
             <div class="mock-msg"><span class="mock-avatar"></span><div><span class="mock-name">Customer</span>Can the duplicate charge be refunded without a call?</div></div>
             <div class="mock-msg"><span class="mock-avatar"></span><div><span class="mock-name">Agent</span>Yes &mdash; approved in the thread, note added to the account.</div></div>
@@ -172,10 +178,13 @@ inlineScript: |
           </div>
         </div>
         <div class="card reveal">
-          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-support"/></svg></span>
-          <h3>Customer support</h3>
-          <ul class="examples"><li>Resolved tickets</li><li>Agent notes</li><li>Escalations</li></ul>
-          <div class="mock" aria-hidden="true">
+          <div class="card-top">
+            <span class="card-cat" style="--cat: #D79A2B">Customer support</span>
+            <span class="app-chips" aria-hidden="true"><span class="app-chip">ZD</span><span class="app-chip">IC</span><span class="app-chip">GM</span></span>
+          </div>
+          <h3>Tickets with the fix attached.</h3>
+          <p class="card-line">Resolved tickets, agent notes, escalations.</p>
+          <div class="mock tint-amber" aria-hidden="true">
             <div class="mock-head"><span>Ticket 4821</span><span class="mock-status">Resolved</span></div>
             <p class="mock-subject">Billing sync failed</p>
             <div class="mock-timeline"><span class="done">Reported</span><span class="done">Diagnosed</span><span class="done">Fixed</span><span>Confirmed</span></div>
@@ -183,15 +192,60 @@ inlineScript: |
           </div>
         </div>
         <div class="card reveal">
-          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-doc"/></svg></span>
-          <h3>Documents</h3>
-          <ul class="examples"><li>SOPs and playbooks</li><li>Proposals and reports</li><li>Revision history</li></ul>
-          <div class="mock" aria-hidden="true">
+          <div class="card-top">
+            <span class="card-cat" style="--cat: #2E9E6B">Documents</span>
+            <span class="app-chips" aria-hidden="true"><span class="app-chip">DR</span><span class="app-chip">SP</span><span class="app-chip">SL</span></span>
+          </div>
+          <h3>Playbooks with their revisions.</h3>
+          <p class="card-line">SOPs, proposals and reports, revision history.</p>
+          <div class="mock tint-green" aria-hidden="true">
             <div class="mock-versions"><b>v1</b><b>v2</b><b class="on">v3</b></div>
             <p class="mock-subject">Onboarding playbook</p>
             <div class="mock-line del">Escalate after 2 hours</div>
             <div class="mock-line add">Escalate after 1 hour, with a named owner</div>
             <p class="mock-foot">Earlier versions kept in the file history</p>
+          </div>
+        </div>
+        <div class="card reveal">
+          <div class="card-top">
+            <span class="card-cat" style="--cat: #6B7A8C">Code &amp; engineering</span>
+            <span class="app-chips" aria-hidden="true"><span class="app-chip">GH</span><span class="app-chip">JR</span><span class="app-chip">SL</span></span>
+          </div>
+          <h3>Code with its reviews and tests.</h3>
+          <p class="card-line">Pull requests, issues and fixes, test history.</p>
+          <div class="mock tint-slate" aria-hidden="true">
+            <div class="mock-head"><span class="mock-mono">retry.ts</span><span class="mock-tag">Reviewed</span></div>
+            <div class="mock-code"><span class="del">return send(job)</span><span class="add">return await send(job)</span></div>
+            <p class="mock-foot">Merged after review</p>
+          </div>
+        </div>
+        <div class="card reveal">
+          <div class="card-top">
+            <span class="card-cat" style="--cat: #7A5BC9">Sales &amp; CRM</span>
+            <span class="app-chips" aria-hidden="true"><span class="app-chip">SF</span><span class="app-chip">HS</span><span class="app-chip">GM</span></span>
+          </div>
+          <h3>Deals with the reasons behind them.</h3>
+          <p class="card-line">Deal history, call notes, won and lost reasons.</p>
+          <div class="mock tint-lilac" aria-hidden="true">
+            <div class="mock-deals">
+              <div class="mock-stage">Qualified<b></b><b></b></div>
+              <div class="mock-stage">Proposal<b></b><b></b></div>
+              <div class="mock-stage on">Won<strong>Faster onboarding</strong></div>
+            </div>
+            <p class="mock-foot">Lost reasons recorded on the deal</p>
+          </div>
+        </div>
+        <div class="card reveal">
+          <div class="card-top">
+            <span class="card-cat" style="--cat: #C2557A">Operations</span>
+            <span class="app-chips" aria-hidden="true"><span class="app-chip">JR</span><span class="app-chip">SF</span><span class="app-chip">SL</span></span>
+          </div>
+          <h3>Handoffs between teams, recorded.</h3>
+          <p class="card-line">Project boards, approvals, exception logs.</p>
+          <div class="mock tint-rose" aria-hidden="true">
+            <div class="mock-head"><span>Vendor onboarding</span><span class="mock-tag">Illustrative</span></div>
+            <div class="mock-timeline"><span class="done">Request</span><span class="done">Approval</span><span>Handoff</span></div>
+            <p class="mock-foot">Approver and date kept with the record</p>
           </div>
         </div>
       </div>
@@ -206,7 +260,7 @@ inlineScript: |
           <li>Jira or GitHub</li>
         </ul>
       </div>
-      <p class="link-row reveal"><a href="what-you-can-sell.html">See every data type</a> <a href="what-affects-a-deal.html">What affects a deal</a></p>
+      <p class="link-row reveal"><a href="what-affects-a-deal.html">What affects a deal</a></p>
     </div>
   </section>
 

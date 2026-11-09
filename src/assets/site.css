@@ -1041,3 +1041,65 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .faq-aside .faq-float-b { animation: floaty 12s ease-in-out infinite reverse; }
 .faq-aside .faq-float-c { animation: floaty 19s ease-in-out infinite; }
 @media (max-width: 899px) { .faq-aside { margin-top: var(--space-2); } }
+
+/* ---------- What you can sell: illustrated record cards ---------- */
+.section-head--split { max-width: none; display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
+.section-head--split > div { max-width: 720px; }
+.head-link { margin: 0; font-size: var(--text-sm); font-weight: 650; white-space: nowrap; }
+.head-link a::after { content: " \2192"; }
+
+.cards-feature { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+@media (min-width: 760px) { .cards-feature { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1040px) { .cards-feature { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.section.ink .cards-feature .card {
+  display: flex; flex-direction: column;
+  background: var(--dl-paper); color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.16); border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: 0 20px 44px rgba(3, 14, 27, 0.34);
+}
+.section.ink .cards-feature .card:hover { border-color: rgba(45, 212, 191, 0.55); box-shadow: 0 26px 60px rgba(3, 14, 27, 0.42); }
+
+.card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.card-cat { display: inline-flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); }
+.card-cat::before { content: ""; width: 6px; height: 6px; border-radius: 1px; background: var(--cat, var(--dl-teal)); flex: 0 0 auto; }
+.app-chips { display: flex; gap: 5px; }
+.app-chip { display: inline-grid; place-items: center; width: 21px; height: 21px; border-radius: 6px; font-size: 9px; font-weight: 800; letter-spacing: 0.02em; color: #2A4358; background: #EDF1F5; box-shadow: inset 0 0 0 1px rgba(15, 42, 71, 0.07); }
+
+.section.ink .cards-feature .card h3 { color: var(--dl-navy); font-family: var(--font-sans); font-size: var(--text-lg); font-weight: 650; letter-spacing: -0.01em; margin: 0 0 var(--space-2); }
+.card-line { margin: 0 0 var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.section.ink .cards-feature .mock { margin-top: auto; border: 1px solid rgba(15, 42, 71, 0.08); background: var(--tint, #F4F1EA); color: var(--color-text); border-radius: var(--radius-md); padding: var(--space-4); }
+.section.ink .cards-feature .mock-head { color: var(--dl-navy); }
+.section.ink .cards-feature .mock-tag,
+.section.ink .cards-feature .mock-foot { color: var(--color-text-muted); }
+.section.ink .cards-feature .mock-subject { color: var(--dl-navy); }
+.section.ink .cards-feature .mock-avatar { background: rgba(15, 42, 71, 0.16); }
+.section.ink .cards-feature .mock-status { background: rgba(31, 167, 154, 0.14); color: var(--dl-approved-fg); }
+.section.ink .cards-feature .mock-pill { background: var(--dl-teal-ink); color: #FFFFFF; }
+.section.ink .cards-feature .mock-timeline span { border-top-color: rgba(15, 42, 71, 0.18); color: var(--color-text-muted); }
+.section.ink .cards-feature .mock-timeline span.done { border-top-color: var(--dl-teal); color: var(--color-text); }
+.section.ink .cards-feature .mock-versions b { background: rgba(15, 42, 71, 0.09); color: var(--color-text); }
+.section.ink .cards-feature .mock-versions b.on { background: var(--dl-navy); color: #FFFFFF; }
+.section.ink .cards-feature .mock-line.del { background: rgba(146, 52, 38, 0.12); color: #7A2E22; }
+.section.ink .cards-feature .mock-line.add { background: rgba(20, 110, 84, 0.14); color: #0E5A3C; }
+
+.tint-blue { --tint: #EAF0FB; }
+.tint-amber { --tint: #FDF3E4; }
+.tint-green { --tint: #E9F5EC; }
+.tint-slate { --tint: #ECF1F6; }
+.tint-lilac { --tint: #F1EEFB; }
+.tint-rose { --tint: #FBEEF1; }
+
+.mock-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.mock-code { display: grid; gap: 6px; margin: var(--space-2) 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+.mock-code span { display: block; padding: 5px 8px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.section.ink .cards-feature .mock-code .del { background: rgba(146, 52, 38, 0.12); color: #7A2E22; }
+.section.ink .cards-feature .mock-code .add { background: rgba(20, 110, 84, 0.14); color: #0E5A3C; }
+
+.mock-deals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: var(--space-2); }
+.mock-stage { border-radius: 8px; background: rgba(255, 255, 255, 0.62); padding: 8px; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); box-shadow: inset 0 0 0 1px rgba(15, 42, 71, 0.06); }
+.mock-stage b { display: block; height: 6px; border-radius: 3px; margin-top: 6px; background: rgba(15, 42, 71, 0.13); }
+.mock-stage.on { background: rgba(20, 110, 84, 0.12); color: #0E5A3C; }
+.mock-stage.on strong { display: block; margin-top: 6px; font-size: 10px; font-weight: 650; letter-spacing: 0; text-transform: none; color: var(--dl-navy); }
