@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<link rel="canonical" href="{{ canonical }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ site.name }}">
+<meta property="og:title" content="{{ ogTitle or title }}">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:url" content="{{ canonical }}">
+<meta name="description" content="{{ description }}">
+<link rel="stylesheet" href="brand-tokens.css?v={{ site.assetVersion }}">
+<link rel="stylesheet" href="site.css?v={{ site.assetVersion }}">
+</head>
+<body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
+{% include "partials/header.njk" %}
+
+{{ content | safe }}
+
+{% include "partials/footer.njk" %}
+<script src="site.js" defer></script>
+{%- if inlineScript %}
+{{ inlineScript | safe }}
+{%- endif %}
+</body>
+</html>

@@ -1,0 +1,9 @@
+<footer class="site-footer">
+  <div class="wrap">
+    <img class="icon" src="logo-icon.svg" alt="">
+    <div class="small">
+      <p>Data Leasers, LLC &middot; {% for item in site.footer.primary %}<a href="{{ item.href }}">{{ item.label }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
+      <p>{% for item in site.footer.secondary %}<a href="{{ item.href }}">{{ item.label }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
+    </div>
+  </div>
+</footer>

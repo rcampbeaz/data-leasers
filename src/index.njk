@@ -1,34 +1,43 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>dataleasers: turn your data into a new revenue line</title>
-<link rel="canonical" href="https://dataleasers.com/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="dataleasers">
-<meta property="og:title" content="dataleasers: turn your data into a new revenue line">
-<meta property="og:description" content="dataleasers introduces companies to Mode, which takes data licensing for AI forward. Book a call to learn more.">
-<meta property="og:url" content="https://dataleasers.com/">
-<meta name="description" content="dataleasers introduces companies to Mode, which takes data licensing for AI forward. Book a call to learn more.">
-<link rel="stylesheet" href="site.css?v=4">
-</head>
-<body class="home">
-<header class="site-header">
-  <div class="wrap">
-    <a href="index.html"><img class="logo" src="logo.svg" alt="dataleasers"></a>
-    <nav class="nav" aria-label="Main">
-      <a href="index.html" aria-current="page">Home</a>
-      <a href="data-owners.html">For companies</a>
-      <a href="what-you-can-sell.html">What you can sell</a>
-      <a href="how-it-works.html">How it works</a>
-      <a href="ai-buyers.html">Mode</a>
-      <a href="refer.html">Refer a company</a>
-      <a href="contact.html">Book a call</a>
-    </nav>
-  </div>
-</header>
-
+---
+layout: layouts/base.njk
+permalink: "/"
+title: "dataleasers: turn your data into a new revenue line"
+description: "dataleasers introduces companies to Mode, which takes data licensing for AI forward. Book a call to learn more."
+canonical: "https://dataleasers.com/"
+navKey: home
+bodyClass: "home"
+inlineScript: |
+  <script>
+    (function () {
+      var form = document.getElementById('qualifier');
+      var out = document.getElementById('q-result');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var answers = {};
+        var missing = false;
+        ['q1', 'q2', 'q3', 'q4'].forEach(function (name) {
+          var checked = form.querySelector('input[name="' + name + '"]:checked');
+          if (!checked) missing = true;
+          answers[name] = checked ? checked.value : null;
+        });
+        out.hidden = false;
+        if (missing) {
+          out.className = 'q-result q-review';
+          out.textContent = 'Please answer all four questions.';
+          return;
+        }
+        var fit = Object.keys(answers).every(function (k) { return answers[k] === 'yes'; });
+        if (fit) {
+          out.className = 'q-result q-fit';
+          out.innerHTML = '<strong>You may fit our criteria.</strong> The next step is a short call to see what your company holds. <a class="btn" href="contact.html">Book a call</a>';
+        } else {
+          out.className = 'q-result q-review';
+          out.innerHTML = '<strong>You may not fit yet.</strong> Mode&rsquo;s criteria are strict, so a call may not be the right next step. If you know a company that does fit, you can <a href="refer.html">refer it to us</a>.';
+        }
+      });
+    })();
+  </script>
+---
 <main>
   <section class="hero ink">
     <div class="wrap">
@@ -169,45 +178,3 @@
     </div>
   </section>
 </main>
-
-<footer class="site-footer">
-  <div class="wrap">
-    <img class="icon" src="logo-icon.svg" alt="">
-    <div class="small">
-      <p>Data Leasers, LLC &middot; <a href="data-owners.html">For companies</a> &middot; <a href="what-you-can-sell.html">What you can sell</a> &middot; <a href="trust.html">How we handle data</a> &middot; <a href="refer.html">Refer a company</a> &middot; <a href="contact.html">Book a call</a></p>
-    </div>
-  </div>
-</footer>
-<script src="site.js" defer></script>
-<script>
-  (function () {
-    var form = document.getElementById('qualifier');
-    var out = document.getElementById('q-result');
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var answers = {};
-      var missing = false;
-      ['q1', 'q2', 'q3', 'q4'].forEach(function (name) {
-        var checked = form.querySelector('input[name="' + name + '"]:checked');
-        if (!checked) missing = true;
-        answers[name] = checked ? checked.value : null;
-      });
-      out.hidden = false;
-      if (missing) {
-        out.className = 'q-result q-review';
-        out.textContent = 'Please answer all four questions.';
-        return;
-      }
-      var fit = Object.keys(answers).every(function (k) { return answers[k] === 'yes'; });
-      if (fit) {
-        out.className = 'q-result q-fit';
-        out.innerHTML = '<strong>You may fit our criteria.</strong> The next step is a short call to see what your company holds. <a class="btn" href="contact.html">Book a call</a>';
-      } else {
-        out.className = 'q-result q-review';
-        out.innerHTML = '<strong>You may not fit yet.</strong> Mode&rsquo;s criteria are strict, so a call may not be the right next step. If you know a company that does fit, you can <a href="refer.html">refer it to us</a>.';
-      }
-    });
-  })();
-</script>
-</body>
-</html>
