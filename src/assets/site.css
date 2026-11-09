@@ -197,23 +197,37 @@ section[id] { scroll-margin-top: 92px; }
 
 /* ---------- What a buyer sees ---------- */
 .flow { display: grid; gap: var(--space-4); counter-reset: flow; }
+/* The rail sits on a cream section, so it is light-first now: white headings
+   and dark-surface greys were near-invisible there. The dark treatment is
+   kept for any page that places it inside an ink section. */
 .flow-step {
   position: relative; padding: var(--space-6); border-radius: var(--radius-md);
-  border: 1px solid var(--dl-border-dark); background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border); background: var(--dl-paper);
+  box-shadow: var(--shadow-sm);
 }
 .flow-num {
-  font-family: var(--font-serif); font-size: var(--text-xl); color: var(--dl-teal-bright);
+  font-family: var(--font-serif); font-size: var(--text-xl); color: var(--dl-teal-ink);
   display: block; margin-bottom: var(--space-2);
 }
-.flow-step h3 { margin-bottom: var(--space-2); color: #FFFFFF; }
-.flow-step p { margin: 0; color: var(--dl-dark-muted); font-size: var(--text-sm); }
+.flow-step h3 { margin-bottom: var(--space-2); color: var(--color-text); }
+.flow-step p { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
 .sample-record {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: var(--text-xs); line-height: 1.7; color: var(--dl-dark-muted);
-  border-left: 2px solid var(--dl-teal-bright); padding-left: var(--space-3); margin-top: var(--space-4);
+  font-size: var(--text-xs); line-height: 1.7; color: var(--color-text-muted);
+  border-left: 2px solid var(--dl-teal); padding-left: var(--space-3); margin-top: var(--space-4);
 }
-.sample-record b { color: #FFFFFF; font-weight: 600; }
-.flow-note { margin-top: var(--space-6); font-size: var(--text-sm); color: var(--dl-dark-muted); }
+.sample-record b { color: var(--color-text); font-weight: 600; }
+.flow-note { margin-top: var(--space-6); font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.section.ink .flow-step {
+  background: rgba(255, 255, 255, 0.05); border-color: var(--dl-border-dark); box-shadow: none;
+}
+.section.ink .flow-num { color: var(--dl-teal-bright); }
+.section.ink .flow-step h3 { color: #FFFFFF; }
+.section.ink .flow-step p { color: var(--dl-dark-muted); }
+.section.ink .sample-record { color: var(--dl-dark-muted); border-left-color: var(--dl-teal-bright); }
+.section.ink .sample-record b { color: #FFFFFF; }
+.section.ink .flow-note { color: var(--dl-dark-muted); }
 
 /* ---------- Cards, tiles ---------- */
 .cards { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
@@ -626,10 +640,12 @@ textarea { min-height: 120px; }
   .flow-step { position: relative; }
   .flow-step + .flow-step::before {
     content: ""; position: absolute; left: calc(-1 * var(--space-4)); top: 38px;
-    width: var(--space-4); height: 1px; background: var(--dl-border-dark);
+    width: var(--space-4); height: 1px; background: var(--color-border);
   }
   .flow-num { display: inline-flex; align-items: center; gap: var(--space-2); }
-  .flow-num::after { content: ""; width: 18px; height: 1px; background: var(--dl-teal-bright); opacity: 0.6; }
+  .flow-num::after { content: ""; width: 18px; height: 1px; background: var(--dl-teal-ink); opacity: 0.45; }
+  .section.ink .flow-step + .flow-step::before { background: var(--dl-border-dark); }
+  .section.ink .flow-num::after { background: var(--dl-teal-bright); opacity: 0.6; }
 }
 
 /* ---------- Sticky call bar on small screens: appears after the hero,

@@ -6,7 +6,7 @@ export default {
   name: "dataleasers",
   url: "https://dataleasers.com",
   // Bump when site.css or brand-tokens.css changes so browsers fetch fresh CSS.
-  assetVersion: "14",
+  assetVersion: "15",
 
   // `key` is matched against a page's `navKey` front matter to set aria-current.
   nav: [
