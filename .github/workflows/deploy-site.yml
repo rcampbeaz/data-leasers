@@ -4,7 +4,10 @@ on:
   push:
     branches: [main]
     paths:
-      - "site/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "eleventy.config.js"
       - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
 
@@ -22,20 +25,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check the site before uploading
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build the site
         run: |
           set -euo pipefail
-          test -f site/index.html || { echo "::error::site/index.html is missing"; exit 1; }
-          test -f site/site.css || { echo "::error::site/site.css is missing"; exit 1; }
+          npm ci
+          npm run build
 
-          # Every page in the sitemap must exist in the repo.
+      - name: Check the built site before uploading
+        run: |
+          set -euo pipefail
+          test -f _site/index.html || { echo "::error::_site/index.html is missing"; exit 1; }
+          test -f _site/site.css || { echo "::error::_site/site.css is missing"; exit 1; }
+
+          # Every page in the sitemap must exist in the build output.
           fail=0
           while read -r path; do
-            if [ ! -f "site/${path}" ]; then
-              echo "::error::sitemap.xml lists /${path} but site/${path} does not exist"
+            if [ ! -f "_site/${path}" ]; then
+              echo "::error::sitemap.xml lists /${path} but _site/${path} does not exist"
               fail=1
             fi
-          done < <(grep -o '<loc>[^<]*</loc>' site/sitemap.xml | sed -e 's|<loc>||' -e 's|</loc>||' \
+          done < <(grep -o '<loc>[^<]*</loc>' _site/sitemap.xml | sed -e 's|<loc>||' -e 's|</loc>||' \
                    | sed -e 's|^https://dataleasers\.com/||' | sed -e 's|^$|index.html|')
           exit $fail
 
@@ -59,21 +74,20 @@ jobs:
         run: |
           set -euo pipefail
           rsync -avz --delete \
-            --exclude '*.artifact.json' \
             --exclude '.htaccess' \
             --exclude '.well-known/' \
             --exclude 'error_log' \
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
-            site/ "${DEPLOY_USER}@${DEPLOY_HOST}:/home/dataleasers/public_html/"
+            _site/ "${DEPLOY_USER}@${DEPLOY_HOST}:/home/dataleasers/public_html/"
 
       - name: Verify the live site
         run: |
           set -euo pipefail
 
           # The served copy must contain the title of the index.html we just sent.
-          marker=$(grep -oE '<title>[^<]+' site/index.html | head -1 | sed 's|<title>||' | sed 's/[[:space:]]*$//')
+          marker=$(grep -oE '<title>[^<]+' _site/index.html | head -1 | sed 's|<title>||' | sed 's/[[:space:]]*$//')
           if [ -z "$marker" ]; then
-            echo "::warning::No <title> found in site/index.html; skipping the content check."
+            echo "::warning::No <title> found in _site/index.html; skipping the content check."
           fi
 
           code=""
@@ -105,5 +119,5 @@ jobs:
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)
             printf '%s %s\n' "$code" "$url"
             [ "$code" = "200" ] || fail=1
-          done < <(grep -o '<loc>[^<]*</loc>' site/sitemap.xml | sed -e 's|<loc>||' -e 's|</loc>||')
+          done < <(grep -o '<loc>[^<]*</loc>' _site/sitemap.xml | sed -e 's|<loc>||' -e 's|</loc>||')
           exit $fail

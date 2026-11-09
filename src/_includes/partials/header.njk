@@ -1,0 +1,10 @@
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html"><img class="logo" src="logo.svg" alt="dataleasers"></a>
+    <nav class="nav" aria-label="Main">
+{%- for item in site.nav %}
+      <a href="{{ item.href }}"{% if item.key == navKey %} aria-current="page"{% endif %}>{{ item.label }}</a>
+{%- endfor %}
+    </nav>
+  </div>
+</header>
