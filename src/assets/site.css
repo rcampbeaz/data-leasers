@@ -734,3 +734,219 @@ textarea { min-height: 120px; }
 @media (min-width: 900px) {
   .site-footer .footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1.15fr; }
 }
+
+/* ============================================================
+   Visual pass 2 — surface depth, texture and motion
+   Every surface is a stack: base colour, wash, pattern, content.
+   ============================================================ */
+
+/* ---------- Type comfort ---------- */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+.section-head p { font-size: clamp(18px, 1.6vw, 21px); line-height: 1.6; }
+.table { font-size: 15px; }
+.table th { font-size: 12.5px; letter-spacing: 0.09em; }
+.small-note, .related span, .criteria-label, .trust-item span, .tile-text { font-size: 15px; }
+.mock { line-height: 1.62; }
+.mock-tag { font-size: 11px; }
+.footer-brand p, .footer-col a, .footer-legal p { font-size: 14.5px; }
+a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
+
+/* ---------- Light sections: wash plus paper grain ---------- */
+.section {
+  position: relative;
+  background-color: #FFFFFF;
+  background-image: linear-gradient(180deg, #FFFFFF 0%, #FCFAF5 64%, #F7F4EC 100%);
+}
+.section > .wrap { position: relative; z-index: 1; }
+.section::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("bg-grain.svg"); background-size: 220px 220px;
+  opacity: 0.16; mix-blend-mode: multiply;
+}
+
+.section.mist {
+  background-color: #F7F5F0;
+  background-image:
+    linear-gradient(180deg, #FBF9F4 0%, #F3EFE6 100%),
+    radial-gradient(rgba(15, 42, 71, 0.05) 1px, transparent 1px);
+  background-size: auto, 26px 26px;
+}
+
+.section.teal-soft {
+  background-color: #E9F4F2;
+  background-image:
+    linear-gradient(180deg, #EBF6F4 0%, #E0EDF2 100%),
+    radial-gradient(820px 420px at 6% -12%, rgba(45, 212, 191, 0.24), transparent 70%);
+}
+
+.section.ink {
+  background-color: var(--dl-navy);
+  background-image:
+    radial-gradient(760px 420px at 86% 4%, rgba(45, 212, 191, 0.18), transparent 68%),
+    radial-gradient(620px 420px at 4% 98%, rgba(201, 162, 39, 0.10), transparent 70%),
+    linear-gradient(168deg, #123A5C 0%, #0F2A47 46%, #0A1E33 100%);
+}
+.section.ink::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("bg-grain.svg"); background-size: 220px 220px;
+  mix-blend-mode: soft-light; opacity: 0.30;
+  animation: breathe 16s ease-in-out infinite alternate;
+}
+
+/* ---------- Heroes: orbit artwork behind the headline ---------- */
+.hero.ink, .hero-home {
+  background-color: var(--dl-navy-deep);
+  background-image:
+    radial-gradient(720px 400px at 84% 8%, rgba(45, 212, 191, 0.20), transparent 68%),
+    radial-gradient(560px 420px at 2% 94%, rgba(201, 162, 39, 0.10), transparent 70%),
+    linear-gradient(160deg, #123A5C 0%, #0F2A47 55%, #0A1E33 100%);
+}
+.hero.ink::before, .hero-home::before {
+  content: ""; position: absolute; top: -46%; right: -34%; z-index: 0;
+  width: 880px; height: 880px; pointer-events: none;
+  background: url("bg-orbits.svg") center / contain no-repeat;
+  opacity: 0.24;
+  animation: orbit 130s linear infinite;
+}
+.hero.ink > .wrap, .hero-home > .wrap { position: relative; z-index: 1; }
+
+/* ---------- Closing call band ---------- */
+.cta-band {
+  overflow: hidden;
+  background-color: var(--dl-navy-deep);
+  background-image:
+    radial-gradient(900px 460px at 50% -18%, rgba(45, 212, 191, 0.30), transparent 62%),
+    radial-gradient(620px 320px at 92% 112%, rgba(201, 162, 39, 0.14), transparent 70%),
+    linear-gradient(180deg, #12395B 0%, #0A1E33 100%);
+}
+.cta-band::before {
+  content: ""; position: absolute; left: 50%; top: -160px; z-index: 0;
+  width: 520px; height: 520px; margin-left: -260px; border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.26), transparent 62%);
+  animation: floaty 18s ease-in-out infinite;
+}
+.cta-band::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("bg-grain.svg"); background-size: 220px 220px;
+  mix-blend-mode: soft-light; opacity: 0.26;
+}
+.cta-band > .wrap { position: relative; z-index: 1; }
+
+/* ---------- Referral band ---------- */
+.refer-band {
+  background-color: var(--dl-navy);
+  background-image:
+    radial-gradient(560px 320px at 88% 18%, rgba(201, 162, 39, 0.24), transparent 70%),
+    radial-gradient(520px 320px at 4% 92%, rgba(45, 212, 191, 0.16), transparent 70%),
+    linear-gradient(165deg, #123A5C 0%, #0A1E33 100%);
+}
+.refer-band::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: url("bg-grain.svg"); background-size: 220px 220px;
+  mix-blend-mode: soft-light; opacity: 0.24;
+}
+
+/* ---------- Trust strip and footer ---------- */
+.trust-strip {
+  position: relative;
+  background-color: var(--dl-cream);
+  background-image:
+    radial-gradient(700px 240px at 20% -40%, rgba(45, 212, 191, 0.14), transparent 70%),
+    linear-gradient(180deg, #F8F6F1 0%, #FCFAF4 100%);
+}
+.trust-item svg { filter: drop-shadow(0 2px 6px rgba(31, 167, 154, 0.28)); }
+
+.site-footer {
+  position: relative;
+  background-color: var(--dl-navy-deep);
+  background-image:
+    radial-gradient(700px 320px at 10% 0%, rgba(45, 212, 191, 0.13), transparent 70%),
+    linear-gradient(180deg, #0B2138 0%, #071A2C 100%);
+}
+.site-footer::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: url("bg-orbits.svg") 84% 10% / 720px no-repeat;
+  opacity: 0.10;
+}
+.site-footer .wrap { position: relative; z-index: 1; }
+
+/* ---------- Motion ---------- */
+@keyframes breathe { from { opacity: 0.16; } to { opacity: 0.34; } }
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+@keyframes orbit { to { transform: rotate(360deg); } }
+@keyframes ruleIn { from { width: 0; } to { width: 26px; } }
+@keyframes dotPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.72); } }
+@keyframes sheen { to { transform: translateX(220%); } }
+
+.kicker::before { animation: ruleIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+.announce-inner > span::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-right: var(--space-2);
+  border-radius: 50%; background: var(--dl-teal-bright); vertical-align: middle;
+  animation: dotPulse 2.6s ease-in-out infinite;
+}
+
+/* Buttons catch the light on hover */
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  transform: translateX(-160%); pointer-events: none; z-index: -1;
+}
+.btn:hover::after { animation: sheen 0.9s ease; }
+
+/* Nav links underline themselves on hover */
+.nav a { position: relative; }
+.nav a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: left;
+  transition: transform 0.22s ease;
+}
+.nav a:hover::after, .nav a[aria-current="page"]::after { transform: scaleX(1); }
+
+/* Cards and tiles lift with a soft teal edge */
+.card:hover, .tile:hover {
+  box-shadow: 0 18px 44px rgba(15, 42, 71, 0.13), 0 0 0 1px rgba(31, 167, 154, 0.32);
+}
+.tile-cta, .door-cta { display: inline-block; transition: transform 0.18s ease; }
+.tile:hover .tile-cta, .door:hover .door-cta { transform: translateX(4px); }
+
+/* Reveal children in sequence rather than all at once */
+.cards > *:nth-child(2), .tiles > *:nth-child(2), .inline-cards > *:nth-child(2) { transition-delay: 0.07s; }
+.cards > *:nth-child(3), .tiles > *:nth-child(3) { transition-delay: 0.14s; }
+.tiles > *:nth-child(4) { transition-delay: 0.21s; }
+
+/* The guide rail draws itself as it arrives */
+.path li::after { transform: scaleY(0); transform-origin: top; transition: transform 0.6s ease 0.15s; }
+.path li.in::after { transform: scaleY(1); }
+@media (min-width: 900px) {
+  .path li::after { transform: scaleX(0); transform-origin: left; }
+  .path li.in::after { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section.ink::after, .cta-band::before, .hero.ink::before, .hero-home::before { animation: none; }
+}
+
+/* ---------- Hero calibration ----------
+   At phone width a 720px bloom covers the whole band and washes the kicker
+   out, so the washes are smaller and the base gradient stays navy. */
+.hero-home .kicker, .hero-home .kicker-num { color: var(--dl-teal-bright); }
+
+.hero-home {
+  background-image:
+    radial-gradient(520px 300px at 92% 2%, rgba(45, 212, 191, 0.16), transparent 66%),
+    linear-gradient(158deg, #11395A 0%, #0F2A47 52%, #0A1E33 100%);
+}
+.hero-home::before { top: -30%; right: -46%; width: 700px; height: 700px; opacity: 0.16; }
+
+.hero.ink {
+  background-image:
+    radial-gradient(520px 300px at 92% 4%, rgba(45, 212, 191, 0.15), transparent 66%),
+    linear-gradient(158deg, #11395A 0%, #0F2A47 52%, #0A1E33 100%);
+}
+.hero.ink::before { top: -34%; right: -44%; width: 700px; height: 700px; opacity: 0.15; }
+
+.hero.ink .lead, .hero-home .lead, .hero-note { color: #C6D6E4; }

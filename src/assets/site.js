@@ -68,3 +68,33 @@
     }, true);
   }
 })();
+
+/* The published figures count up once as they scroll into view. Text is only
+   ever left complete: the final frame writes the exact source value. */
+(function () {
+  var nums = document.querySelectorAll('.ticker-num, .criteria-num, .criteria-item strong');
+  if (!nums.length || !('IntersectionObserver' in window)) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function countUp(el) {
+    var raw = (el.textContent || '').trim();
+    var m = raw.match(/^(\d+)(.*)$/);
+    if (!m || reduce) return;
+    var target = parseInt(m[1], 10);
+    var suffix = m[2];
+    var start = null;
+    function frame(now) {
+      if (start === null) start = now;
+      var p = Math.min(1, (now - start) / 900);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+      if (p < 1) requestAnimationFrame(frame);
+      else el.textContent = target + suffix;
+    }
+    requestAnimationFrame(frame);
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) { countUp(entry.target); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.6 });
+  nums.forEach(function (el) { io.observe(el); });
+})();
