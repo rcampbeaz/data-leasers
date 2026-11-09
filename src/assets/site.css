@@ -1020,7 +1020,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 }
 .faq-aside {
   position: relative; overflow: hidden; isolation: isolate;
-  max-width: 420px; margin: 0 auto; padding: var(--space-6) var(--space-6) 0;
+  max-width: 420px; margin: 0 auto; padding: var(--space-6);
   border-radius: var(--radius-lg);
   background: linear-gradient(155deg, #143456 0%, var(--dl-navy) 46%, var(--dl-navy-deep) 100%);
   border: 1px solid rgba(255, 255, 255, 0.10);
