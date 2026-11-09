@@ -23,7 +23,7 @@ function stampAssets() {
  * Editing nav or footer here updates every page on the next build.
  */
 export default {
-  name: "dataleasers",
+  name: "DataLeasers",
   url: "https://dataleasers.com",
   assetVersion: stampAssets(),
 

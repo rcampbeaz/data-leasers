@@ -1,4 +1,4 @@
-/* dataleasers brand tokens. Shared by the website and the CRM. */
+/* DataLeasers brand tokens. Shared by the website and the CRM. */
 :root {
   /* No automatic dark mode: the site uses light sections with dark hero bands.
      An earlier prefers-color-scheme override flipped text to light without

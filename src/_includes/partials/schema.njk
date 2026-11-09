@@ -1,4 +1,4 @@
-{%- set crumbLabel = title | replace(" | dataleasers", "") -%}
+{%- set crumbLabel = title | replace(" | DataLeasers", "") -%}
 {%- set org = site.url + "/#organization" -%}
 <script type="application/ld+json">
 {
@@ -16,7 +16,7 @@
       "@type": "WebSite",
       "@id": "{{ site.url }}/#website",
       "url": "{{ site.url }}/",
-      "name": "dataleasers",
+      "name": "DataLeasers",
       "publisher": { "@id": "{{ org }}" },
       "inLanguage": "en-US"
     },
@@ -44,7 +44,7 @@
       "serviceType": "Company data licensing introductions",
       "provider": { "@id": "{{ org }}" },
       "areaServed": { "@type": "Country", "name": "United States" },
-      "description": "dataleasers introduces operating companies to a data buyer that takes data licensing for AI forward. The company keeps ownership and approves scope and terms in writing."
+      "description": "DataLeasers introduces operating companies to a data buyer that takes data licensing for AI forward. The company keeps ownership and approves scope and terms in writing."
     }{% endif %}
   ]
 }

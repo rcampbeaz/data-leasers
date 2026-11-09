@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" role="img" aria-labelledby="title desc">
-  <title id="title">dataleasers logo</title>
-  <desc id="desc">Three stacked data layers with an amber lease dot, followed by the dataleasers wordmark.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 104" role="img" aria-labelledby="title desc">
+  <title id="title">DataLeasers logo</title>
+  <desc id="desc">Three stacked data layers with an amber lease dot, followed by the DataLeasers wordmark.</desc>
   <g id="mark">
-    <rect x="8" y="8" width="104" height="104" rx="24" fill="#0F7C7A"/>
-    <rect x="28" y="30" width="64" height="14" rx="7" fill="#FFFFFF"/>
-    <rect x="28" y="53" width="48" height="14" rx="7" fill="#FFFFFF" fill-opacity="0.85"/>
-    <rect x="28" y="76" width="32" height="14" rx="7" fill="#FFFFFF" fill-opacity="0.7"/>
-    <circle cx="90" cy="83" r="10" fill="#B45309"/>
+    <rect x="2" y="6" width="92" height="92" rx="22" fill="#0F7C7A"/>
+    <rect x="22" y="28" width="54" height="12" rx="6" fill="#FFFFFF"/>
+    <rect x="22" y="48" width="42" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.85"/>
+    <rect x="22" y="68" width="30" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.7"/>
+    <circle cx="80" cy="74" r="9" fill="#B45309"/>
   </g>
-  <text x="132" y="78" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="46" font-weight="700" letter-spacing="-1" fill="#0B1F2A">data<tspan fill="#0F7C7A">leasers</tspan></text>
+  <text x="112" y="72" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="52" font-weight="700" letter-spacing="-1.5" fill="#0B1F2A">Data<tspan fill="#0F7C7A">Leasers</tspan></text>
 </svg>
