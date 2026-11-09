@@ -24,6 +24,40 @@ export default function (eleventyConfig) {
       })
   );
 
+  // Emit FAQPage structured data from the questions a page actually shows, so the
+  // markup can never drift from the visible copy.
+  const decode = (html) =>
+    html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&mdash;/g, "\u2014")
+      .replace(/&ndash;/g, "\u2013")
+      .replace(/&rsquo;/g, "\u2019")
+      .replace(/&lsquo;/g, "\u2018")
+      .replace(/&ldquo;/g, "\u201c")
+      .replace(/&rdquo;/g, "\u201d")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  eleventyConfig.addTransform("faq-schema", function (content, outputPath) {
+    if (!outputPath || !outputPath.endsWith(".html") || !content.includes("<details>")) return content;
+    const items = [...content.matchAll(/<details[^>]*>\s*<summary>([\s\S]*?)<\/summary>\s*<p>([\s\S]*?)<\/p>/g)]
+      .map((m) => ({
+        "@type": "Question",
+        name: decode(m[1]),
+        acceptedAnswer: { "@type": "Answer", text: decode(m[2]) },
+      }))
+      .filter((q) => q.name && q.acceptedAnswer.text);
+    if (!items.length) return content;
+    const json = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: items,
+    }).replace(/</g, "\\u003c");
+    return content.replace("</head>", '<script type="application/ld+json">' + json + "</script>\n</head>");
+  });
+
   return {
     dir: {
       input: "src",

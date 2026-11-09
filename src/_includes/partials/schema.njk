@@ -1,0 +1,51 @@
+{%- set crumbLabel = title | replace(" | dataleasers", "") -%}
+{%- set org = site.url + "/#organization" -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "{{ org }}",
+      "name": "Data Leasers, LLC",
+      "url": "{{ site.url }}/",
+      "logo": { "@type": "ImageObject", "url": "{{ site.url }}/logo.svg" },
+      "description": "Data Leasers, LLC introduces operating companies to a data buyer that takes data licensing for AI forward."
+    },
+    {
+      "@type": "WebSite",
+      "@id": "{{ site.url }}/#website",
+      "url": "{{ site.url }}/",
+      "name": "dataleasers",
+      "publisher": { "@id": "{{ org }}" },
+      "inLanguage": "en-US"
+    },
+    {
+      "@type": "WebPage",
+      "@id": "{{ canonical }}#webpage",
+      "url": "{{ canonical }}",
+      "name": "title",
+      "description": "description",
+      "isPartOf": { "@id": "{{ site.url }}/#website" },
+      "about": { "@id": "{{ org }}" },
+      "primaryImageOfPage": { "@type": "ImageObject", "url": "{{ site.url }}/og-card.png" },
+      "inLanguage": "en-US"
+    }{% if navKey %},
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "{{ site.url }}/" },
+        { "@type": "ListItem", "position": 2, "name": "crumbLabel", "item": "{{ canonical }}" }
+      ]
+    }{% endif %}{% if bodyClass == "home" %},
+    {
+      "@type": "Service",
+      "name": "Introductions to a data buyer for company data licensing",
+      "serviceType": "Company data licensing introductions",
+      "provider": { "@id": "{{ org }}" },
+      "areaServed": { "@type": "Country", "name": "United States" },
+      "description": "dataleasers introduces operating companies to a data buyer that takes data licensing for AI forward. The company keeps ownership and approves scope and terms in writing."
+    }{% endif %}
+  ]
+}
+</script>
