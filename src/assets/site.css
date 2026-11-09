@@ -658,4 +658,5 @@ textarea { min-height: 120px; }
 }
 @media (max-width: 560px) {
   .announce-inner { padding: 7px var(--space-4); gap: 2px var(--space-3); font-size: 12px; }
+  .announce-note { display: none; }
 }
