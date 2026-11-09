@@ -11,10 +11,13 @@
 <meta property="og:description" content="{{ description }}">
 <meta property="og:url" content="{{ canonical }}">
 <meta name="description" content="{{ description }}">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="brand-tokens.css?v={{ site.assetVersion }}">
 <link rel="stylesheet" href="site.css?v={{ site.assetVersion }}">
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
+<a class="skip-link" href="#main">Skip to content</a>
 {% include "partials/header.njk" %}
 
 {{ content | safe }}

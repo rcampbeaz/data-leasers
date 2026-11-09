@@ -1,10 +1,21 @@
 <header class="site-header">
-  <div class="wrap">
-    <a href="index.html"><img class="logo" src="logo.svg" alt="dataleasers"></a>
-    <nav class="nav" aria-label="Main">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html"><img class="logo" src="logo.svg" alt="dataleasers"></a>
+    <nav class="nav nav-desktop" aria-label="Main">
 {%- for item in site.nav %}
       <a href="{{ item.href }}"{% if item.key == navKey %} aria-current="page"{% endif %}>{{ item.label }}</a>
 {%- endfor %}
     </nav>
+    <div class="header-actions">
+      <a class="btn btn-sm" href="contact.html">Book a call</a>
+      <details class="nav-disclosure">
+        <summary class="nav-toggle" aria-label="Open menu">Menu</summary>
+        <nav class="nav nav-mobile" aria-label="Mobile">
+{%- for item in site.nav %}
+          <a href="{{ item.href }}"{% if item.key == navKey %} aria-current="page"{% endif %}>{{ item.label }}</a>
+{%- endfor %}
+        </nav>
+      </details>
+    </div>
   </div>
 </header>

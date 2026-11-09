@@ -1,9 +1,28 @@
 <footer class="site-footer">
-  <div class="wrap">
-    <img class="icon" src="logo-icon.svg" alt="">
-    <div class="small">
-      <p>Data Leasers, LLC &middot; {% for item in site.footer.primary %}<a href="{{ item.href }}">{{ item.label }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
-      <p>{% for item in site.footer.secondary %}<a href="{{ item.href }}">{{ item.label }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <img class="footer-logo" src="logo-reversed.svg" alt="dataleasers">
+      <p>Data Leasers, LLC introduces operating companies to Mode, which takes data licensing for AI forward.</p>
     </div>
+    <div class="footer-col">
+      <h3>Learn</h3>
+      <ul>
+{%- for item in site.footer.primary %}
+        <li><a href="{{ item.href }}">{{ item.label }}</a></li>
+{%- endfor %}
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h3>Details</h3>
+      <ul>
+{%- for item in site.footer.secondary %}
+        <li><a href="{{ item.href }}">{{ item.label }}</a></li>
+{%- endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="wrap footer-legal">
+    <p>Data Leasers, LLC. All rights reserved.</p>
+    <p><a href="privacy.html">Privacy</a> &middot; <a href="consent.html">Consent</a> &middot; <a href="trust.html">How we handle your data</a></p>
   </div>
 </footer>

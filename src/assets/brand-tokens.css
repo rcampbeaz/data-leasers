@@ -1,48 +1,69 @@
 /* dataleasers brand tokens. Shared by the website and the CRM. */
 :root {
-  /* Core palette */
-  --dl-ink: #0B1F2A;
-  --dl-teal: #0F7C7A;
-  --dl-amber: #B45309;
-  --dl-slate: #4B5563;
-  --dl-mist: #F3F6F7;
+  /* No automatic dark mode: the site uses light sections with dark hero bands.
+     An earlier prefers-color-scheme override flipped text to light without
+     changing section backgrounds, which made text unreadable on dark-mode devices. */
+  color-scheme: light;
+
+  /* Core palette — credible and calm, closer to financial services than to a startup */
+  --dl-navy: #0F2A47;
+  --dl-navy-deep: #0A1E33;
+  --dl-teal: #1FA79A;
+  --dl-teal-ink: #0E6F68;    /* teal that is safe for text on light backgrounds */
+  --dl-teal-bright: #2DD4BF; /* teal for dark backgrounds */
+  --dl-cream: #F7F5F0;
   --dl-paper: #FFFFFF;
-  --dl-border: #D5DCE0;
+  --dl-charcoal: #1F2933;
+  --dl-slate: #55636F;
+  --dl-gold: #C9A227;
+  --dl-gold-ink: #7A5E00;    /* gold that is safe for text on light backgrounds */
+  --dl-border: #E2DED5;
+  --dl-border-dark: #23425F;
+
+  /* Legacy aliases kept so existing markup and the CRM keep working */
+  --dl-ink: var(--dl-navy);
+  --dl-mist: var(--dl-cream);
+  --dl-amber: var(--dl-gold);
 
   /* Semantic states (CRM) */
-  --dl-approved-bg: #D7EFEE;
-  --dl-approved-fg: #0A5654;
-  --dl-review-bg: #FBEBD6;
-  --dl-review-fg: #7A3A05;
-  --dl-blocked-bg: #FDE2E0;
+  --dl-approved-bg: #D7EFEA;
+  --dl-approved-fg: #0B5B54;
+  --dl-review-bg: #FBF0DA;
+  --dl-review-fg: #7A4B05;
+  --dl-blocked-bg: #FBE3E0;
   --dl-blocked-fg: #8A1C14;
 
-  /* Dark mode */
-  --dl-dark-bg: #0B1F2A;
-  --dl-dark-fg: #E6F4F3;
-  --dl-dark-accent: #2DD4BF;
+  /* Dark surfaces */
+  --dl-dark-bg: var(--dl-navy);
+  --dl-dark-fg: #EAF2F7;
+  --dl-dark-muted: #A9C0D3;
+  --dl-dark-accent: var(--dl-teal-bright);
 
   /* Semantic aliases */
-  --color-text: var(--dl-ink);
+  --color-text: var(--dl-charcoal);
   --color-text-muted: var(--dl-slate);
   --color-bg: var(--dl-paper);
-  --color-surface: var(--dl-mist);
+  --color-surface: var(--dl-cream);
   --color-border: var(--dl-border);
-  --color-primary: var(--dl-teal);
+  --color-primary: var(--dl-teal-ink);
   --color-primary-text: var(--dl-paper);
-  --color-accent: var(--dl-amber);
+  --color-accent: var(--dl-gold);
 
-  /* Type scale */
-  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Type: serif headlines for gravitas, a modern sans for everything else */
+  --font-sans: "InterVar", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --text-xs: 13px;
   --text-sm: 14px;
-  --text-base: 16px;
+  --text-base: 17px;
   --text-lg: 20px;
-  --text-xl: 24px;
-  --text-2xl: 32px;
-  --text-3xl: 40px;
-  --leading-body: 1.6;
-  --leading-heading: 1.2;
+  --text-xl: 26px;
+  --text-2xl: 34px;
+  --text-3xl: 44px;
+  --text-4xl: 56px;
+  --leading-body: 1.65;
+  --leading-heading: 1.14;
+  --leading-heading-tight: 1.05;
+  --tracking-heading: -0.02em;
 
   /* Spacing (8px base) */
   --space-1: 4px;
@@ -52,32 +73,19 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
 
-  /* Radii */
-  --radius-sm: 8px;
+  /* Radii and elevation */
+  --radius-sm: 6px;
   --radius-md: 12px;
+  --radius-lg: 18px;
   --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(15, 42, 71, 0.06), 0 1px 3px rgba(15, 42, 71, 0.08);
+  --shadow-md: 0 12px 32px rgba(15, 42, 71, 0.10);
 
+  /* Layout */
+  --container: 1120px;
   /* Logo clear space = 1/4 of the mark tile height */
   --logo-clear-space: 30px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-text: var(--dl-dark-fg);
-    --color-bg: var(--dl-dark-bg);
-    --color-primary: var(--dl-dark-accent);
-    --color-primary-text: var(--dl-dark-bg);
-  }
-}
-
-:root[data-theme="dark"] {
-  --color-text: var(--dl-dark-fg);
-  --color-bg: var(--dl-dark-bg);
-  --color-primary: var(--dl-dark-accent);
-  --color-primary-text: var(--dl-dark-bg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
 }

@@ -4,123 +4,245 @@ permalink: "/"
 title: "dataleasers: turn your data into a new revenue line"
 description: "dataleasers introduces companies to Mode, which takes data licensing for AI forward. Book a call to learn more."
 canonical: "https://dataleasers.com/"
-navKey: home
 bodyClass: "home"
 inlineScript: |
   <script>
     (function () {
       var form = document.getElementById('qualifier');
       var out = document.getElementById('q-result');
+      var bar = document.getElementById('fit-bar');
+      var count = document.getElementById('fit-count');
+      if (!form) return;
+      var names = ['q1', 'q2', 'q3', 'q4'];
+      function sync() {
+        var answered = names.filter(function (n) {
+          return form.querySelector('input[name="' + n + '"]:checked');
+        }).length;
+        if (bar) bar.style.width = (answered / names.length * 100) + '%';
+        if (count) count.textContent = answered + ' of ' + names.length + ' answered';
+      }
+      form.addEventListener('change', sync);
+      sync();
       form.addEventListener('submit', function (e) {
         e.preventDefault();
-        var answers = {};
-        var missing = false;
-        ['q1', 'q2', 'q3', 'q4'].forEach(function (name) {
-          var checked = form.querySelector('input[name="' + name + '"]:checked');
-          if (!checked) missing = true;
-          answers[name] = checked ? checked.value : null;
+        var values = names.map(function (n) {
+          var c = form.querySelector('input[name="' + n + '"]:checked');
+          return c ? c.value : null;
         });
         out.hidden = false;
-        if (missing) {
+        if (values.indexOf(null) !== -1) {
           out.className = 'q-result q-review';
-          out.textContent = 'Please answer all four questions.';
+          out.innerHTML = '<strong>One more step.</strong> Answer all four questions and the result will be useful.';
           return;
         }
-        var fit = Object.keys(answers).every(function (k) { return answers[k] === 'yes'; });
+        var fit = values.every(function (v) { return v === 'yes'; });
         if (fit) {
           out.className = 'q-result q-fit';
-          out.innerHTML = '<strong>You may fit our criteria.</strong> The next step is a short call to see what your company holds. <a class="btn" href="contact.html">Book a call</a>';
+          out.innerHTML = '<strong>You may fit Mode&rsquo;s criteria.</strong> The records worth reviewing first are the ones AI teams look for: customer conversations, support tickets, document and proposal history, and sales notes. The next step is a short call to confirm what you hold and whether it can be licensed.<div class="q-result-actions"><a class="btn" href="contact.html">Book a call</a><a class="btn btn-ghost" href="#buyer-view">See what a buyer sees</a></div>';
         } else {
           out.className = 'q-result q-review';
           out.innerHTML = '<strong>You may not fit yet.</strong> Mode&rsquo;s criteria are strict, so a call may not be the right next step. If you know a company that does fit, you can <a href="refer.html">refer it to us</a>.';
         }
+        out.setAttribute('tabindex', '-1');
+        out.focus();
       });
     })();
   </script>
 ---
-<main>
-  <section class="hero ink">
+<main id="main">
+  <section class="hero hero-home">
     <div class="wrap">
-      <img class="hero-logo" src="logo-reversed.svg" alt="dataleasers">
-      <h1>Your data may be worth more than you think.</h1>
-      <p class="lead">The conversations, documents and tickets behind everyday work show AI how real work gets done. dataleasers introduces companies to Mode, which takes data licensing for AI forward. We start with a conversation about what you hold.</p>
-      <div class="doors">
-        <a class="door" href="#fit">
-          <span class="door-label">I have data to sell</span>
-          <span class="door-text">Check whether your company may fit, then book a short call.</span>
-          <span class="door-cta">Check my fit &rarr;</span>
-        </a>
-        <a class="door" href="refer.html">
-          <span class="door-label">I know a company that should</span>
-          <span class="door-text">Introduce a company to us and see how referral terms work.</span>
-          <span class="door-cta">Refer a company &rarr;</span>
-        </a>
+      <div class="hero-grid">
+        <div>
+          <p class="kicker">Data licensing for AI</p>
+          <h1>Your data may be worth more than you think.</h1>
+          <p class="lead">The conversations, documents and tickets behind everyday work show AI how real work gets done. dataleasers introduces companies to Mode, which takes data licensing for AI forward. We start with a conversation about what you hold.</p>
+          <div class="hero-actions">
+            <a class="btn" href="contact.html">Book a call</a>
+            <a class="btn btn-ghost" href="#buyer-view">See what a buyer sees</a>
+          </div>
+          <p class="hero-note">A first call carries no commitment. Nothing moves without your approval.</p>
+        </div>
+        <div>
+          <div class="doors">
+            <a class="door" href="#fit">
+              <span class="door-label">I have data to sell</span>
+              <span class="door-text">Check whether your company may fit, then book a short call.</span>
+              <span class="door-cta">Check my fit &rarr;</span>
+            </a>
+            <a class="door" href="refer.html">
+              <span class="door-label">I know a company that should</span>
+              <span class="door-text">Introduce a company to us and see how referral terms work.</span>
+              <span class="door-cta">Refer a company &rarr;</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section mist" id="fit">
+  <section class="trust-strip" aria-label="How your data is handled">
     <div class="wrap">
-      <p class="kicker reveal">Quick check</p>
-      <h2 class="reveal">Four questions, about a minute.</h2>
-      <p class="reveal">Mode works with companies that meet its criteria. Answer these to see whether a call is worth having. Nothing you enter here is stored.</p>
-      <form class="qualifier reveal" id="qualifier" novalidate>
-        <fieldset>
-          <legend>1. Does your company have 20 or more full-time staff in U.S. offices, or is it an accounting or law firm?</legend>
-          <label class="q-option"><input type="radio" name="q1" value="yes" required> Yes</label>
-          <label class="q-option"><input type="radio" name="q1" value="no"> No</label>
-        </fieldset>
-        <fieldset>
-          <legend>2. Has your company operated for at least 3 years?</legend>
-          <label class="q-option"><input type="radio" name="q2" value="yes"> Yes</label>
-          <label class="q-option"><input type="radio" name="q2" value="no"> No</label>
-        </fieldset>
-        <fieldset>
-          <legend>3. Does your business activity sit in several systems, such as email, CRM, support or document tools?</legend>
-          <label class="q-option"><input type="radio" name="q3" value="yes"> Yes</label>
-          <label class="q-option"><input type="radio" name="q3" value="no"> No</label>
-        </fieldset>
-        <fieldset>
-          <legend>4. Do your staff work from U.S. offices?</legend>
-          <label class="q-option"><input type="radio" name="q4" value="yes"> Yes</label>
-          <label class="q-option"><input type="radio" name="q4" value="no"> No</label>
-        </fieldset>
-        <p><button class="btn" type="submit">See my result</button></p>
-      </form>
-      <div class="q-result" id="q-result" role="status" aria-live="polite" hidden></div>
+      <ul class="trust-list">
+        <li class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="icons.svg#i-check"/></svg>
+          <div><strong>You approve every deal</strong><span>Every buyer, every term.</span></div>
+        </li>
+        <li class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="icons.svg#i-shield"/></svg>
+          <div><strong>Rights checked first</strong><span>We confirm data can be licensed before anything moves.</span></div>
+        </li>
+        <li class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="icons.svg#i-lock"/></svg>
+          <div><strong>Personal data reviewed separately</strong><span>Removing names does not make data anonymous.</span></div>
+        </li>
+        <li class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="icons.svg#i-doccheck"/></svg>
+          <div><strong>Terms in writing</strong><span>Scope and fees are agreed in writing first.</span></div>
+        </li>
+      </ul>
     </div>
   </section>
 
-  <section class="section ink">
+  <section class="section" id="fit">
     <div class="wrap">
-      <p class="kicker reveal">01 / What you can sell</p>
-      <h2 class="reveal">The records your team already keeps may be useful to AI teams.</h2>
-      <p class="reveal">AI teams look for real work: how problems were solved, how decisions were made, how projects moved. Much of it already sits in tools you use every day.</p>
+      <div class="section-head reveal">
+        <p class="kicker">Quick check</p>
+        <h2>Four questions, about a minute.</h2>
+        <p>Mode works with companies that meet its criteria. Answer these to see whether a call is worth having. Nothing you enter here is stored &mdash; see our <a href="privacy.html">privacy policy</a>.</p>
+      </div>
+      <div class="fit-panel reveal">
+        <div class="fit-progress" aria-hidden="true"><span id="fit-bar"></span></div>
+        <p class="fit-count" id="fit-count">0 of 4 answered</p>
+        <form class="qualifier" id="qualifier" novalidate>
+          <fieldset>
+            <legend>1. Does your company have 20 or more full-time staff in U.S. offices, or is it an accounting or law firm?</legend>
+            <label class="q-option"><input type="radio" name="q1" value="yes" required> Yes</label>
+            <label class="q-option"><input type="radio" name="q1" value="no"> No</label>
+          </fieldset>
+          <fieldset>
+            <legend>2. Has your company operated for at least 3 years?</legend>
+            <label class="q-option"><input type="radio" name="q2" value="yes"> Yes</label>
+            <label class="q-option"><input type="radio" name="q2" value="no"> No</label>
+          </fieldset>
+          <fieldset>
+            <legend>3. Does your business activity sit in several systems, such as email, CRM, support or document tools?</legend>
+            <label class="q-option"><input type="radio" name="q3" value="yes"> Yes</label>
+            <label class="q-option"><input type="radio" name="q3" value="no"> No</label>
+          </fieldset>
+          <fieldset>
+            <legend>4. Do your staff work from U.S. offices?</legend>
+            <label class="q-option"><input type="radio" name="q4" value="yes"> Yes</label>
+            <label class="q-option"><input type="radio" name="q4" value="no"> No</label>
+          </fieldset>
+          <p><button class="btn" type="submit">See my result</button></p>
+        </form>
+        <div class="q-result" id="q-result" role="status" aria-live="polite" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section ink" id="what-you-can-sell">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">What you can sell</p>
+        <h2>The records your team already keeps may be useful to AI teams.</h2>
+        <p>AI teams look for real work: how problems were solved, how decisions were made, how projects moved. Much of it already sits in tools you use every day.</p>
+      </div>
       <div class="cards">
         <div class="card reveal">
-        <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-chat"/></svg></span>
-        <h3>Conversations</h3>
+          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-chat"/></svg></span>
+          <h3>Conversations</h3>
           <ul class="examples"><li>Chat and call threads</li><li>Shared inboxes</li><li>Decision threads</li></ul>
         </div>
         <div class="card reveal">
-        <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-support"/></svg></span>
-        <h3>Customer support</h3>
+          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-support"/></svg></span>
+          <h3>Customer support</h3>
           <ul class="examples"><li>Resolved tickets</li><li>Agent notes</li><li>Escalations</li></ul>
         </div>
         <div class="card reveal">
-        <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-doc"/></svg></span>
-        <h3>Documents</h3>
+          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-doc"/></svg></span>
+          <h3>Documents</h3>
           <ul class="examples"><li>SOPs and playbooks</li><li>Proposals and reports</li><li>Revision history</li></ul>
         </div>
       </div>
-      <p class="link-row reveal"><a href="what-you-can-sell.html">See every data type</a></p>
+      <p class="link-row reveal"><a href="what-you-can-sell.html">See every data type</a> <a href="what-affects-a-deal.html">What affects a deal</a></p>
     </div>
   </section>
 
-  <section class="section mist">
+  <section class="section mist" id="buyer-view">
     <div class="wrap">
-      <p class="kicker reveal">02 / The process</p>
-      <h2 class="reveal">From a first call to an agreement you approve.</h2>
+      <div class="section-head reveal">
+        <p class="kicker">What a buyer sees</p>
+        <h2>From your records to a licensed dataset.</h2>
+        <p>A plain picture of the steps between your systems and a buyer. Nothing is shared until the rights are clear and you approve the terms.</p>
+      </div>
+      <div class="flow">
+        <div class="flow-step reveal">
+          <span class="flow-num">01</span>
+          <h3>Your records</h3>
+          <p>Customer threads, tickets, documents and deal notes as your team already keeps them.</p>
+          <div class="sample-record"><b>Ticket 4821</b> &middot; Customer: [redacted]<br>Issue: billing sync failed<br>Resolution: re-authorised card<br>Handoff: [redacted] &middot; 14 Mar</div>
+        </div>
+        <div class="flow-step reveal">
+          <span class="flow-num">02</span>
+          <h3>Rights and PII review</h3>
+          <p>Contracts, customer terms and personal information are checked before anything is shared.</p>
+        </div>
+        <div class="flow-step reveal">
+          <span class="flow-num">03</span>
+          <h3>Scoped and de-identified</h3>
+          <p>Personal data is removed or minimised, then reviewed again. Removing names alone does not make data anonymous.</p>
+        </div>
+        <div class="flow-step reveal">
+          <span class="flow-num">04</span>
+          <h3>Buyer sees the licensed scope</h3>
+          <p>Scope, purpose and length of licence are set in the terms you approve. You approve every buyer.</p>
+        </div>
+      </div>
+      <p class="flow-note">Illustrative example, not a real record. Every dataset is reviewed on its own terms. <a href="trust.html">How we handle your data</a></p>
+    </div>
+  </section>
+
+  <section class="section" id="who">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Who this is for</p>
+        <h2>Start where your business sits.</h2>
+        <p>Accounting and law firms can qualify with smaller teams. Every sector brings its own rights and confidentiality questions, which we review first.</p>
+      </div>
+      <div class="tiles">
+        <a class="tile reveal" href="industries.html#professional-services">
+          <span class="tile-label">Accounting firms</span>
+          <span class="tile-text">Engagement files, client correspondence and review notes.</span>
+          <span class="tile-cta">What to check first &rarr;</span>
+        </a>
+        <a class="tile reveal" href="industries.html#professional-services">
+          <span class="tile-label">Law firms</span>
+          <span class="tile-text">Matter files, memos and client communication.</span>
+          <span class="tile-cta">What to check first &rarr;</span>
+        </a>
+        <a class="tile reveal" href="industries.html#software-and-saas">
+          <span class="tile-label">SaaS support teams</span>
+          <span class="tile-text">Resolved tickets, escalations and product discussions.</span>
+          <span class="tile-cta">What to check first &rarr;</span>
+        </a>
+        <a class="tile reveal" href="industries.html#professional-services">
+          <span class="tile-label">Agencies</span>
+          <span class="tile-text">Proposals, creative rounds and client feedback.</span>
+          <span class="tile-cta">What to check first &rarr;</span>
+        </a>
+      </div>
+      <p class="link-row reveal"><a href="industries.html">All industries</a> <a href="who-buys.html">Who buys</a></p>
+    </div>
+  </section>
+
+  <section class="section ink" id="process">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">The process</p>
+        <h2>From a first call to an agreement you approve.</h2>
+      </div>
       <ol class="steps">
         <li class="reveal">
           <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-search"/></svg></span>
@@ -142,39 +264,56 @@ inlineScript: |
     </div>
   </section>
 
-  <section class="section teal-soft">
+  <section class="section mist" id="mode">
     <div class="wrap">
-      <p class="kicker reveal">03 / What affects a deal</p>
-      <h2 class="reveal">Rights, consent and content shape what buyers will consider.</h2>
-      <p class="reveal">Buyers look at whether data can be licensed, how recent and complete it is, and what personal information it holds. We check these before any buyer sees it.</p>
-      <p class="link-row reveal"><a href="what-affects-a-deal.html">What affects a deal</a></p>
+      <div class="section-head reveal">
+        <p class="kicker">Meet Mode</p>
+        <h2>Mode leads the buyer conversation. You stay in charge.</h2>
+        <p>Mode is the team that takes data licensing for AI forward once an introduction is made. They assess the opportunity and lead any discussion with buyers. Nothing is agreed without your approval.</p>
+      </div>
+      <p class="link-row reveal"><a href="ai-buyers.html">Learn how Mode works</a> <a href="trust.html">How we handle your data</a></p>
+    </div>
+  </section>
+
+  <section class="section refer-band" id="refer">
+    <div class="wrap refer-inner">
+      <div class="reveal">
+        <p class="kicker">Refer a company</p>
+        <h2>Know a company sitting on years of records?</h2>
+        <p class="muted">You don't need to sell anything, understand AI, or convince anyone to hand over their systems. We take it from there.</p>
+      </div>
+      <div class="reveal">
+        <p class="refer-amount">$50,000 or 6%</p>
+        <p class="muted">of the partnership value, whichever is bigger, when an introduction becomes a qualified data partner and the deal closes.</p>
+        <p><a class="btn" href="refer.html">Refer a company</a></p>
+        <p class="refer-terms">Mode's stated terms. Your referral is confirmed in writing before any deal moves forward. <a href="refer.html">Read the referral terms</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="questions">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Questions</p>
+        <h2>The things people ask first.</h2>
+      </div>
+      <div class="faq reveal">
+        <details><summary>Can I sell data my customers created?</summary><p>It depends on your contracts and the tool's terms. We check this before any buyer sees the data.</p></details>
+        <details><summary>Is anonymised data safe to share?</summary><p>Removing names does not make data anonymous. Personal information gets its own review.</p></details>
+        <details><summary>How much could my data be worth?</summary><p>We do not publish prices, because value depends on the data, the rights and the terms. We discuss it on a call.</p></details>
+        <details><summary>What fees apply?</summary><p>Fees are agreed in writing before any deal moves forward.</p></details>
+        <details><summary>How long does it take?</summary><p>It depends on the data and the rights review. We tell you the likely steps on the first call.</p></details>
+      </div>
+      <p class="link-row reveal"><a href="faq.html">All questions</a> <a href="what-affects-a-deal.html">What affects a deal</a></p>
     </div>
   </section>
 
   <section class="section cta-band">
     <div class="wrap reveal">
-      <p class="kicker">04 / Your data, your decision</p>
+      <p class="kicker">Your data, your decision</p>
       <h2>Curious? Let's talk.</h2>
-      <p class="muted" style="margin-left:auto;margin-right:auto;">A short call is the first step. Bring a rough picture of your data and we will take it from there.</p>
-      <p><a class="btn" href="contact.html">Book a call</a></p>
-    </div>
-  </section>
-
-  <section class="section mist">
-    <div class="wrap">
-      <p class="kicker reveal">Meet Mode</p>
-      <h2 class="reveal">Mode leads the buyer conversation. You stay in charge.</h2>
-      <p class="reveal">Mode is the team that takes data licensing for AI forward once an introduction is made. They assess the opportunity and lead any discussion with buyers. Nothing is agreed without your approval.</p>
-      <p class="link-row reveal"><a href="ai-buyers.html">Learn how Mode works</a> <a href="trust.html">How we handle your data</a></p>
-    </div>
-  </section>
-
-  <section class="section teal-soft">
-    <div class="wrap">
-      <p class="kicker reveal">Refer a company</p>
-      <h2 class="reveal">Know a company sitting on years of records?</h2>
-      <p class="reveal">Mode pays $50,000 or 6% of the partnership value, whichever is bigger, when an introduction becomes a qualified data partner and the deal closes. You don't need to sell anything. We take it from there.</p>
-      <p class="link-row reveal"><a href="refer.html">Refer a company</a></p>
+      <p class="muted">A short call is the first step. Bring a rough picture of your data and we will take it from there.</p>
+      <p><a class="btn" href="contact.html">Book a call</a> <a class="btn btn-ghost" href="#buyer-view">See what a buyer sees</a></p>
     </div>
   </section>
 </main>
