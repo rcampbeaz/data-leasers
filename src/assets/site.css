@@ -1138,7 +1138,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 .read-next a:hover,
-.read-next a:focus-visible { background: rgba(45, 212, 191, 0.14); border-color: rgba(45, 212, 191, 0.5); }
+.read-next a:focus-visible { color: #FFFFFF; background: rgba(45, 212, 191, 0.18); border-color: rgba(45, 212, 191, 0.55); }
 .read-next-arrow { transition: transform 0.2s ease; }
 .read-next a:hover .read-next-arrow { transform: translateX(3px); }
 @media (prefers-reduced-motion: reduce) { .read-next-arrow { transition: none; } .read-next a:hover .read-next-arrow { transform: none; } }
