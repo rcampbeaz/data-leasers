@@ -6,10 +6,31 @@
  * they exist in production: every page keeps its .html path, and the home page
  * stays at the root.
  */
+import fs from "node:fs";
+import path from "node:path";
+import site from "./src/_data/site.js";
+
 export default function (eleventyConfig) {
   // Stylesheets, scripts, logos and robots.txt are referenced by bare filename
   // from every page, so they are copied to the root of the build, not /assets/.
   eleventyConfig.addPassthroughCopy({ "src/assets": "/" });
+
+  // The CDN in front of the site caches by path and ignores the query string, so
+  // "site.css?v=12" and "site.css?v=13" are the same cache entry and a deploy can
+  // keep serving the old stylesheet. Writing the CSS and JS under a content-stamped
+  // name as well means the URL changes exactly when the bytes do.
+  eleventyConfig.on("eleventy.after", ({ dir }) => {
+    const out = (dir && dir.output) || "_site";
+    const stamped = [
+      ["brand-tokens.css", `brand-tokens.${site.assetVersion}.css`],
+      ["site.css", `site.${site.assetVersion}.css`],
+      ["site.js", `site.${site.assetVersion}.js`],
+    ];
+    for (const [from, to] of stamped) {
+      const source = path.join(out, from);
+      if (fs.existsSync(source)) fs.copyFileSync(source, path.join(out, to));
+    }
+  });
 
   // Only real pages belong in the sitemap: the home page first, then
   // alphabetical, matching the order the hand-written sitemap used.

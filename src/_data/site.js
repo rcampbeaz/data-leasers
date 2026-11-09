@@ -1,3 +1,23 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+
+/**
+ * Stamp for the stylesheet and script filenames, derived from their contents.
+ * The CDN caches by path and ignores the query string, so a version query is
+ * not enough: the path itself has to change when the bytes do.
+ */
+function stampAssets() {
+  const hash = createHash("sha256");
+  for (const file of ["src/assets/brand-tokens.css", "src/assets/site.css", "src/assets/site.js"]) {
+    try {
+      hash.update(readFileSync(file));
+    } catch {
+      // A missing asset must not stop the build; the stamp just covers less.
+    }
+  }
+  return hash.digest("hex").slice(0, 10);
+}
+
 /**
  * Single source of truth for navigation, footer links and cache-busting.
  * Editing nav or footer here updates every page on the next build.
@@ -5,8 +25,7 @@
 export default {
   name: "dataleasers",
   url: "https://dataleasers.com",
-  // Bump when site.css or brand-tokens.css changes so browsers fetch fresh CSS.
-  assetVersion: "15",
+  assetVersion: stampAssets(),
 
   // `key` is matched against a page's `navKey` front matter to set aria-current.
   nav: [

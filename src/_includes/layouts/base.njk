@@ -29,8 +29,8 @@
 
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="brand-tokens.css?v={{ site.assetVersion }}">
-<link rel="stylesheet" href="site.css?v={{ site.assetVersion }}">
+<link rel="stylesheet" href="brand-tokens.{{ site.assetVersion }}.css">
+<link rel="stylesheet" href="site.{{ site.assetVersion }}.css">
 {% include "partials/schema.njk" %}
 {%- if analytics.provider == "ga4" and analytics.id %}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.id }}"></script>
@@ -56,7 +56,7 @@
   <a class="btn" href="contact.html">Book a call</a>
   <a class="btn btn-ghost" href="index.html#fit">Check my fit</a>
 </div>
-<script src="site.js?v={{ site.assetVersion }}" defer></script>
+<script src="site.{{ site.assetVersion }}.js" defer></script>
 {%- if inlineScript %}
 {{ inlineScript | safe }}
 {%- endif %}

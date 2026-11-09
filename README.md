@@ -6,7 +6,7 @@ Static marketing site for Data Leasers, LLC, built with [Eleventy](https://www.1
 
 ```
 src/
-  _data/site.js               nav links, footer links, base URL, CSS version
+  _data/site.js               nav links, footer links, base URL, asset stamp
   _includes/layouts/base.njk  document shell: head, header, footer, scripts
   _includes/partials/         header.njk, footer.njk
   assets/                     site.css, brand-tokens.css, site.js, logos, robots.txt
@@ -34,7 +34,7 @@ npm run dev       # local server with live reload at http://localhost:8080
 | Nav item | `nav` in `src/_data/site.js` — every page updates |
 | Footer links | `footer` in `src/_data/site.js` — every page updates |
 | Title, description, canonical | that page's front matter |
-| Styles | `src/assets/site.css` or `brand-tokens.css`, then bump `assetVersion` in `src/_data/site.js` so browsers fetch fresh CSS |
+| Styles | `src/assets/site.css` or `brand-tokens.css` — the build stamps their filenames from the file contents, so an edge cache can never serve a stale copy |
 | Sitemap | nothing — generated from the pages that build |
 
 ## Page front matter
