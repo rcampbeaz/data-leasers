@@ -33,8 +33,8 @@ p { margin: 0 0 var(--space-4); max-width: 68ch; }
 .hero { padding: var(--space-12) 0 var(--space-8); }
 .hero p.lead { font-size: var(--text-lg); color: var(--color-text-muted); }
 .section { padding: var(--space-8) 0; }
-.section.mist { background: var(--dl-mist); }
-.section.teal-soft { background: var(--dl-approved-bg); }
+.section.mist { background: var(--color-surface); }
+.section.teal-soft { background: var(--color-surface-accent); }
 .section.ink { background: var(--dl-ink); color: var(--dl-dark-fg); }
 .section.ink h2, .section.ink h3 { color: var(--dl-dark-fg); }
 .section.ink .muted { color: #B8D9D6; }
@@ -50,7 +50,10 @@ p { margin: 0 0 var(--space-4); max-width: 68ch; }
 .cta-band { background: var(--dl-ink); color: var(--dl-dark-fg); text-align: center; }
 .cta-band h2 { color: var(--dl-dark-fg); margin-top: 0; }
 .cta-band .btn { background: var(--dl-dark-accent); color: var(--dl-ink); }
-.teal-soft .card { background: var(--dl-paper); }
+.cta-band .muted, .cta-band .small-note { color: #B8D9D6; }
+.cta-band .kicker { color: var(--dl-dark-accent); }
+.cta-band a { color: var(--dl-dark-accent); }
+.teal-soft .card { background: var(--color-paper); }
 .step-num { font-size: var(--text-2xl); font-weight: 700; color: var(--dl-teal); margin: 0 0 var(--space-2); }
 .cards { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
 .card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); background: var(--color-bg); }
@@ -84,7 +87,7 @@ textarea { min-height: 120px; }
 .small-note { font-size: var(--text-sm); margin-top: var(--space-4); }
 
 /* Footer */
-.site-footer { border-top: 1px solid var(--color-border); padding: var(--space-8) 0; background: var(--dl-mist); }
+.site-footer { border-top: 1px solid var(--color-border); padding: var(--space-8) 0; background: var(--color-surface); }
 .site-footer .wrap { display: grid; gap: var(--space-4); }
 .site-footer .small { font-size: var(--text-sm); color: var(--color-text-muted); }
 .site-footer .icon { width: 32px; height: 32px; }
@@ -106,10 +109,10 @@ textarea { min-height: 120px; }
 .link-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-4); }
 .link-row a { font-weight: 700; }
 /* Icons */
-.icon-tile { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--dl-mist); color: var(--dl-teal); margin: 0 0 var(--space-4); }
+.icon-tile { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--color-surface); color: var(--dl-teal); margin: 0 0 var(--space-4); }
 .icon-tile svg, .hero-icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .section.ink .icon-tile, .hero.ink .icon-tile { background: #12303F; color: var(--dl-dark-accent); }
-.teal-soft .icon-tile { background: var(--dl-paper); }
+.teal-soft .icon-tile { background: var(--color-paper); }
 .hero-icon { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius-md); background: #12303F; color: var(--dl-dark-accent); margin: 0 0 var(--space-4); }
 .hero-icon svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .steps li .icon-tile { margin-bottom: var(--space-3); }
@@ -183,6 +186,12 @@ textarea { min-height: 120px; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes logoIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+
+/* Ink-coloured outlines would disappear on a dark page */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-secondary { color: var(--color-text); border-color: var(--color-text); }
+}
+:root[data-theme="dark"] .btn-secondary { color: var(--color-text); border-color: var(--color-text); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
