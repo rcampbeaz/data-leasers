@@ -55,7 +55,7 @@ inlineScript: |
       <div class="hero-grid">
         <div>
           <p class="kicker">Data licensing for AI</p>
-          <h1>Your data may be worth more than you think.</h1>
+          <h1>Your data may be <span class="hl">worth more</span> than you think.</h1>
           <p class="lead">The conversations, documents and tickets behind everyday work show AI how real work gets done. dataleasers introduces companies to a data buyer that takes data licensing for AI forward. We start with a conversation about what you hold.</p>
           <div class="hero-actions">
             <a class="btn" href="contact.html">Book a call</a>
@@ -107,7 +107,7 @@ inlineScript: |
   <section class="section" id="fit">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">Quick check</p>
+        <p class="kicker"><span class="kicker-num">01</span>Quick check</p>
         <h2>Four questions, about a minute.</h2>
         <p>These are the data buyer&rsquo;s published minimums, and the check follows them. The company also has to own the records in those systems. Nothing you enter here is stored &mdash; see our <a href="privacy.html">privacy policy</a>.</p>
       </div>
@@ -145,7 +145,7 @@ inlineScript: |
   <section class="section ink" id="what-you-can-sell">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">What you can sell</p>
+        <p class="kicker"><span class="kicker-num">02</span>What you can sell</p>
         <h2>The records your team already keeps may be useful to AI teams.</h2>
         <p>AI teams look for real work: how problems were solved, how decisions were made, how projects moved. Much of it already sits in tools you use every day.</p>
       </div>
@@ -154,16 +154,35 @@ inlineScript: |
           <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-chat"/></svg></span>
           <h3>Conversations</h3>
           <ul class="examples"><li>Chat and call threads</li><li>Shared inboxes</li><li>Decision threads</li></ul>
+          <div class="mock" aria-hidden="true">
+            <div class="mock-head"><span>#customer-success</span><span class="mock-tag">Illustrative</span></div>
+            <div class="mock-msg"><span class="mock-avatar"></span><div><span class="mock-name">Customer</span>Can the duplicate charge be refunded without a call?</div></div>
+            <div class="mock-msg"><span class="mock-avatar"></span><div><span class="mock-name">Agent</span>Yes &mdash; approved in the thread, note added to the account.</div></div>
+            <span class="mock-pill">Decision logged</span>
+          </div>
         </div>
         <div class="card reveal">
           <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-support"/></svg></span>
           <h3>Customer support</h3>
           <ul class="examples"><li>Resolved tickets</li><li>Agent notes</li><li>Escalations</li></ul>
+          <div class="mock" aria-hidden="true">
+            <div class="mock-head"><span>Ticket 4821</span><span class="mock-status">Resolved</span></div>
+            <p class="mock-subject">Billing sync failed</p>
+            <div class="mock-timeline"><span class="done">Reported</span><span class="done">Diagnosed</span><span class="done">Fixed</span><span>Confirmed</span></div>
+            <p class="mock-foot">Card re-authorised &middot; 14 Mar</p>
+          </div>
         </div>
         <div class="card reveal">
           <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-doc"/></svg></span>
           <h3>Documents</h3>
           <ul class="examples"><li>SOPs and playbooks</li><li>Proposals and reports</li><li>Revision history</li></ul>
+          <div class="mock" aria-hidden="true">
+            <div class="mock-versions"><b>v1</b><b>v2</b><b class="on">v3</b></div>
+            <p class="mock-subject">Onboarding playbook</p>
+            <div class="mock-line del">Escalate after 2 hours</div>
+            <div class="mock-line add">Escalate after 1 hour, with a named owner</div>
+            <p class="mock-foot">Earlier versions kept in the file history</p>
+          </div>
         </div>
       </div>
       <p class="link-row reveal"><a href="what-you-can-sell.html">See every data type</a> <a href="what-affects-a-deal.html">What affects a deal</a></p>
@@ -173,7 +192,7 @@ inlineScript: |
   <section class="section mist" id="buyer-view">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">What a buyer sees</p>
+        <p class="kicker"><span class="kicker-num">03</span>What a buyer sees</p>
         <h2>From your records to a licensed dataset.</h2>
         <p>A plain picture of the steps between your systems and a buyer. Nothing is shared until the rights are clear and you approve the terms.</p>
       </div>
@@ -200,6 +219,22 @@ inlineScript: |
           <p>Scope, purpose and length of licence are set in the terms you approve. You approve every buyer.</p>
         </div>
       </div>
+      <div class="redact">
+        <div class="redact-panel">
+          <h3>In your systems</h3>
+          <p class="redact-row"><span>Customer name</span><b>present</b></p>
+          <p class="redact-row"><span>Email address</span><b>present</b></p>
+          <p class="redact-row"><span>Issue</span><b>billing sync failed</b></p>
+          <p class="redact-row"><span>Resolution</span><b>card re-authorised</b></p>
+        </div>
+        <div class="redact-panel buyer">
+          <h3>In the licensed scope</h3>
+          <p class="redact-row"><span>Customer name</span><b>[redacted]</b></p>
+          <p class="redact-row"><span>Email address</span><b>[redacted]</b></p>
+          <p class="redact-row"><span>Issue</span><b>billing sync failed</b></p>
+          <p class="redact-row"><span>Resolution</span><b>card re-authorised</b></p>
+        </div>
+      </div>
       <p class="flow-note">Illustrative example, not a real record. Every dataset is reviewed on its own terms. <a href="trust.html">How we handle your data</a></p>
     </div>
   </section>
@@ -207,9 +242,15 @@ inlineScript: |
   <section class="section" id="who">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">Who this is for</p>
+        <p class="kicker"><span class="kicker-num">04</span>Who this is for</p>
         <h2>Start where your business sits.</h2>
         <p>Accounting, finance and medical firms can qualify with smaller teams, and law firms with smaller teams again. Every sector brings its own rights and confidentiality questions, which we review first.</p>
+      </div>
+<div class="criteria">
+        <div><span class="criteria-num">30+</span><span class="criteria-label">full-time U.S. office staff &mdash; 10+ for accounting, finance or medical firms, 6+ for law firms</span></div>
+        <div><span class="criteria-num">3+</span><span class="criteria-label">years operating, with those years of records still in the systems</span></div>
+        <div><span class="criteria-num">5+</span><span class="criteria-label">systems holding the work: email, chat, file storage, CRM and one more</span></div>
+        <div><span class="criteria-num">Half</span><span class="criteria-label">of staff or more working from U.S. offices</span></div>
       </div>
       <div class="tiles">
         <a class="tile reveal" href="industries.html#professional-services">
@@ -240,7 +281,7 @@ inlineScript: |
   <section class="section ink" id="process">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">The process</p>
+        <p class="kicker"><span class="kicker-num">05</span>The process</p>
         <h2>From a first call to an agreement you approve.</h2>
       </div>
       <ol class="steps">
@@ -267,7 +308,7 @@ inlineScript: |
   <section class="section mist" id="buyer">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">Who we introduce you to</p>
+        <p class="kicker"><span class="kicker-num">06</span>Who we introduce you to</p>
         <h2>The data buyer leads the conversation. You stay in charge.</h2>
         <p>The data buyer takes data licensing for AI forward once an introduction is made. It assesses the opportunity and leads any discussion with AI teams. The agreement is between your company and the data buyer, and nothing is agreed without your approval.</p>
       </div>
@@ -294,7 +335,7 @@ inlineScript: |
   <section class="section" id="questions">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker">Questions</p>
+        <p class="kicker"><span class="kicker-num">07</span>Questions</p>
         <h2>The things people ask first.</h2>
       </div>
       <div class="faq reveal">
