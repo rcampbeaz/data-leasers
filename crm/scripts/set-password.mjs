@@ -31,7 +31,12 @@ const USAGE = `Usage:
 
 Environment (read from .env, .env.local or ../.env if not already set):
   SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL
-  SUPABASE_SERVICE_ROLE_KEY
+  SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY
+
+Where to find the key: Supabase Dashboard -> your project -> Settings ->
+API Keys. Use the "Legacy API keys" tab for service_role (starts with eyJ),
+or the "Secret keys" tab for a key starting with sb_secret_. The publishable
+key (sb_publishable_) will not work: it cannot read or write other users.
 
 Run this from the crm directory, which is where .env lives.`;
 
@@ -74,12 +79,27 @@ if (password.length < 12) {
 loadEnvFile(['.env.local', '.env', '../.env']);
 
 const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+const serviceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_SECRET_KEY ??
+  process.env.SUPABASE_SERVICE_KEY ??
+  '';
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
+if (serviceKey.startsWith('sb_publishable_') || serviceKey.startsWith('sb_PUBLISHABLE')) {
+  console.error('That is the publishable key, which cannot change other users.');
+  console.error('Use service_role from Settings > API Keys > Legacy API keys,');
+  console.error('or a secret key (sb_secret_...) from the Secret keys tab.');
+  process.exit(1);
+}
 
 if (!url || !serviceKey) {
   console.error('Missing Supabase configuration.');
-  console.error(url ? '  SUPABASE_SERVICE_ROLE_KEY is not set.' : '  SUPABASE_URL is not set.');
+  console.error(
+    url
+      ? '  No service key: set SUPABASE_SERVICE_ROLE_KEY (legacy service_role) or SUPABASE_SECRET_KEY (sb_secret_).'
+      : '  SUPABASE_URL is not set.',
+  );
   console.error('');
   console.error('If you are not in the crm directory, cd into it first:');
   console.error('  cd crm && node scripts/set-password.mjs ...');
@@ -88,16 +108,20 @@ if (!url || !serviceKey) {
 
 const host = url.replace(/^https?:\/\//, '');
 
+// Legacy JWT keys work on either header. New sb_secret_ keys are not JWTs and
+// must go on apikey only, so they are never sent as a bearer token.
+function authHeaders(key) {
+  const headers = { apikey: key, 'Content-Type': 'application/json' };
+  if (!key.startsWith('sb_')) headers.Authorization = `Bearer ${key}`;
+  return headers;
+}
+
 async function api(path, { method = 'GET', body, key = serviceKey } = {}) {
   let res;
   try {
     res = await fetch(`${url}/auth/v1${path}`, {
       method,
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(key),
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (e) {
