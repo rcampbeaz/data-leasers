@@ -36,7 +36,6 @@ export default {
 
   // `key` is matched against a page's `navKey` front matter to set aria-current.
   nav: [
-    { key: "home", href: "index.html", label: "Home" },
     { key: "data-owners", href: "data-owners.html", label: "For companies" },
     { key: "what-you-can-sell", href: "what-you-can-sell.html", label: "What you can sell" },
     { key: "how-it-works", href: "how-it-works.html", label: "How it works" },

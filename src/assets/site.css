@@ -1625,3 +1625,42 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   .compare td.is-us { background: none; border-left: 2px solid var(--dl-teal-ink); padding-left: 12px; margin-top: 4px; }
   .compare td.is-us::before { color: var(--dl-teal-ink); }
 }
+
+/* ---------- Header nav: a segmented cluster instead of a line of links ----------
+   Six text links plus a long CTA wrapped to a second line with a single item on
+   it. The logo is the home link, so the nav carries five, sits in its own
+   rounded track and is not allowed to wrap. */
+.nav-desktop {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 2px;
+  padding: 4px; border-radius: 999px;
+  background: rgba(15, 42, 71, 0.045);
+  border: 1px solid rgba(15, 42, 71, 0.07);
+}
+.nav-desktop a {
+  padding: 7px 12px; border-radius: 999px; white-space: nowrap;
+  font-size: 13.5px; font-weight: 550; color: var(--color-text);
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.nav-desktop a::after { display: none; }
+.nav-desktop a:hover { background: rgba(255, 255, 255, 0.92); color: var(--dl-teal-ink); }
+.nav-desktop a[aria-current="page"] {
+  background: #FFFFFF; color: var(--dl-teal-ink); font-weight: 650;
+  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.1), 0 0 0 1px rgba(15, 42, 71, 0.06);
+}
+@media (max-width: 1160px) {
+  .header-inner { gap: var(--space-3); }
+  .nav-desktop { margin-left: var(--space-2); }
+  .nav-desktop a { padding: 6px 9px; font-size: 12.5px; }
+}
+
+/* Link rows: pairs on small screens so a wrap never leaves one orphan link,
+   and an arrow that moves on hover. */
+.link-row a {
+  display: inline-flex; align-items: center; gap: 7px;
+  border-bottom: 1px solid rgba(31, 167, 154, 0.38); padding-bottom: 2px;
+}
+.link-row a::after { content: "\2192"; font-weight: 500; transition: transform 0.18s ease; }
+.link-row a:hover::after { transform: translateX(3px); }
+@media (max-width: 860px) {
+  .link-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-4); }
+}
