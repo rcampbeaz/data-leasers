@@ -8,16 +8,23 @@
   /* Core palette — credible and calm, closer to financial services than to a startup */
   --dl-navy: #0F2A47;
   --dl-navy-deep: #0A1E33;
-  --dl-teal: #1FA79A;
-  --dl-teal-ink: #0E6F68;    /* teal that is safe for text on light backgrounds */
-  --dl-teal-bright: #2DD4BF; /* teal for dark backgrounds */
+  /* Accent: copper, warm against navy. Sand is the same accent for dark surfaces. */
+  --dl-copper: #9A5227;
+  --dl-copper-ink: #8C4A22;  /* copper that is safe for text on light backgrounds */
+  --dl-sand: #E8B98A;        /* copper's light partner: used on navy */
+  --dl-parchment: #EFE5D8;   /* soft section surface, warmer than white */
+
+  /* Legacy names kept so existing markup and the CRM keep working */
+  --dl-teal: var(--dl-copper);
+  --dl-teal-ink: var(--dl-copper-ink);
+  --dl-teal-bright: var(--dl-sand);
   --dl-cream: #F7F5F0;
   --dl-paper: #FFFFFF;
   --dl-charcoal: #1F2933;
-  --dl-slate: #45535F;
+  --dl-slate: #4E5B68;   /* darkened for AA on parchment */
   --dl-gold: #C9A227;
   --dl-gold-ink: #7A5E00;    /* gold that is safe for text on light backgrounds */
-  --dl-border: #E2DED5;
+  --dl-border: #E3D5C4;
   --dl-border-dark: #23425F;
 
   /* Legacy aliases kept so existing markup and the CRM keep working */
@@ -26,8 +33,8 @@
   --dl-amber: var(--dl-gold);
 
   /* Semantic states (CRM) */
-  --dl-approved-bg: #D7EFEA;
-  --dl-approved-fg: #0B5B54;
+  --dl-approved-bg: #E7EFE1;
+  --dl-approved-fg: #2F5B3C;
   --dl-review-bg: #FBF0DA;
   --dl-review-fg: #7A4B05;
   --dl-blocked-bg: #FBE3E0;
