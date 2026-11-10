@@ -55,6 +55,7 @@ export default {
     secondary: [
       { href: "what-affects-a-deal.html", label: "What affects a deal" },
       { href: "trust.html", label: "How we handle data" },
+      { href: "market.html", label: "The market" },
       { href: "faq.html", label: "FAQ" },
       { href: "privacy.html", label: "Privacy" },
       { href: "consent.html", label: "Consent" },
