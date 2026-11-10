@@ -1,5 +1,7 @@
 {%- set crumbLabel = title | replace(" | DataLeasers", "") -%}
 {%- set org = site.url + "/#organization" -%}
+{%- set person = site.url + "/about.html#person" -%}
+{%- set pageType = schemaType or "WebPage" -%}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -12,7 +14,8 @@
       "url": "{{ site.url }}/",
       "logo": { "@type": "ImageObject", "url": "{{ site.url }}/logo.svg" },
       "description": "Data Leasers, LLC introduces operating companies to the data buyers and AI labs that license company data for AI.",
-      "address": { "@type": "PostalAddress", "addressRegion": "AZ", "addressCountry": "US" }
+      "address": { "@type": "PostalAddress", "addressRegion": "AZ", "addressCountry": "US" }{% if siteAuthor.enabled and siteAuthor.name %},
+      "founder": { "@id": "{{ person }}" }{% endif %}
     },
     {
       "@type": "WebSite",
@@ -23,7 +26,7 @@
       "inLanguage": "en-US"
     },
     {
-      "@type": "WebPage",
+      "@type": "{{ pageType }}",
       "@id": "{{ canonical }}#webpage",
       "url": "{{ canonical }}",
       "name": {{ title | dump | safe }},
@@ -31,10 +34,22 @@
       "isPartOf": { "@id": "{{ site.url }}/#website" },
       "about": { "@id": "{{ org }}" },{% if updated %}
       "dateModified": "{{ updated }}",{% endif %}
-      "author": {% if siteAuthor.enabled and siteAuthor.name %}{ "@type": "Person", "name": {{ siteAuthor.name | dump | safe }}, "address": { "@type": "PostalAddress", "addressRegion": "AZ", "addressCountry": "US" }{% if siteAuthor.role %}, "jobTitle": {{ siteAuthor.role | dump | safe }}{% endif %}{% if siteAuthor.url %}, "url": {{ siteAuthor.url | dump | safe }}{% endif %} }{% else %}{ "@id": "{{ org }}" }{% endif %},
+      "author": {% if siteAuthor.enabled and siteAuthor.name %}{ "@id": "{{ person }}" }{% else %}{ "@id": "{{ org }}" }{% endif %},
       "primaryImageOfPage": { "@type": "ImageObject", "url": "{{ site.url }}/og-card.png" },
       "inLanguage": "en-US"
-    }{% if bodyClass != "home" and not noindex %},
+    }{% if siteAuthor.enabled and siteAuthor.name %},
+    {
+      "@type": "Person",
+      "@id": "{{ person }}",
+      "name": {{ siteAuthor.name | dump | safe }},{% if siteAuthor.role %}
+      "jobTitle": {{ siteAuthor.role | dump | safe }},{% endif %}{% if siteAuthor.bio %}
+      "description": {{ siteAuthor.bio | dump | safe }},{% endif %}
+      "url": "{{ site.url }}/about.html",{% if siteAuthor.photo %}
+      "image": "{{ site.url }}/{{ siteAuthor.photo }}",{% endif %}
+      "address": { "@type": "PostalAddress", "addressRegion": "AZ", "addressCountry": "US" },
+      "worksFor": { "@id": "{{ org }}" }{% if siteAuthor.url %},
+      "sameAs": [{{ siteAuthor.url | dump | safe }}]{% endif %}
+    }{% endif %}{% if bodyClass != "home" and not noindex %},
     {
       "@type": "BreadcrumbList",
       "itemListElement": [

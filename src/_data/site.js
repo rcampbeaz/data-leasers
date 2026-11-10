@@ -63,6 +63,7 @@ export default {
       { href: "buyer-terms.html", label: "Buyer terms" },
       { href: "glossary.html", label: "Glossary" },
       { href: "editorial-standards.html", label: "Editorial standards" },
+      { href: "about.html", label: "About" },
     ],
     guides: [
       { href: "learn.html", label: "Start here" },

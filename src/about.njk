@@ -1,0 +1,90 @@
+---
+layout: layouts/base.njk
+permalink: "/about.html"
+title: "About DataLeasers and Rod Campbell"
+description: "Who runs DataLeasers, how the company gets paid, what it refuses to do for a seller, and how to check every claim on this site yourself."
+canonical: "https://dataleasers.com/about.html"
+updated: "2026-11-10"
+schemaType: "AboutPage"
+---
+<main id="main">
+  <section class="hero ink">
+    <div class="wrap">
+      <p class="kicker">About</p>
+      <h1>About DataLeasers</h1>
+      <p class="lead">DataLeasers is an introduction business, registered in Arizona, that puts operating companies in front of the data buyers and AI labs that license company records. One person runs it, and the rules it works by are published on this site.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap">
+      <div class="about-grid">
+        <div class="author-portrait">
+          {%- if siteAuthor.photo %}
+          <img src="{{ siteAuthor.photo }}" alt="{{ siteAuthor.name }}, {{ siteAuthor.role }} of DataLeasers" width="264" height="264">
+          {%- else %}
+          <!-- Headshot goes here: set siteAuthor.photo in src/_data/siteAuthor.js and it renders in this frame. -->
+          <span aria-hidden="true">RC</span>
+          {%- endif %}
+        </div>
+        <div class="prose">
+          <h2 class="reveal">{{ siteAuthor.name }}, {{ siteAuthor.role | lower }}</h2>
+          <p class="reveal">{{ siteAuthor.bio }}</p>
+          <p class="reveal">He works from {{ siteAuthor.location }}. Data Leasers, LLC is registered in Arizona, and the company&rsquo;s registration is the only address a buyer needs before a conversation starts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap prose">
+      <h2 class="reveal">What the company actually does</h2>
+      <p class="reveal">A company with sellable records usually hears from one buyer at a time, which makes it impossible to tell a fair offer from the only offer. DataLeasers changes the order of events.</p>
+      <ul class="checklist reveal">
+        <li><strong>Parallel conversations</strong>The same dataset goes to several buyers and AI labs at once, so what comes back can be compared on scope, term and price rather than accepted on faith.</li>
+        <li><strong>Written terms</strong>What each buyer asks for is recorded, including the requests that are bad for a seller, such as long exclusivity or broad sublicensing.</li>
+        <li><strong>Company approval</strong>Terms come back for the company to approve in writing. Nothing about the data moves before that signature.</li>
+      </ul>
+      <p class="link-row reveal"><a href="how-it-works.html">How a deal runs</a> <a href="what-affects-a-deal.html">What changes the terms</a></p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">How DataLeasers gets paid</h2>
+      <p class="reveal">The data buyer pays DataLeasers when a company it introduced signs a licence. A company selling its data pays nothing for the introduction. That payment comes after signature, following processing of the deal.</p>
+      <p class="reveal">The reason to state it plainly is that the incentive is visible: an introduction business earns only when a licence is signed, so it has no reason to talk a company out of a deal, and no reason to talk it into a bad one. Where that tension shows up, it is written on the page rather than left out.</p>
+      <p class="link-row reveal"><a href="refer.html">Referral terms</a> <a href="editorial-standards.html">Editorial standards</a></p>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap prose">
+      <h2 class="reveal">What it will not do</h2>
+      <ul class="checklist reveal">
+        <li><strong>Sign on a company&rsquo;s behalf</strong>Every agreement is the company&rsquo;s own, reviewed by the company.</li>
+        <li><strong>Take ownership of the data</strong>This is an introduction business. It does not buy corpora, resell them, or hold a sublicence over them.</li>
+        <li><strong>Quote a price before seeing the corpus</strong>No honest figure exists before diligence, so none is offered.</li>
+        <li><strong>Publish a figure it cannot trace</strong>Every number on this site carries a date and the page it came from.</li>
+      </ul>
+      <p class="link-row reveal"><a href="rights-file.html">What you keep</a> <a href="buyer-terms.html">The buyer&rsquo;s terms</a></p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">Where it works</h2>
+      <p class="reveal">Companies in the United States, Canada, the United Kingdom and Australia. The four countries are not a marketing claim: they are the markets where the buyers in question will accept a licence and where the referral terms apply.</p>
+      <p class="link-row reveal"><a href="where-to-sell.html">Where to sell</a> <a href="market.html">What the market pays</a></p>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap prose">
+      <h2 class="reveal">How to check all of this</h2>
+      <p class="reveal">Nothing here asks to be taken on trust. The published figures, the buyer&rsquo;s terms including the ones that favour the buyer, and the rules for sourcing a claim are all on their own pages, with dates.</p>
+      <p class="link-row reveal"><a href="market.html">The market</a> <a href="buyer-terms.html">Buyer terms</a> <a href="glossary.html">Glossary</a> <a href="editorial-standards.html">Editorial standards</a></p>
+      <p class="reveal">If something on this site is wrong, <a href="contact.html">say which page and which sentence</a>. It gets checked against the source and corrected with the date.</p>
+    </div>
+  </section>
+</main>
