@@ -316,14 +316,70 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
 .prose h2 { margin-top: 28px; font-size: 19px; }
 .prose ul { padding-left: 20px; }
 
+/* ---------- filters, search rows and inline forms ---------- */
+.page { min-width: 0; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.filters a {
+  padding: 7px 13px;
+  border: 1px solid var(--dl-line);
+  border-radius: 999px;
+  color: var(--dl-text-2);
+  text-decoration: none;
+  font-size: 14px;
+}
+.filters a:hover { border-color: var(--dl-line-strong); color: var(--dl-text); }
+.filters a.active {
+  background: rgba(47, 107, 255, 0.16);
+  border-color: rgba(47, 107, 255, 0.45);
+  color: var(--dl-electric-ink);
+}
+
+.form-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 16px; }
+.form-row input[type="search"], .form-row input[type="text"] { flex: 1 1 260px; min-width: 0; }
+
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin-top: 12px; }
+.form-grid label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; color: var(--dl-text-2); }
+.form-grid .span-2 { grid-column: 1 / -1; }
+
+.form-row input, .form-grid input, .form-grid select, .form-grid textarea {
+  font: inherit;
+  padding: 9px 10px;
+  color: var(--dl-text);
+  background: var(--dl-gunmetal-deep);
+  border: 1px solid var(--dl-line-strong);
+  border-radius: var(--radius-sm);
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .two-col { grid-template-columns: 1fr; }
   .content { padding: 24px 20px 56px; }
 }
 @media (max-width: 720px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; border-right: 0; border-bottom: 1px solid var(--dl-line); }
-  .sidebar .logo { width: 104px; margin: 0 12px 0 0; }
-  .sidebar-foot { margin-left: auto; border-top: 0; padding-top: 0; grid-auto-flow: column; align-items: center; }
+  /* The grid stretched the sidebar row to half the viewport, which spread the
+     links into a wall. Block layout plus a two-column menu keeps it compact. */
+  .shell { display: block; }
+  .sidebar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 8px;
+    padding: 14px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--dl-line);
+  }
+  .sidebar .logo { grid-column: 1 / -1; width: 120px; margin: 0 0 8px; }
+  .sidebar-foot {
+    grid-column: 1 / -1;
+    margin: 10px 0 0;
+    border-top: 1px solid var(--dl-line);
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .sidebar .who { padding: 0; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .span-2 { grid-column: auto; }
 }

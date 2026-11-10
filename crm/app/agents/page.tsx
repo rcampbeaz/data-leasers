@@ -96,7 +96,7 @@ export default async function AgentsPage({
             <header>
               <strong>{d.title ?? d.kind}</strong>{' '}
               <span className="stage">{d.status}</span>{' '}
-              <span className="muted">{new Date(d.created_at).toLocaleString('en-GB')}</span>
+              <span className="muted">{new Date(d.created_at).toLocaleString('en-US')}</span>
             </header>
             <pre className="wrap-cell">{d.body}</pre>
             {canRun && d.status === 'pending' ? (

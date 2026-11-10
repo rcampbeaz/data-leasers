@@ -222,8 +222,8 @@ export default async function CompanyPage({
             {(activities.data ?? []).map((a) => (
               <li key={a.id}>
                 <strong>{a.kind}</strong>
-                {a.call_at ? ` on ${new Date(a.call_at).toLocaleString('en-GB')}` : ''}
-                {' · '}{new Date(a.created_at).toLocaleDateString('en-GB')}
+                {a.call_at ? ` on ${new Date(a.call_at).toLocaleString('en-US')}` : ''}
+                {' · '}{new Date(a.created_at).toLocaleDateString('en-US')}
                 {a.body ? <div className="wrap-cell">{a.body}</div> : null}
               </li>
             ))}
@@ -236,7 +236,7 @@ export default async function CompanyPage({
         {(history.data ?? []).length === 0 ? <p className="muted">No changes yet.</p> : (
           <ul className="list small">
             {(history.data ?? []).map((h, i) => (
-              <li key={i}>{h.from_stage ?? 'Start'} to {h.to_stage} · {new Date(h.changed_at).toLocaleString('en-GB')}</li>
+              <li key={i}>{h.from_stage ?? 'Start'} to {h.to_stage} · {new Date(h.changed_at).toLocaleString('en-US')}</li>
             ))}
           </ul>
         )}

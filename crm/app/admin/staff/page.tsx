@@ -99,7 +99,7 @@ export default async function StaffPage({
                 <td>{p.email ? <a href={`mailto:${p.email}`}>{p.email}</a> : <span className="muted">-</span>}</td>
                 <td>{p.phone ?? <span className="muted">-</span>}</td>
                 <td>{ROLE_LABELS[r.role as Role] ?? r.role}</td>
-                <td>{new Date(r.created_at).toLocaleDateString('en-GB')}</td>
+                <td>{new Date(r.created_at).toLocaleDateString('en-US')}</td>
               </tr>
             );
           })}

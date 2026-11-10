@@ -69,7 +69,7 @@ export default async function TasksPage({
               const late = !t.done && t.due_on < today;
               return (
                 <tr key={t.id} className={late ? 'overdue' : undefined}>
-                  <td>{new Date(t.due_on + 'T00:00:00').toLocaleDateString('en-GB')}{late ? ' (overdue)' : ''}</td>
+                  <td>{new Date(t.due_on + 'T00:00:00').toLocaleDateString('en-US')}{late ? ' (overdue)' : ''}</td>
                   <td>{t.title}</td>
                   <td>
                     {t.companies ? <Link href={`/companies/${t.companies.id}`}>{t.companies.name}</Link> : '-'}

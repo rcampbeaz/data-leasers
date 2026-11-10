@@ -91,7 +91,7 @@ export default async function LeadsPage({
               const company = lead.companies?.[0];
               return (
                 <tr key={lead.id}>
-                  <td>{new Date(lead.created_at).toLocaleDateString('en-GB')}</td>
+                  <td>{new Date(lead.created_at).toLocaleDateString('en-US')}</td>
                   <td>{lead.company}</td>
                   <td>
                     {lead.name}

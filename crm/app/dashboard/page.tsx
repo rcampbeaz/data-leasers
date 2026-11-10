@@ -14,7 +14,7 @@ function lastMonths(count: number) {
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
     months.push({
       key: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`,
-      label: d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
+      label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
     });
   }
   return months;
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
                 <li key={i}>
                   <Link href={`/pipeline`}>{name(h.companies)}</Link> moved{' '}
                   {h.from_stage ? <>from <strong>{h.from_stage}</strong> </> : null}to <strong>{h.to_stage}</strong>{' '}
-                  <span className="muted small">{new Date(h.changed_at).toLocaleDateString('en-GB')}</span>
+                  <span className="muted small">{new Date(h.changed_at).toLocaleDateString('en-US')}</span>
                 </li>
               ))}
             </ul>
