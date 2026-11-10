@@ -66,6 +66,9 @@ export default {
       { href: "data-licensing-checklist.html", label: "Licensing checklist" },
       { href: "what-data-do-ai-teams-buy.html", label: "What AI teams buy" },
       { href: "is-my-customer-data-sellable.html", label: "Is customer data sellable?" },
+      { href: "industries.html", label: "Industries" },
+      { href: "who-buys.html", label: "Who buys" },
+      { href: "where-to-sell.html", label: "Where to sell" },
     ],
   },
 };

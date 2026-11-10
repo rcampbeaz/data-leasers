@@ -29,10 +29,12 @@
       "name": {{ title | dump | safe }},
       "description": {{ description | dump | safe }},
       "isPartOf": { "@id": "{{ site.url }}/#website" },
-      "about": { "@id": "{{ org }}" },
+      "about": { "@id": "{{ org }}" },{% if updated %}
+      "dateModified": "{{ updated }}",{% endif %}
+      "author": { "@id": "{{ org }}" },
       "primaryImageOfPage": { "@type": "ImageObject", "url": "{{ site.url }}/og-card.png" },
       "inLanguage": "en-US"
-    }{% if navKey or breadcrumb %},
+    }{% if bodyClass != "home" and not noindex %},
     {
       "@type": "BreadcrumbList",
       "itemListElement": [

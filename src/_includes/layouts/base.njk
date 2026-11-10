@@ -9,6 +9,8 @@
 <meta name="theme-color" content="#0F2A47">
 {%- if noindex %}
 <meta name="robots" content="noindex, follow">
+{%- else %}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 {%- endif %}
 {%- if analytics.searchConsoleVerification %}
 <meta name="google-site-verification" content="{{ analytics.searchConsoleVerification }}">
@@ -51,6 +53,9 @@
   </div>
 </div>
 {% include "partials/header.njk" %}
+{% if bodyClass != "home" and not noindex %}
+{% include "partials/crumbs.njk" %}
+{% endif %}
 
 {{ content | safe }}
 
