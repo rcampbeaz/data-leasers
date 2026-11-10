@@ -13,6 +13,6 @@ export default {
   role: "Founder",
   bio: "Rod Campbell founded DataLeasers, which introduces operating companies to the data buyers that license company records for AI. He works with sellers from the first call, and he sets the rule this site follows: every figure is dated, and every figure is attributed to the page it came from.",
   url: "",
-  photo: "",
+  photo: "rod-campbell.jpg",
   location: "Arizona, United States",
 };
