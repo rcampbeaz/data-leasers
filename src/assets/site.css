@@ -1257,6 +1257,44 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.mist.record-band {
   background-color: #EDE3CE;
   background-image:
-    radial-gradient(760px 380px at 90% -10%, rgba(45, 212, 191, 0.10), transparent 68%),
-    linear-gradient(180deg, #F1E9D8 0%, #E5D9BD 100%);
+    radial-gradient(760px 340px at 92% -6%, rgba(45, 212, 191, 0.10), transparent 68%),
+    radial-gradient(rgba(15, 42, 71, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, #F2EADA 0%, #E6DAC0 100%);
+  background-size: auto, 22px 22px, auto;
+}
+/* The tiled grain reads as diagonal banding on a warm mid-tone, so this band
+   uses an even dot field instead: texture, but no stripes. */
+.section.mist.record-band::after { display: none; }
+
+/* ---------- Record cards: colour key along the top, preview bled to the edges ----------
+   The category colour already existed per card; it now runs as a 3px rule across
+   the top and tints the category chip, and the mock preview stops being an inset
+   panel and becomes the card's lower half. */
+.section.ink .cards-feature .card {
+  position: relative; overflow: hidden;
+  padding-bottom: 0;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.section.ink .cards-feature .card::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 3px; z-index: 2;
+  background: var(--cat, var(--dl-teal));
+}
+.section.ink .cards-feature .card:hover {
+  border-color: rgba(45, 212, 191, 0.5);
+  box-shadow: 0 26px 60px rgba(3, 14, 27, 0.42);
+}
+.section.ink .cards-feature .card-cat {
+  color: var(--dl-navy);
+  background: #F0F2F5;
+  background: color-mix(in srgb, var(--cat, #1FA79A) 15%, #FFFFFF);
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-pill);
+}
+.section.ink .cards-feature .card .mock {
+  flex: 1;
+  margin: var(--space-5) calc(-1 * var(--space-6)) 0;
+  border: 0;
+  border-top: 1px solid rgba(15, 42, 71, 0.09);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: var(--space-5) var(--space-6) var(--space-6);
 }
