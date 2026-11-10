@@ -1299,215 +1299,56 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   padding: var(--space-4) var(--space-6) var(--space-6);
 }
 
-/* ---------- Who this is for: real edges on a cream page ----------
-   White tiles on cream with a beige hairline differ by about 2% lightness, so
-   they read as holes rather than objects. A navy-tinted border plus a soft
-   elevation gives them an edge the eye can find without adding a new colour. */
-.section#who .tiles .tile {
-  background: #FFFFFF;
-  border: 1px solid rgba(15, 42, 71, 0.14);
-  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.06), 0 14px 30px rgba(15, 42, 71, 0.07);
-}
-.section#who .tiles .tile:hover {
-  border-color: rgba(31, 167, 154, 0.55);
-  box-shadow: 0 2px 4px rgba(15, 42, 71, 0.07), 0 20px 44px rgba(15, 42, 71, 0.12);
-}
 
-/* The four figures become panels, so the hairline that used to hold them can go. */
-.section#who .criteria { border-top: 0; padding-top: 0; }
-.section#who .criteria > div {
-  background: #FFFFFF;
-  border: 1px solid rgba(15, 42, 71, 0.12);
-  border-radius: var(--radius-md);
-  padding: var(--space-4) var(--space-4) var(--space-3);
-  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.06), 0 10px 22px rgba(15, 42, 71, 0.05);
-}
-.section#who .criteria-num { margin-bottom: 2px; }
+/* ---------- 04 Who this is for: four equal panels ----------
+   The earlier versions paired a tall stack of figures against a shorter list, so
+   the two halves never ended together and the section read as two boxes that did
+   not belong to each other. It is now one rhythm: the figures in a plain ruled
+   strip, then four equal panels. Each panel carries a drawn graphic across its
+   top, the way the reference does, then a small label, one line of what we look
+   at, and the link. Panels stretch to a common height and the links sit on a
+   common baseline, so the row lines up. */
 
-/* ---------- Who this is for: one ruled stat card, one numbered index card ----------
-   Four identical white boxes followed by four more identical white boxes is what
-   made this section flat. The figures now share a single card divided by hairlines,
-   and the sectors read as an index: a serif numeral, the name, a one-line summary
-   and the link, in rows inside one card. Same markup, different composition. */
-.section#who .criteria {
-  gap: 1px;
-  padding: 0;
-  margin: var(--space-6) 0 var(--space-8);
-  background: rgba(15, 42, 71, 0.10);
-  border: 1px solid rgba(15, 42, 71, 0.12);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.section#who .criteria > div {
-  background: #FFFFFF;
-  border: 0; border-radius: 0; box-shadow: none;
-  padding: var(--space-6);
-}
-
-.section#who .tiles {
-  counter-reset: who-tile;
-  gap: 1px;
-  background: rgba(15, 42, 71, 0.10);
-  border: 1px solid rgba(15, 42, 71, 0.12);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.section#who .tiles .tile {
-  display: grid;
-  grid-template-columns: 60px minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  align-items: baseline;
-  column-gap: var(--space-4);
-  row-gap: var(--space-1);
-  padding: var(--space-6);
-  background: #FFFFFF;
-  border: 0; border-radius: 0; box-shadow: none;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-.section#who .tiles .tile::before {
-  counter-increment: who-tile;
-  content: "0" counter(who-tile);
-  grid-column: 1; grid-row: 1 / span 2;
-  font-family: var(--font-serif);
-  font-size: 30px; line-height: 1;
-  color: rgba(15, 42, 71, 0.22);
-  transition: color 0.2s ease;
-}
-.section#who .tiles .tile-label {
-  grid-column: 2; grid-row: 1;
-  font-family: var(--font-serif); font-weight: 600;
-  font-size: var(--text-lg); letter-spacing: -0.01em;
-  color: var(--dl-navy);
-}
-.section#who .tiles .tile-text { grid-column: 2; grid-row: 2; }
-.section#who .tiles .tile-cta {
-  grid-column: 3; grid-row: 1 / span 2;
-  align-self: center; white-space: nowrap;
-}
-.section#who .tiles .tile:hover { background: #FBFDFC; }
-.section#who .tiles .tile:hover::before { color: var(--dl-teal-ink); }
-
-@media (max-width: 640px) {
-  .section#who .tiles .tile {
-    grid-template-columns: 44px minmax(0, 1fr);
-    row-gap: var(--space-2);
-  }
-  .section#who .tiles .tile::before { font-size: 24px; grid-row: 1 / span 2; }
-  .section#who .tiles .tile-cta { grid-column: 2; grid-row: 3; justify-self: start; }
-}
-
-/* ---------- Who this is for: the index is a list, and the section is a spread ----------
-   The tiles grid was four columns wide on desktop, so each index row was squeezed
-   into ~200px and its link overlapped the summary. A list has one column at every
-   width; the width comes from the composition instead. */
-.section#who .tiles {
-  grid-template-columns: minmax(0, 1fr);
-  counter-reset: who-tile;
-  gap: 1px;
-  background: rgba(15, 42, 71, 0.10);
-  border: 1px solid rgba(15, 42, 71, 0.12);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.section#who .tiles .tile { position: relative; }
-.section#who .tiles .tile::after {
-  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: var(--dl-teal); transform: scaleY(0); transform-origin: top;
-  transition: transform 0.2s ease;
-}
-.section#who .tiles .tile:hover::after,
-.section#who .tiles .tile:focus-visible::after { transform: scaleY(1); }
-
-@media (min-width: 960px) {
-  .section#who > .wrap {
-    display: grid;
-    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
-    column-gap: var(--space-16);
-    align-items: start;
-  }
-  .section#who .section-head { grid-column: 1; margin-bottom: var(--space-8); }
-  .section#who .criteria {
-    grid-column: 1; grid-row: 2;
-    grid-template-columns: minmax(0, 1fr);
-    margin: 0;
-  }
-  .section#who .tiles { grid-column: 2; grid-row: 1 / span 2; }
-  .section#who > .wrap > *:not(.section-head):not(.criteria):not(.tiles) {
-    grid-column: 1 / -1; margin-top: var(--space-8);
-  }
-  .section#who .tiles .tile {
-    padding: var(--space-8);
-    grid-template-columns: 76px minmax(0, 1fr) auto;
-    column-gap: var(--space-6);
-  }
-  .section#who .tiles .tile::before { font-size: 40px; }
-  .section#who .tiles .tile-label { font-size: var(--text-xl); }
-  .section#who .tiles .tile-text { font-size: var(--text-sm); max-width: 54ch; }
-}
-
-/* ---------- Who this is for: its own cool band ----------
-   Sand above and navy below left this section as a cream gap with white cards
-   floating in it. A cool tint gives the cards something to sit against, and it
-   separates this band from the warm sand directly above it. */
 .section#who {
   background-color: #EAEFF3;
   background-image:
     radial-gradient(760px 380px at 88% -12%, rgba(45, 212, 191, 0.10), transparent 68%),
     linear-gradient(180deg, #EFF3F6 0%, #E2E9EF 100%);
 }
-
-/* ---------- Who this is for: a quiet motif per row ----------
-   The rows are wide and empty on the right. A low-contrast pattern there gives
-   the list some feeling without touching the copy: a white gradient sits over the
-   left of each row so the text reads on clean paper, and the motif shows through
-   in the space beside it. One pattern per row, all in the same navy at ~12%. */
-@media (min-width: 720px) {
-  .section#who .tiles .tile:nth-child(1) {
-    background-image:
-      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
-      radial-gradient(circle, rgba(15, 42, 71, 0.13) 1.1px, transparent 1.4px);
-    background-size: 100% 100%, 15px 15px;
-    background-repeat: no-repeat, repeat;
-  }
-  .section#who .tiles .tile:nth-child(2) {
-    background-image:
-      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
-      repeating-radial-gradient(circle, rgba(15, 42, 71, 0.12) 0 1px, transparent 1px 12px);
-    background-size: 100% 100%, 260px 260px;
-    background-position: 0 0, 100% 50%;
-    background-repeat: no-repeat, no-repeat;
-  }
-  .section#who .tiles .tile:nth-child(3) {
-    background-image:
-      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
-      repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.11) 0 1px, transparent 1px 10px);
-    background-size: auto, auto;
-    background-repeat: no-repeat, repeat;
-  }
-  .section#who .tiles .tile:nth-child(4) {
-    background-image:
-      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
-      repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.10) 0 1px, transparent 1px 14px),
-      repeating-linear-gradient(-45deg, rgba(15, 42, 71, 0.10) 0 1px, transparent 1px 14px);
-    background-size: auto, auto, auto;
-    background-repeat: no-repeat, repeat, repeat;
-  }
-}
-
-/* ---------- Who this is for: four matched cards, not a two-column rail ----------
-   The rail put a tall stack of figures beside a shorter list, so the two columns
-   never ended together and the composition made no sense. Now the section runs in
-   one rhythm: a full-width strip of figures, then four equal cards, each with an
-   art panel on top like the reference. */
+.section#who::after { display: none; }
 .section#who > .wrap { display: block; }
-.section#who .section-head { max-width: 760px; margin-bottom: var(--space-8); }
-.section#who .criteria { grid-template-columns: minmax(0, 1fr); margin: 0 0 var(--space-12); }
+.section#who .section-head { max-width: 720px; margin-bottom: var(--space-8); }
+
+/* The figures are a ruled strip, not four more cards competing with the panels. */
+.section#who .criteria {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin: 0 0 var(--space-12);
+  padding: var(--space-6) 0 0;
+  border-top: 1px solid rgba(15, 42, 71, 0.18);
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.section#who .criteria > div {
+  gap: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.section#who .criteria-num { font-size: clamp(26px, 2.4vw, 32px); }
+.section#who .criteria-label { font-size: var(--text-sm); max-width: 36ch; }
+
 @media (min-width: 720px) {
-  .section#who .criteria { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .section#who .criteria { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6); }
+  .section#who .criteria > div { padding-left: var(--space-6); border-left: 1px solid rgba(15, 42, 71, 0.13); }
+  .section#who .criteria > div:first-child { padding-left: 0; border-left: 0; }
 }
 
-.section#who .tiles,
-.section#who .tiles .tile:nth-child(n) { background-image: none; }
+/* Four panels: one row on desktop, two up on tablets, stacked on phones. */
 .section#who .tiles {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1517,72 +1358,70 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   border-radius: 0;
   overflow: visible;
 }
-@media (min-width: 720px) {
+@media (min-width: 620px) {
   .section#who .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (min-width: 1100px) {
-  .section#who .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1040px) {
+  .section#who .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .section#who .tiles .tile {
   display: flex;
   flex-direction: column;
   padding: 0;
+  overflow: hidden;
   background: #FFFFFF;
   border: 1px solid rgba(15, 42, 71, 0.12);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.05), 0 16px 34px rgba(15, 42, 71, 0.08);
-  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.05), 0 14px 30px rgba(15, 42, 71, 0.07);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .section#who .tiles .tile::before,
 .section#who .tiles .tile::after { content: none; }
-.section#who .tiles .tile:hover {
-  transform: translateY(-2px);
+.section#who .tiles .tile:hover,
+.section#who .tiles .tile:focus-visible {
+  transform: translateY(-3px);
   border-color: rgba(31, 167, 154, 0.5);
-  box-shadow: 0 2px 4px rgba(15, 42, 71, 0.06), 0 24px 44px rgba(15, 42, 71, 0.13);
+  box-shadow: 0 2px 4px rgba(15, 42, 71, 0.06), 0 22px 40px rgba(15, 42, 71, 0.12);
 }
 
-/* The art panel is the part the eye lands on; the copy sits under it on white. */
+/* The graphic is the part the eye lands on: a steel panel holding line art drawn
+   at a strength you can actually see, not a pattern at 15% in the corner. */
 .section#who .tiles .tile-art {
   display: block;
-  height: clamp(148px, 17vw, 192px);
-  background-color: #EFF4F6;
-  border-bottom: 1px solid rgba(15, 42, 71, 0.08);
+  position: relative;
+  flex: 0 0 auto;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-height: 220px;
+  background-color: #E0E9ED;
+  background-image: none;
+  border-bottom: 1px solid rgba(15, 42, 71, 0.10);
+  overflow: hidden;
 }
-.section#who .tiles .tile:nth-child(1) .tile-art {
-  background-image: radial-gradient(circle, rgba(15, 42, 71, 0.26) 1.5px, transparent 1.8px);
-  background-size: 16px 16px; background-position: 8px 8px;
-}
-.section#who .tiles .tile:nth-child(2) .tile-art {
-  background-image: repeating-radial-gradient(circle at 50% 50%, rgba(15, 42, 71, 0.24) 0 1px, transparent 1px 14px);
-  background-size: 190px 190px; background-position: 50% 50%;
-}
-.section#who .tiles .tile:nth-child(3) .tile-art {
-  background-image: repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.18) 0 1px, transparent 1px 12px);
-}
-.section#who .tiles .tile:nth-child(4) .tile-art {
-  background-image:
-    repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.15) 0 1px, transparent 1px 16px),
-    repeating-linear-gradient(-45deg, rgba(15, 42, 71, 0.15) 0 1px, transparent 1px 16px);
+.section#who .tiles .tile-art svg {
+  position: absolute; inset: 0;
+  display: block; width: 100%; height: 100%;
 }
 
 .section#who .tiles .tile-label {
+  margin: var(--space-4) var(--space-4) var(--space-2);
   font-family: var(--font-serif); font-weight: 600;
-  font-size: var(--text-xl); letter-spacing: -0.01em;
+  font-size: clamp(21px, 1.6vw, 23px); line-height: 1.25; letter-spacing: -0.01em;
   color: var(--dl-navy);
-  margin: var(--space-6) var(--space-6) var(--space-2);
 }
 .section#who .tiles .tile-text {
-  margin: 0 var(--space-6) var(--space-4);
-  font-size: var(--text-sm);
+  margin: 0 var(--space-4);
+  max-width: none;
+  font-size: var(--text-sm); line-height: 1.5;
   color: var(--color-text-muted);
-  max-width: 46ch;
 }
 .section#who .tiles .tile-cta {
-  margin: 0 var(--space-6) var(--space-6);
-  font-size: var(--text-sm); font-weight: 650;
+  margin: auto var(--space-4) var(--space-4);
+  padding-top: var(--space-4);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.02em;
   color: var(--dl-teal-ink);
-  white-space: normal; align-self: flex-start;
+  white-space: normal;
+  align-self: flex-start;
 }
 .section#who .tiles .tile:hover .tile-cta { color: var(--dl-navy); }
