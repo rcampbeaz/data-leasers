@@ -8,29 +8,36 @@
   /* Core palette — credible and calm, closer to financial services than to a startup */
   --dl-navy: #0F2A47;
   --dl-navy-deep: #0A1E33;
-  /* Accent: copper, warm against navy. Sand is the same accent for dark surfaces. */
-  --dl-copper: #9A5227;
-  --dl-copper-ink: #8C4A22;  /* copper that is safe for text on light backgrounds */
-  --dl-sand: #E8B98A;        /* copper's light partner: used on navy */
-  --dl-parchment: #EFE5D8;   /* soft section surface, warmer than white */
+  /* Accent: burgundy. The classic authority pairing with navy, without the
+     navy-and-gold look every firm in this category already uses. Rose is the
+     same accent lifted for dark surfaces; slate is the neutral between them. */
+  --dl-burgundy: #7D2E3E;
+  --dl-burgundy-ink: #6B2433; /* burgundy that is safe for small text on light */
+  --dl-rose: #D8A8A6;         /* burgundy lifted for navy backgrounds */
+  --dl-mist: #E9EDF0;         /* soft section surface: cool, not tan */
+
+  /* Historical names kept so existing markup and the CRM keep working */
+  --dl-copper: var(--dl-burgundy);
+  --dl-copper-ink: var(--dl-burgundy-ink);
+  --dl-sand: var(--dl-rose);
+  --dl-parchment: var(--dl-mist);
 
   /* Legacy names kept so existing markup and the CRM keep working */
-  --dl-teal: var(--dl-copper);
-  --dl-teal-ink: var(--dl-copper-ink);
-  --dl-teal-bright: var(--dl-sand);
+  --dl-teal: var(--dl-burgundy);
+  --dl-teal-ink: var(--dl-burgundy-ink);
+  --dl-teal-bright: var(--dl-rose);
   --dl-cream: #F7F5F0;
   --dl-paper: #FFFFFF;
   --dl-charcoal: #1F2933;
   --dl-slate: #4E5B68;   /* darkened for AA on parchment */
-  --dl-gold: #C9A227;
-  --dl-gold-ink: #7A5E00;    /* gold that is safe for text on light backgrounds */
-  --dl-border: #E3D5C4;
+  --dl-gold: #9C3F52;
+  --dl-gold-ink: #6B2433;    /* gold that is safe for text on light backgrounds */
+  --dl-border: #D7DEE4;
   --dl-border-dark: #23425F;
 
   /* Legacy aliases kept so existing markup and the CRM keep working */
   --dl-ink: var(--dl-navy);
-  --dl-mist: var(--dl-cream);
-  --dl-amber: var(--dl-gold);
+  --dl-amber: var(--dl-burgundy);
 
   /* Semantic states (CRM) */
   --dl-approved-bg: #E7EFE1;

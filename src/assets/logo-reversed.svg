@@ -2,11 +2,11 @@
   <title id="title">DataLeasers logo, reversed for dark backgrounds</title>
   <desc id="desc">Three stacked data layers with an amber lease dot, followed by the DataLeasers wordmark.</desc>
   <g id="mark">
-    <rect x="2" y="6" width="92" height="92" rx="22" fill="#E8B98A"/>
+    <rect x="2" y="6" width="92" height="92" rx="22" fill="#D8A8A6"/>
     <rect x="22" y="28" width="54" height="12" rx="6" fill="#0B1F2A"/>
     <rect x="22" y="48" width="42" height="12" rx="6" fill="#0B1F2A" fill-opacity="0.85"/>
     <rect x="22" y="68" width="30" height="12" rx="6" fill="#0B1F2A" fill-opacity="0.7"/>
-    <circle cx="80" cy="74" r="9" fill="#9A5227"/>
+    <circle cx="80" cy="74" r="9" fill="#7D2E3E"/>
   </g>
-  <text x="112" y="72" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="52" font-weight="700" letter-spacing="-1.5" fill="#E6F4F3">Data<tspan fill="#E8B98A">Leasers</tspan></text>
+  <text x="112" y="72" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="52" font-weight="700" letter-spacing="-1.5" fill="#E6F4F3">Data<tspan fill="#D8A8A6">Leasers</tspan></text>
 </svg>
