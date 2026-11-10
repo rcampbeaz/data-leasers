@@ -1608,3 +1608,19 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .timeline p { margin: 0; color: rgba(234, 242, 247, .72); font-size: var(--text-sm); line-height: 1.55; }
 .timeline .slows { display: block; margin-top: 9px; font-size: .8rem; color: rgba(234, 242, 247, .5); line-height: 1.5; }
 .timeline-note { margin-top: 1.8rem; font-size: var(--text-sm); color: rgba(234, 242, 247, .62); max-width: 62ch; }
+
+/* The comparison stacks on a phone rather than scrolling sideways. */
+@media (max-width: 700px) {
+  .compare { min-width: 0; }
+  .compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .compare, .compare tbody, .compare tr, .compare th, .compare td { display: block; width: auto; }
+  .compare tbody tr { padding: 14px 0 10px; border-bottom: 1px solid var(--color-border); }
+  .compare tbody th { border: 0; padding: 0 0 8px; font-size: .95rem; }
+  .compare td { border: 0; padding: 3px 0 3px 12px; }
+  .compare td::before {
+    content: attr(data-label); display: block; font-size: .66rem; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--color-text-muted); font-weight: 600; margin-bottom: 1px;
+  }
+  .compare td.is-us { background: none; border-left: 2px solid var(--dl-teal-ink); padding-left: 12px; margin-top: 4px; }
+  .compare td.is-us::before { color: var(--dl-teal-ink); }
+}
