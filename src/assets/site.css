@@ -1278,6 +1278,8 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .cards-more,
 .section.ink .read-next { max-width: none; }
 .section.ink .read-next { justify-content: space-between; margin: var(--space-8) 0 0; }
+/* When the row wraps on a phone the pill lands on its own line, so it keeps the right edge there too. */
+.section.ink .read-next a { margin-left: auto; }
 .section#what-you-can-sell { padding-bottom: var(--space-16); }
 
 /* ---------- What a buyer sees: warm sand, so it separates from the cream below ----------
