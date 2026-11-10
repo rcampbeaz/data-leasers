@@ -4,6 +4,7 @@ permalink: "/code-and-engineering.html"
 title: "Code and engineering | What you can sell | DataLeasers"
 description: "Pull request threads, reviews, issues and test history that show how software was changed, checked and corrected over several years of work."
 canonical: "https://dataleasers.com/code-and-engineering.html"
+updated: "2026-11-10"
 relatedHrefs:
   - documents.html
   - operations.html
@@ -73,6 +74,19 @@ relatedHrefs:
         <li><strong>Licences that forbid sublicensing</strong>Copyleft and vendor terms can rule out sharing the code with a buyer, even in your own repository.</li>
         <li><strong>Secrets in commit history</strong>Keys, tokens and credentials have to be removed, and history has to be purged rather than overwritten.</li>
         <li><strong>Customer data in issues and comments</strong>Tickets, logs and review notes can carry names, addresses and account details.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap">
+      <h2 class="reveal">Preparing a repository for review</h2>
+      <p class="reveal">Code is the one category where most of the work happens before anyone looks at it, because history is the hard part. A repository that has never been cleaned is not ready to show a buyer.</p>
+      <ul class="checklist reveal">
+        <li><strong>Inventory the licences</strong>Open-source dependencies, vendored libraries and copied snippets each carry terms that decide whether the code can travel at all.</li>
+        <li><strong>Purge secrets from history</strong>A key removed in the latest commit is still in the history. The history has to be rewritten, not overwritten.</li>
+        <li><strong>Separate vendor and first-party code</strong>Reviewing your own work is straightforward; shipping somebody else&rsquo;s is a licence question.</li>
+        <li><strong>Take customer data out of issues and comments</strong>Review threads are where the value sits, and they are also where names, addresses and account details end up.</li>
       </ul>
     </div>
   </section>
