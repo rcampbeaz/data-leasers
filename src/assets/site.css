@@ -39,6 +39,18 @@ hr { border: 0; border-top: 1px solid var(--dl-line); margin: var(--space-8) 0; 
 
 .muted { color: var(--color-text-muted); }
 .small-note { font-size: var(--text-sm); margin-top: var(--space-4); }
+
+/* The published buyer band, shown before the fold answer rather than three pages in. */
+.hero-money {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2) var(--space-4);
+  margin: var(--space-6) 0 0; padding-top: var(--space-4);
+  border-top: 1px solid rgba(232, 237, 243, 0.16);
+}
+.hero-money strong {
+  font-family: var(--font-sans); font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 750; letter-spacing: -0.01em; color: var(--dl-electric-lift); white-space: nowrap;
+}
+.hero-money span { flex: 1 1 260px; font-size: var(--text-sm); line-height: 1.55; color: var(--dl-dark-muted); }
 .wrap { max-width: var(--container); margin: 0 auto; padding: 0 var(--space-6); }
 
 .skip-link {
