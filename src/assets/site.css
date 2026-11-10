@@ -1395,3 +1395,52 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   .section#who .tiles .tile::before { font-size: 24px; grid-row: 1 / span 2; }
   .section#who .tiles .tile-cta { grid-column: 2; grid-row: 3; justify-self: start; }
 }
+
+/* ---------- Who this is for: the index is a list, and the section is a spread ----------
+   The tiles grid was four columns wide on desktop, so each index row was squeezed
+   into ~200px and its link overlapped the summary. A list has one column at every
+   width; the width comes from the composition instead. */
+.section#who .tiles {
+  grid-template-columns: minmax(0, 1fr);
+  counter-reset: who-tile;
+  gap: 1px;
+  background: rgba(15, 42, 71, 0.10);
+  border: 1px solid rgba(15, 42, 71, 0.12);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.section#who .tiles .tile { position: relative; }
+.section#who .tiles .tile::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--dl-teal); transform: scaleY(0); transform-origin: top;
+  transition: transform 0.2s ease;
+}
+.section#who .tiles .tile:hover::after,
+.section#who .tiles .tile:focus-visible::after { transform: scaleY(1); }
+
+@media (min-width: 960px) {
+  .section#who > .wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    column-gap: var(--space-16);
+    align-items: start;
+  }
+  .section#who .section-head { grid-column: 1; margin-bottom: var(--space-8); }
+  .section#who .criteria {
+    grid-column: 1; grid-row: 2;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+  }
+  .section#who .tiles { grid-column: 2; grid-row: 1 / span 2; }
+  .section#who > .wrap > *:not(.section-head):not(.criteria):not(.tiles) {
+    grid-column: 1 / -1; margin-top: var(--space-8);
+  }
+  .section#who .tiles .tile {
+    padding: var(--space-8);
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    column-gap: var(--space-6);
+  }
+  .section#who .tiles .tile::before { font-size: 40px; }
+  .section#who .tiles .tile-label { font-size: var(--text-xl); }
+  .section#who .tiles .tile-text { font-size: var(--text-sm); max-width: 54ch; }
+}
