@@ -1153,3 +1153,8 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 .section.ink .systems-marquee { margin-top: var(--space-4); }
+
+/* ---------- Headline above the band, band slimmed to the chips ---------- */
+.section.ink .systems-label { margin: var(--space-12) 0 var(--space-3); }
+.section.ink .systems { margin-top: 0; padding: var(--space-3) 0; }
+.section.ink .systems-marquee { margin-top: 0; }
