@@ -1292,9 +1292,9 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 }
 .section.ink .cards-feature .card .mock {
   flex: 1;
-  margin: var(--space-5) calc(-1 * var(--space-6)) 0;
+  margin: var(--space-4) calc(-1 * var(--space-6)) 0;
   border: 0;
   border-top: 1px solid rgba(15, 42, 71, 0.09);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  padding: var(--space-5) var(--space-6) var(--space-6);
+  padding: var(--space-4) var(--space-6) var(--space-6);
 }
