@@ -391,10 +391,6 @@ textarea { min-height: 120px; }
 .status.approved { background: var(--dl-approved-bg); color: var(--dl-approved-fg); }
 .status.review { background: var(--dl-review-bg); color: var(--dl-review-fg); }
 .status.blocked { background: var(--dl-blocked-bg); color: var(--dl-blocked-fg); }
-.draft-note {
-  border-left: 3px solid var(--dl-gold); background: var(--dl-review-bg); color: var(--dl-review-fg);
-  padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); font-size: var(--text-sm);
-}
 
 /* ---------- Motion: gentle fade-up only ---------- */
 .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.55s ease, transform 0.55s ease; }
