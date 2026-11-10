@@ -1,67 +1,79 @@
 /* DataLeasers brand tokens. Shared by the website and the CRM. */
 :root {
-  /* No automatic dark mode: the site uses light sections with dark hero bands.
-     An earlier prefers-color-scheme override flipped text to light without
-     changing section backgrounds, which made text unreadable on dark-mode devices. */
-  color-scheme: light;
+  /* Dark by design: the site is read on gunmetal, not paper. A bright blue is
+     the only accent, because saturated colour gains apparent brightness on a
+     dark surface and a second hue starts to hum. Elevation is lightness (each
+     step up is a lighter surface) rather than shadow, which disappears here. */
+  color-scheme: dark;
 
-  /* Core palette — credible and calm, closer to financial services than to a startup */
-  --dl-navy: #0F2A47;
-  --dl-navy-deep: #0A1E33;
-  /* Accent: burgundy. The classic authority pairing with navy, without the
-     navy-and-gold look every firm in this category already uses. Rose is the
-     same accent lifted for dark surfaces; slate is the neutral between them. */
-  --dl-burgundy: #7D2E3E;
-  --dl-burgundy-ink: #6B2433; /* burgundy that is safe for small text on light */
-  --dl-rose: #D8A8A6;         /* burgundy lifted for navy backgrounds */
-  --dl-mist: #E9EDF0;         /* soft section surface: cool, not tan */
+  /* Surfaces, darkest to lightest */
+  --dl-gunmetal-deep: #12171C;  /* page bands, footer */
+  --dl-gunmetal: #1B2128;       /* page */
+  --dl-panel: #232A33;          /* cards, inputs */
+  --dl-panel-raised: #2A323C;   /* hover, raised rows */
+  --dl-line: #333C47;
+  --dl-line-strong: #46515F;
 
-  /* Historical names kept so existing markup and the CRM keep working */
-  --dl-copper: var(--dl-burgundy);
-  --dl-copper-ink: var(--dl-burgundy-ink);
-  --dl-sand: var(--dl-rose);
-  --dl-parchment: var(--dl-mist);
+  /* Text, three tiers */
+  --dl-text: #E8EDF3;
+  --dl-text-2: #B8C4D2;
+  --dl-text-muted: #96A4B4;
 
-  /* Legacy names kept so existing markup and the CRM keep working */
-  --dl-teal: var(--dl-burgundy);
-  --dl-teal-ink: var(--dl-burgundy-ink);
-  --dl-teal-bright: var(--dl-rose);
-  --dl-cream: #F7F5F0;
-  --dl-paper: #FFFFFF;
-  --dl-charcoal: #1F2933;
-  --dl-slate: #4E5B68;   /* darkened for AA on parchment */
-  --dl-gold: #9C3F52;
-  --dl-gold-ink: #6B2433;    /* gold that is safe for text on light backgrounds */
-  --dl-border: #D7DEE4;
-  --dl-border-dark: #23425F;
+  /* One accent: electric blue. `lift` is the dark-surface text-safe tint,
+     `deep` is the filled-button colour that carries white text. */
+  --dl-electric: #2F6BFF;
+  --dl-electric-lift: #7FB0FF;
+  --dl-electric-deep: #2563EB;
+  --dl-electric-ink: #9CC2FF;
+  --dl-glow: rgba(47, 107, 255, 0.35);
 
-  /* Legacy aliases kept so existing markup and the CRM keep working */
-  --dl-ink: var(--dl-navy);
-  --dl-amber: var(--dl-burgundy);
+  /* Legacy names resolve to the dark system so old markup keeps working */
+  --dl-navy: var(--dl-gunmetal-deep);
+  --dl-navy-deep: #0D1116;
+  --dl-charcoal: var(--dl-text);
+  --dl-slate: var(--dl-text-2);
+  --dl-cream: var(--dl-gunmetal);
+  --dl-mist: var(--dl-gunmetal);
+  --dl-paper: var(--dl-panel);
+  --dl-border: var(--dl-line);
+  --dl-border-dark: var(--dl-line-strong);
+  --dl-burgundy: var(--dl-electric);
+  --dl-burgundy-ink: var(--dl-electric-lift);
+  --dl-rose: var(--dl-electric-ink);
+  --dl-copper: var(--dl-electric);
+  --dl-copper-ink: var(--dl-electric-lift);
+  --dl-sand: var(--dl-electric-ink);
+  --dl-teal: var(--dl-electric);
+  --dl-teal-ink: var(--dl-electric-lift);
+  --dl-teal-bright: var(--dl-electric-ink);
+  --dl-gold: var(--dl-electric-lift);
+  --dl-gold-ink: var(--dl-electric-lift);
+  --dl-amber: var(--dl-electric);
+  --dl-ink: var(--dl-text);
 
-  /* Semantic states (CRM) */
-  --dl-approved-bg: #E7EFE1;
-  --dl-approved-fg: #2F5B3C;
-  --dl-review-bg: #FBF0DA;
-  --dl-review-fg: #7A4B05;
-  --dl-blocked-bg: #FBE3E0;
-  --dl-blocked-fg: #8A1C14;
+  /* States: meaning only, never decoration */
+  --dl-approved-bg: rgba(52, 211, 153, 0.14);
+  --dl-approved-fg: #6EE7A8;
+  --dl-review-bg: rgba(245, 183, 76, 0.14);
+  --dl-review-fg: #F5C063;
+  --dl-blocked-bg: rgba(248, 113, 113, 0.14);
+  --dl-blocked-fg: #FF9C90;
 
   /* Dark surfaces */
-  --dl-dark-bg: var(--dl-navy);
-  --dl-dark-fg: #EAF2F7;
-  --dl-dark-muted: #BFCFDD;
-  --dl-dark-accent: var(--dl-teal-bright);
+  --dl-dark-bg: var(--dl-gunmetal-deep);
+  --dl-dark-fg: var(--dl-text);
+  --dl-dark-muted: var(--dl-text-2);
+  --dl-dark-accent: var(--dl-electric-ink);
 
   /* Semantic aliases */
-  --color-text: var(--dl-charcoal);
-  --color-text-muted: var(--dl-slate);
-  --color-bg: var(--dl-paper);
-  --color-surface: var(--dl-cream);
-  --color-border: var(--dl-border);
-  --color-primary: var(--dl-teal-ink);
-  --color-primary-text: var(--dl-paper);
-  --color-accent: var(--dl-gold);
+  --color-text: var(--dl-text);
+  --color-text-muted: var(--dl-text-2);
+  --color-bg: var(--dl-gunmetal);
+  --color-surface: var(--dl-panel);
+  --color-border: var(--dl-line);
+  --color-primary: var(--dl-electric-lift);
+  --color-primary-text: #FFFFFF;
+  --color-accent: var(--dl-electric);
 
   /* Type: serif headlines for gravitas, a modern sans for everything else */
   --font-sans: "InterVar", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
