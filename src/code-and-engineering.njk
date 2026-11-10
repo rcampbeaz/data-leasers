@@ -17,12 +17,24 @@ canonical: "https://dataleasers.com/code-and-engineering.html"
 
   <section class="section mist">
     <div class="wrap">
-      <h2 class="reveal">What it can include</h2>
+      <div class="type-split">
+        <div>
+          <h2 class="reveal">What it can include</h2>
       <ul class="examples reveal" style="font-size:var(--text-base);">
         <li>Pull requests and reviews</li>
         <li>Issues and fixes</li>
         <li>Test history</li>
       </ul>
+        </div>
+        <div class="type-split-media reveal">
+          <div class="mock tint-slate" aria-hidden="true">
+            <div class="mock-head"><span class="mock-mono">retry.ts</span><span class="mock-tag">Reviewed</span></div>
+            <div class="mock-code"><span class="del">return send(job)</span><span class="add">return await send(job)</span></div>
+            <p class="mock-foot">Merged after review</p>
+          </div>
+          <p class="mock-caption">Illustrative example</p>
+        </div>
+      </div>
     </div>
   </section>
 

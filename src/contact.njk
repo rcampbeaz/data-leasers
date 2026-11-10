@@ -15,7 +15,9 @@ navKey: contact
   </section>
 
   <section class="section mist">
-    <div class="wrap reveal">
+    <div class="wrap">
+      <div class="type-split">
+        <div class="reveal">
       <p class="notice-ok" id="form-sent" hidden>Thank you. We will reply to arrange a call.</p>
       <p class="notice-err" id="form-error" hidden>Something went wrong, or a field was not valid. Please check and try again.</p>
       <form action="https://app.dataleasers.com/api/leads" method="post">
@@ -47,6 +49,17 @@ navKey: contact
           if (q.get('error')) document.getElementById('form-error').hidden = false;
         })();
       </script>
+        </div>
+        <aside class="signpost reveal">
+          <h2>What happens next</h2>
+          <ol class="next-steps">
+            <li>We reply to arrange a short conversation.</li>
+            <li>We look at which systems hold your records, and whether they fit what the data buyer looks for.</li>
+            <li>If there is a fit, we make the introduction. Nothing is shared without your approval.</li>
+          </ol>
+          <p class="muted small-note">A first call commits you to nothing.</p>
+        </aside>
+      </div>
     </div>
   </section>
 </main>
