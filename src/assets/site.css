@@ -1214,3 +1214,16 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
     linear-gradient(180deg, #E9F0F5 0%, #D5E2EB 100%);
 }
 .section.quick-band::after { opacity: 0.12; }
+
+/* ---------- Link that closes the cards, then air before the systems band ----------
+   The link finishes the six cards, so it sits under them; the uppercase label
+   below is the heading for the band, so it needs a clear break to read that way. */
+.section.ink .cards-more { margin: var(--space-8) 0 0; font-size: var(--text-sm); font-weight: 650; }
+.section.ink .cards-more a {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  color: var(--dl-teal-bright); text-decoration: none;
+}
+.section.ink .cards-more a::after { content: "\2192"; transition: transform 0.2s ease; }
+.section.ink .cards-more a:hover { color: #FFFFFF; }
+.section.ink .cards-more a:hover::after { transform: translateX(4px); }
+.section.ink .systems-label { margin-top: var(--space-24); }
