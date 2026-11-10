@@ -1171,15 +1171,17 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems { margin-top: 0; padding: var(--space-3) 0; }
 .section.ink .systems-marquee { margin-top: 0; }
 
-/* ---------- Systems band: cool steel, so it belongs to the navy section ----------
-   The warm sand band was the only tan block inside a blue section, which read as
-   a leftover from the cream pages. Pale steel picks up the cool bands elsewhere
-   on the homepage and keeps the white app tiles looking like tiles. */
+/* ---------- Systems band: mid steel, so it separates from the sand below ----------
+   The warm sand band was the only tan block inside a blue section, so it became
+   cool steel. At the pale end it then sat within a few points of the sand section
+   that follows it: different families, near-identical value. This is the same
+   steel taken a step darker, which holds the colour difference and the value
+   difference at the same time. Text stays navy throughout. */
 .section.ink .systems {
-  background: linear-gradient(180deg, #E8F1F7 0%, #D2E2EE 100%);
-  border-top: 1px solid rgba(15, 42, 71, 0.10);
-  border-bottom: 1px solid rgba(15, 42, 71, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), inset 0 -1px 0 rgba(15, 42, 71, 0.05);
+  background: linear-gradient(180deg, #C0D4E1 0%, #9CB6C9 100%);
+  border-top: 1px solid rgba(15, 42, 71, 0.16);
+  border-bottom: 1px solid rgba(15, 42, 71, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(15, 42, 71, 0.08);
 }
 .section.ink .systems .sys-list li {
   background: rgba(255, 255, 255, 0.66);
@@ -1202,7 +1204,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems .sys-list { gap: var(--space-3); padding-right: var(--space-3); }
 .section.ink .systems .sys-list li {
   background: transparent;
-  border-color: rgba(15, 42, 71, 0.22);
+  border-color: rgba(15, 42, 71, 0.30);
   color: var(--dl-navy);
   padding: 8px 20px 8px 7px;
 }
@@ -1215,7 +1217,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems .sys-item { display: inline-flex; align-items: center; gap: 7px; }
 /* 50% navy on the sand band measured about 2.9:1, too faint to read; 72% keeps
    it quiet but legible. */
-.section.ink .systems .sys-or { margin: 0 6px; color: rgba(15, 42, 71, 0.72); }
+.section.ink .systems .sys-or { margin: 0 6px; color: rgba(15, 42, 71, 0.85); }
 .section.ink .systems .sys-list li { padding: 6px 18px 6px 6px; }
 
 /* ---------- Quick check: a cool band between the cream strip and the navy ----------
