@@ -55,6 +55,7 @@
 {% include "partials/header.njk" %}
 {% if bodyClass != "home" and not noindex %}
 {% include "partials/crumbs.njk" %}
+{% include "partials/byline.njk" %}
 {% endif %}
 
 {{ content | safe }}

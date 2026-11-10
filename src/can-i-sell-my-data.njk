@@ -4,6 +4,17 @@ permalink: "/can-i-sell-my-data.html"
 title: "Can I sell my company's data? | DataLeasers"
 description: "Owning the records is not the same as being allowed to license them. Check contracts, customer data and tool terms before anything is shared."
 canonical: "https://dataleasers.com/can-i-sell-my-data.html"
+updated: "2026-11-10"
+sources:
+  - label: "Nixon Peabody LLP, Five diligence questions before you buy AI training data"
+    href: "https://www.nixonpeabody.com/insights/alerts/2026/10/26/shopping-for-ai-training-data-five-diligence-questions-before-you-buy"
+    note: "rights, personal data and deletion questions a buyer has to answer"
+  - label: "UK Information Commissioner's Office, Introduction to anonymisation"
+    href: "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-sharing/anonymisation/introduction-to-anonymisation"
+    note: "why removing names does not make data anonymous, and the re-identification test"
+  - label: "U.S. Copyright Office, Circular 30: Works Made for Hire"
+    href: "https://www.copyright.gov/circs/circ30.pdf"
+    note: "who owns work product created by employees in the course of employment"
 ---
 <main id="main">
   <section class="hero ink">
@@ -74,6 +85,72 @@ canonical: "https://dataleasers.com/can-i-sell-my-data.html"
       </div>
     </div>
   </section>
+
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">The clauses that actually decide it</h2>
+      <p class="reveal">Rights questions are rarely answered by one document. They are answered by four, and the fourth is the one people forget.</p>
+      <div class="table-wrap reveal">
+        <table class="table">
+          <caption>Where to look, and what each document controls</caption>
+          <thead><tr><th scope="col">Document</th><th scope="col">What it usually says</th><th scope="col">What it means for licensing</th></tr></thead>
+          <tbody>
+            <tr><td>Employment and contractor terms</td><td>Work created by staff in the course of their job belongs to the company; contractor work may not.</td><td>Clears the records your own team wrote. Contractor-authored material needs its own check.</td></tr>
+            <tr><td>Customer agreement</td><td>Customer information is used to provide the service, and kept confidential.</td><td>This is the usual blocker. Purpose limitation is what rules licensing out, not ownership.</td></tr>
+            <tr><td>Tool terms of service</td><td>You keep your content; the platform gets a licence to operate and improve its service.</td><td>The platform&rsquo;s licence to itself is not a licence to you. It neither grants nor removes your right to license.</td></tr>
+            <tr><td>Sector rules</td><td>Professional obligations, privilege, financial or health privacy rules.</td><td>Can remove whole categories from scope regardless of what your contracts say.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="reveal">The second row is why &ldquo;we own our data&rdquo; is not an answer. A company can own a record and still be unable to license it, because the customer agreement limited what the record may be used for.</p>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap prose">
+      <h2 class="reveal">Where the line usually falls</h2>
+      <p class="reveal">Three distinctions cover most of the cases we see. They are not legal tests, but they predict the answer well enough to plan around.</p>
+      <ul class="checklist reveal">
+        <li><strong>Your staff&rsquo;s own work product</strong>Internal threads, resolution notes, playbooks and deal notes your team wrote. Usually the clearest ground, subject to the customer agreement.</li>
+        <li><strong>Customer-authored content</strong>What the customer wrote to you. Readable by you, but licensing it to a third party is a different act from reading it.</li>
+        <li><strong>Material you licence but do not own</strong>Third-party research, purchased datasets, syndicated content. Your rights end where your licence ends.</li>
+      </ul>
+      <p class="reveal">A scope can mix these. Excluding the second and third categories and licensing the first is a normal, narrower deal, and it is often the one that closes.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">What a narrow scope looks like</h2>
+      <p class="reveal">The most useful thing a seller can bring to a first call is not a bigger dataset. It is a clear edge: what is in, what is out, and why.</p>
+      <div class="table-wrap reveal">
+        <table class="table">
+          <thead><tr><th scope="col">In scope</th><th scope="col">Out of scope</th><th scope="col">Why</th></tr></thead>
+          <tbody>
+            <tr><td>Internal resolution notes and fixes</td><td>Customer messages</td><td>Keeps the reasoning, drops the customer&rsquo;s words.</td></tr>
+            <tr><td>Playbooks and revision history</td><td>Client deliverables</td><td>Deliverables may belong to the client, not the firm.</td></tr>
+            <tr><td>Deal notes with reasons recorded</td><td>Names, emails, pricing terms</td><td>The commercial logic survives de-identification; the parties do not.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="reveal">None of this is legal advice, and it is not a substitute for your own counsel reading the agreement. It is the map we use to decide what to ask them about.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">More questions</h2>
+      <div class="faq reveal">
+        <details><summary>Does owning the data mean I can license it?</summary><p>No. Ownership and permitted use are separate. A company can own a record and still be barred from licensing it by the customer agreement that governs it.</p></details>
+        <details><summary>What if only part of the dataset is clear?</summary><p>Then that part is the dataset. Narrowing the scope is normal and usually faster than trying to clear everything.</p></details>
+        <details><summary>Do I have to tell my customers?</summary><p>It depends on your agreement and where they are. Where notice or consent is required, that is settled before a buyer sees anything.</p></details>
+        <details><summary>Is a licence the same as a sale?</summary><p>No. A licence grants defined rights for a defined term and purpose; ownership stays with you. That distinction is what makes most of these deals possible at all.</p></details>
+      </div>
+    </div>
+  </section>
+
+  {% include "partials/sources.njk" %}
 
   <section class="section mist">
     <div class="wrap">

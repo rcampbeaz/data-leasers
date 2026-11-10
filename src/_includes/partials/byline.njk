@@ -1,0 +1,6 @@
+{%- if siteAuthor.enabled and siteAuthor.name %}
+<p class="byline">
+  <span>By <a href="{{ siteAuthor.url or 'about.html' }}">{{ siteAuthor.name }}</a>{% if siteAuthor.role %}, {{ siteAuthor.role }}{% endif %}</span>
+  {%- if updated %}<span>Reviewed {{ updated }}</span>{% endif %}
+</p>
+{%- endif %}

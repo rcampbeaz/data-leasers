@@ -4,6 +4,14 @@ permalink: "/is-my-customer-data-sellable.html"
 title: "Is my customer data sellable? | DataLeasers"
 description: "Customer records can be licensed, but rarely as they sit. Your contracts, the tool terms and the personal data inside them decide what can be sold."
 canonical: "https://dataleasers.com/is-my-customer-data-sellable.html"
+updated: "2026-11-10"
+sources:
+  - label: "UK Information Commissioner's Office, Introduction to anonymisation"
+    href: "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-sharing/anonymisation/introduction-to-anonymisation"
+    note: "pseudonymised data is still personal data, and anonymisation is judged on re-identification risk"
+  - label: "Nixon Peabody LLP, Five diligence questions before you buy AI training data"
+    href: "https://www.nixonpeabody.com/insights/alerts/2026/10/26/shopping-for-ai-training-data-five-diligence-questions-before-you-buy"
+    note: "de-identification and deletion terms in AI data deals"
 ---
 <main id="main">
   <section class="hero ink">
@@ -72,6 +80,68 @@ canonical: "https://dataleasers.com/is-my-customer-data-sellable.html"
       </div>
     </div>
   </section>
+
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">What de-identification has to survive</h2>
+      <p class="reveal">There are three layers, and most failed attempts stop at the first.</p>
+      <ol class="path reveal">
+        <li><h3>Direct identifiers</h3><p>Names, email addresses, phone numbers, account numbers. The easy layer, and the only one a find-and-replace can handle.</p></li>
+        <li><h3>Quasi-identifiers</h3><p>Job title, employer, city, dates, unusual combinations. Not identifying alone, identifying together.</p></li>
+        <li><h3>Free text</h3><p>The hardest layer. A resolution note can describe a person, a company and a dispute in one sentence without naming anyone.</p></li>
+      </ol>
+      <p class="reveal">The UK Information Commissioner&rsquo;s Office makes the standard concrete: data is anonymised when re-identification is not reasonably likely, considering who could attempt it and with what. Pseudonymised data is still personal data. That is why a column-level review is not the same as a review of the dataset.</p>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap prose">
+      <h2 class="reveal">What a customer-data licence usually sets</h2>
+      <div class="table-wrap reveal">
+        <table class="table">
+          <thead><tr><th scope="col">Term</th><th scope="col">The question it answers</th></tr></thead>
+          <tbody>
+            <tr><td>Scope</td><td>Which records, which years, which fields, and which categories are excluded.</td></tr>
+            <tr><td>Purpose</td><td>What the buyer may do with it. Training, evaluation and benchmarking are different permissions.</td></tr>
+            <tr><td>Term and exclusivity</td><td>How long the licence runs, and whether you can license the same records to anyone else meanwhile.</td></tr>
+            <tr><td>Deletion</td><td>When the raw copy is destroyed, and what evidence you get of it.</td></tr>
+            <tr><td>Audit</td><td>Whether you can inspect a sample before delivery, and on what notice.</td></tr>
+            <tr><td>Onward transfer</td><td>Whether the buyer may pass the data to another party, and on what terms.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="reveal">Read the fourth row and the second row together. A long exclusivity on a narrow purpose is a very different deal from a short exclusivity on a broad one.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">When the answer is no</h2>
+      <p class="reveal">Some records should not be licensed by anyone, and saying so early is cheaper than discovering it in diligence.</p>
+      <ul class="checklist reveal">
+        <li><strong>Health information without a consent path</strong>Not impossible, but a separate legal analysis, not a line item.</li>
+        <li><strong>Payment card data</strong>Out of scope for the programmes we work with, whatever it is worth.</li>
+        <li><strong>Children&rsquo;s data</strong>Also excluded by the buyer&rsquo;s published terms.</li>
+        <li><strong>Privileged or under-protective-order material</strong>Belongs to a matter, not to a dataset.</li>
+        <li><strong>Client files where the client has not agreed</strong>The professional obligation sits with the firm, and it does not transfer.</li>
+      </ul>
+      <p class="reveal">A refusal here is not a lost deal. It is the reason a seller can say yes to the parts that are clean.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap prose">
+      <h2 class="reveal">More questions</h2>
+      <div class="faq reveal">
+        <details><summary>Can I license the same records to two buyers?</summary><p>Only if the first agreement allows it. Exclusivity is a term you negotiate, and it is usually the most valuable thing you give away.</p></details>
+        <details><summary>What if the records are already aggregated?</summary><p>Aggregation lowers risk but does not settle it. Small groups and unusual combinations can still identify, which is why the review looks at the record, not the label.</p></details>
+        <details><summary>Do I need to delete anything myself?</summary><p>The buyer&rsquo;s terms usually cover deletion of the raw copy it receives. What stays in your own systems is your decision and your policy.</p></details>
+      </div>
+    </div>
+  </section>
+
+  {% include "partials/sources.njk" %}
 
   <section class="section mist">
     <div class="wrap">

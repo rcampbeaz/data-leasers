@@ -31,7 +31,7 @@
       "isPartOf": { "@id": "{{ site.url }}/#website" },
       "about": { "@id": "{{ org }}" },{% if updated %}
       "dateModified": "{{ updated }}",{% endif %}
-      "author": { "@id": "{{ org }}" },
+      "author": {% if siteAuthor.enabled and siteAuthor.name %}{ "@type": "Person", "name": {{ siteAuthor.name | dump | safe }}{% if siteAuthor.role %}, "jobTitle": {{ siteAuthor.role | dump | safe }}{% endif %}{% if siteAuthor.url %}, "url": {{ siteAuthor.url | dump | safe }}{% endif %} }{% else %}{ "@id": "{{ org }}" }{% endif %},
       "primaryImageOfPage": { "@type": "ImageObject", "url": "{{ site.url }}/og-card.png" },
       "inLanguage": "en-US"
     }{% if bodyClass != "home" and not noindex %},
