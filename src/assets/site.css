@@ -550,6 +550,11 @@ textarea { min-height: 120px; }
   .header-actions .btn { padding: 8px 12px; font-size: 13px; }
   .nav-toggle { padding: 8px 10px; font-size: 13px; }
 }
+/* At 320px the logo, CTA and menu came to 7px more than the row had room for,
+   so the menu sat on the edge. A smaller mark buys the space back. */
+@media (max-width: 380px) {
+  .site-header .logo { height: 26px; }
+}
 
 /* ---------- Grid items must be allowed to shrink on narrow screens ---------- */
 .cards, .inline-cards, .tiles, .flow, .criteria, .trust-list { min-width: 0; }
