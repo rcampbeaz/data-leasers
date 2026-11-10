@@ -29,6 +29,9 @@ const USAGE = `Usage:
 
   --recreate  delete and recreate the account if its password cannot be set
 
+Simplest use: run it in a terminal with no environment at all and paste the
+key when asked. The project URL defaults to dvlfwtguygcqriwudnmn.supabase.co.
+
 Environment (read from .env, .env.local or ../.env if not already set):
   SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL
   SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY
@@ -78,13 +81,64 @@ if (password.length < 12) {
 
 loadEnvFile(['.env.local', '.env', '../.env']);
 
-const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
-const serviceKey =
+// The project is public knowledge; only the key is secret.
+const DEFAULT_URL = 'https://dvlfwtguygcqriwudnmn.supabase.co';
+const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_URL).replace(
+  /\/$/,
+  '',
+);
+
+let serviceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ??
   process.env.SUPABASE_SECRET_KEY ??
   process.env.SUPABASE_SERVICE_KEY ??
   '';
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+let anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
+// Pasting the key into a hidden prompt is kinder than shell quoting, and it
+// keeps the value out of shell history.
+function askHidden(question) {
+  return new Promise((resolve) => {
+    const stdin = process.stdin;
+    process.stdout.write(question);
+    stdin.setRawMode(true);
+    stdin.setEncoding('utf8');
+    stdin.resume();
+    let value = '';
+    const finish = (result) => {
+      stdin.removeListener('data', onData);
+      stdin.setRawMode(false);
+      stdin.pause();
+      process.stdout.write('\n');
+      resolve(result);
+    };
+    const onData = (chunk) => {
+      for (const ch of chunk) {
+        if (ch === '\r' || ch === '\n') return finish(value.trim());
+        if (ch === '\u0003') {
+          process.stdout.write('\n');
+          process.exit(130);
+        }
+        if (ch === '\u007f' || ch === '\b') {
+          value = value.slice(0, -1);
+          continue;
+        }
+        value += ch;
+      }
+    };
+    stdin.on('data', onData);
+  });
+}
+
+if (!serviceKey && process.stdin.isTTY) {
+  console.log(`Project: ${url.replace(/^https?:\/\//, '')}`);
+  console.log('Open Settings > API Keys > Legacy API keys and copy service_role.');
+  serviceKey = await askHidden('Paste the key, then press Enter (it stays hidden): ');
+}
+
+if (!anonKey && process.stdin.isTTY) {
+  anonKey = await askHidden('Publishable key, optional, Enter to skip (hidden): ');
+}
 
 if (serviceKey.startsWith('sb_publishable_') || serviceKey.startsWith('sb_PUBLISHABLE')) {
   console.error('That is the publishable key, which cannot change other users.');
@@ -94,15 +148,9 @@ if (serviceKey.startsWith('sb_publishable_') || serviceKey.startsWith('sb_PUBLIS
 }
 
 if (!url || !serviceKey) {
-  console.error('Missing Supabase configuration.');
-  console.error(
-    url
-      ? '  No service key: set SUPABASE_SERVICE_ROLE_KEY (legacy service_role) or SUPABASE_SECRET_KEY (sb_secret_).'
-      : '  SUPABASE_URL is not set.',
-  );
-  console.error('');
-  console.error('If you are not in the crm directory, cd into it first:');
-  console.error('  cd crm && node scripts/set-password.mjs ...');
+  console.error('No service key was given.');
+  console.error('  Set SUPABASE_SERVICE_ROLE_KEY (legacy service_role) or SUPABASE_SECRET_KEY, or');
+  console.error('  run this in a terminal so it can prompt you for the key.');
   process.exit(1);
 }
 
