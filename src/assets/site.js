@@ -59,6 +59,48 @@
     var form = e.target;
     track('form_submit', { form_id: form.id || form.getAttribute('name') || 'unnamed' });
   }, true);
+})();
+
+/* A second click while the first submission is still in flight creates a
+   second lead in the CRM. The submission itself is left alone: the browser
+   still posts the form exactly as it would without JavaScript. */
+(function () {
+  function setBusy(form, busy) {
+    var btn = form.querySelector('button[type="submit"], input[type="submit"]');
+    if (!btn) return;
+    if (busy) {
+      if (btn.tagName === 'INPUT') {
+        btn.dataset.label = btn.value;
+        btn.value = 'Sending\u2026';
+      } else {
+        btn.dataset.label = btn.textContent;
+        btn.textContent = 'Sending\u2026';
+      }
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+    } else {
+      if (btn.dataset.label) {
+        if (btn.tagName === 'INPUT') btn.value = btn.dataset.label;
+        else btn.textContent = btn.dataset.label;
+      }
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+    }
+  }
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form || form.nodeName !== 'FORM' || form.dataset.sending) return;
+    form.dataset.sending = '1';
+    setBusy(form, true);
+  }, false);
+  /* Returning with the back button restores the page from cache, button
+     included, so reset it rather than leave a dead form behind. */
+  window.addEventListener('pageshow', function () {
+    Array.prototype.forEach.call(document.querySelectorAll('form[data-sending]'), function (form) {
+      delete form.dataset.sending;
+      setBusy(form, false);
+    });
+  });
 
   var fit = document.querySelector('.fit-panel');
   if (fit) {

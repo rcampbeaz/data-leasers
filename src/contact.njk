@@ -45,7 +45,12 @@ navKey: contact
       <script>
         (function () {
           var q = new URLSearchParams(location.search);
-          if (q.get('sent')) document.getElementById('form-sent').hidden = false;
+          if (q.get('sent')) {
+            document.getElementById('form-sent').hidden = false;
+            /* Hide the form once it has been accepted, so nobody sends the
+               same enquiry twice or wonders whether it went through. */
+            document.querySelector('form[action$="/api/leads"]').hidden = true;
+          }
           if (q.get('error')) document.getElementById('form-error').hidden = false;
         })();
       </script>
