@@ -51,7 +51,7 @@ export default {
       { href: "how-it-works.html", label: "How it works" },
       { href: "ai-buyers.html", label: "The buyer" },
       { href: "refer.html", label: "Refer a company" },
-      { href: "contact.html", label: "Request a call back" },
+      { href: "contact.html", label: "Tell us about your data" },
     ],
     secondary: [
       { href: "what-affects-a-deal.html", label: "What affects a deal" },
