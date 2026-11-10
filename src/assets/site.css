@@ -1727,3 +1727,25 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 }
 .btn.btn:not(.btn-ghost):not(.btn-quiet):hover, a.btn.btn:not(.btn-ghost):not(.btn-quiet):hover,
 .btn.btn:not(.btn-ghost):not(.btn-quiet):focus-visible { background: var(--dl-electric); color: #FFFFFF; }
+
+/* About page: the founder's portrait beside the bio.
+   Square frame, because a headshot is usually supplied 1:1 and object-fit:cover
+   crops it predictably instead of letterboxing. The ring keeps a light
+   background from bleeding into the page on a dark surface. */
+.about-grid { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 40px; align-items: start; }
+.author-portrait { width: 264px; }
+.author-portrait img {
+  display: block; width: 100%; height: auto; aspect-ratio: 1 / 1;
+  object-fit: cover; border-radius: var(--radius-md, 12px);
+  box-shadow: 0 0 0 1px var(--dl-line), 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+.author-portrait > span {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; aspect-ratio: 1 / 1; border-radius: var(--radius-md, 12px);
+  font-family: var(--font-serif, Georgia, serif); font-size: 64px; letter-spacing: 0.04em;
+  color: var(--dl-text-2); background: var(--dl-panel); border: 1px solid var(--dl-line);
+}
+@media (max-width: 760px) {
+  .about-grid { grid-template-columns: 1fr; gap: 24px; }
+  .author-portrait { width: 176px; }
+}
