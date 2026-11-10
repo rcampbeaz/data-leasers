@@ -1273,6 +1273,10 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
    It used to be the only thing left of a long empty navy tail, and it sat on the
    left while the link above it sat on the right. Now the two share an edge and the
    section ends closer behind the band. */
+/* Both pill rows sit on the column's right edge, not on a paragraph text measure;
+   at 68ch the guide pill stopped 370px short of the link above it. */
+.section.ink .cards-more,
+.section.ink .read-next { max-width: none; }
 .section.ink .read-next { justify-content: space-between; margin: var(--space-8) 0 0; }
 .section#what-you-can-sell { padding-bottom: var(--space-16); }
 
