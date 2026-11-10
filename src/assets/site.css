@@ -1166,9 +1166,11 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 }
 .section.ink .systems-marquee { margin-top: var(--space-4); }
 
-/* ---------- Headline above the band, band slimmed to the chips ---------- */
-.section.ink .systems-label { margin: var(--space-12) 0 var(--space-3); }
-.section.ink .systems { margin-top: 0; padding: var(--space-3) 0; }
+/* ---------- The band carries its own heading ----------
+   The label used to float above the strip on navy, so the band read as a thin
+   divider with a caption hovering over it. It now opens inside the band, above
+   the chips, which gives the block a top edge and lets it stand on its own. */
+.section.ink .systems { margin-top: 0; padding: var(--space-4) 0 var(--space-6); }
 .section.ink .systems-marquee { margin-top: 0; }
 
 /* ---------- Systems band: mid steel, two steps down from the first pale pass ----------
@@ -1180,38 +1182,43 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
    labels and the "or" separators drop under 4.5:1. */
 .section.ink .systems {
   background: linear-gradient(180deg, #B2C8D7 0%, #8AA7BE 100%);
-  border-top: 1px solid rgba(15, 42, 71, 0.20);
-  border-bottom: 1px solid rgba(15, 42, 71, 0.26);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -1px 0 rgba(15, 42, 71, 0.10);
+  border-top: 1px solid rgba(15, 42, 71, 0.18);
+  border-bottom: 0;
+  box-shadow: none;
 }
-.section.ink .systems .sys-list li {
-  background: rgba(255, 255, 255, 0.66);
-  border-color: rgba(15, 42, 71, 0.14);
-  color: var(--dl-navy);
-}
-.section.ink .systems .sys-icon { background: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(15, 42, 71, 0.1); }
 
-/* ---------- Eyebrow labels: banner headline and guide label now match ---------- */
+/* ---------- Eyebrow labels: the band heading sits on steel, the guide label on navy ---------- */
 .section.ink .systems-label,
 .read-next-label {
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--dl-dark-muted);
 }
+.section.ink .systems-head .systems-label {
+  margin: 0 0 var(--space-4);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  color: var(--dl-navy);
+}
+.read-next-label { color: var(--dl-dark-muted); }
 
-/* ---------- Band chips: sand shows through, more room inside and between ---------- */
+/* ---------- Band chips: solid white, so each app reads as one crisp chip ----------
+   Against the darker steel the translucent chips and their 34% hairline outlines
+   faded into the gradient. Solid white with a hairline rule and a soft shadow holds
+   the edge, and the icon sits on a faint plate inside it rather than on the band. */
 .section.ink .systems .sys-list { gap: var(--space-3); padding-right: var(--space-3); }
 .section.ink .systems .sys-list li {
-  background: transparent;
-  border-color: rgba(15, 42, 71, 0.34);
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 42, 71, 0.10);
   color: var(--dl-navy);
-  padding: 8px 20px 8px 7px;
+  padding: 7px 18px 7px 7px;
+  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.08);
 }
 .section.ink .systems .sys-icon {
-  background: #FFFFFF;
-  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.12), inset 0 0 0 1px rgba(15, 42, 71, 0.08);
+  background: #F1F5F8;
+  box-shadow: inset 0 0 0 1px rgba(15, 42, 71, 0.08);
 }
 
 /* ---------- Each mark sits beside its own name ---------- */
@@ -1219,7 +1226,6 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 /* 50% navy on the sand band measured about 2.9:1, too faint to read; 72% keeps
    it quiet but legible. */
 .section.ink .systems .sys-or { margin: 0 6px; color: rgba(15, 42, 71, 0.90); }
-.section.ink .systems .sys-list li { padding: 6px 18px 6px 6px; }
 
 /* ---------- Quick check: a cool band between the cream strip and the navy ----------
    The section after this one is the navy "what you can sell" band, so this is a
@@ -1246,7 +1252,6 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .cards-more a::after { content: "\2192"; transition: transform 0.2s ease; }
 .section.ink .cards-more a:hover { color: #FFFFFF; }
 .section.ink .cards-more a:hover::after { transform: translateX(4px); }
-.section.ink .systems-label { margin-top: var(--space-24); }
 
 /* ---------- Cards link as the related-guide pill, on the right, with a nearer band label ---------- */
 .section.ink .cards-more { display: flex; justify-content: flex-end; margin: var(--space-6) 0 0; }
@@ -1263,12 +1268,13 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 }
 .section.ink .cards-more a::after { content: "\2192"; transition: transform 0.2s ease; }
 .section.ink .cards-more a:hover::after { transform: translateX(3px); }
-.section.ink .systems-label {
-  margin-top: var(--space-12);
-  font-size: clamp(16px, 1.6vw, 20px);
-  letter-spacing: 0.1em;
-  line-height: 1.5;
-}
+
+/* ---------- The guide pill closes the section on the same right edge as the link above ----------
+   It used to be the only thing left of a long empty navy tail, and it sat on the
+   left while the link above it sat on the right. Now the two share an edge and the
+   section ends closer behind the band. */
+.section.ink .read-next { justify-content: space-between; margin: var(--space-8) 0 0; }
+.section#what-you-can-sell { padding-bottom: var(--space-16); }
 
 /* ---------- What a buyer sees: warm sand, so it separates from the cream below ----------
    The mist and the section after it were two creams within a few points of each
