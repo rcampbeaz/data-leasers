@@ -60,8 +60,12 @@ export default {
       { href: "faq.html", label: "FAQ" },
       { href: "privacy.html", label: "Privacy" },
       { href: "consent.html", label: "Consent" },
+      { href: "buyer-terms.html", label: "Buyer terms" },
+      { href: "glossary.html", label: "Glossary" },
+      { href: "editorial-standards.html", label: "Editorial standards" },
     ],
     guides: [
+      { href: "learn.html", label: "Start here" },
       { href: "can-i-sell-my-data.html", label: "Can I sell my data?" },
       { href: "data-licensing-checklist.html", label: "Licensing checklist" },
       { href: "what-data-do-ai-teams-buy.html", label: "What AI teams buy" },

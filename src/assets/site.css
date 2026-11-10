@@ -1704,3 +1704,15 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .byline a { color: #0F2A47; text-decoration: none; border-bottom: 1px solid rgba(15,42,71,.3); }
 .byline a:hover, .byline a:focus-visible { border-bottom-color: #0F2A47; }
 .byline span + span::before { content: "\00B7"; margin-right: .9rem; color: #AEB7C1; }
+
+
+/* Glossary: term and definition as a two-column pair on wide screens. */
+.glossary { display: grid; gap: .35rem 2.4rem; margin: 1.6rem 0 0; }
+.glossary dt { font-weight: 600; color: #0F2A47; }
+.glossary dd { margin: 0 0 .9rem; color: #3C4A5A; }
+.glossary dd a { color: #12796F; }
+@media (min-width: 800px) {
+  .glossary { grid-template-columns: 13rem 1fr; align-items: baseline; }
+  .glossary dt { grid-column: 1; }
+  .glossary dd { grid-column: 2; margin-bottom: 1.1rem; }
+}
