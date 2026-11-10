@@ -753,7 +753,7 @@ textarea { min-height: 120px; }
 .criteria-strip { display: grid; gap: var(--space-4); margin: var(--space-6) 0; }
 .criteria-item {
   background: var(--dl-paper, #232A33); border: 1px solid var(--color-border, #333C47);
-  border-radius: var(--radius-md, 10px); padding: var(--space-5);
+  border-radius: var(--radius-md, 10px); padding: var(--space-6);
 }
 .criteria-item strong {
   display: block; font-family: var(--font-serif, Georgia, serif); font-size: 34px;
