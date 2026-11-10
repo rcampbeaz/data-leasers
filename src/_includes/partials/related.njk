@@ -1,12 +1,19 @@
 {%- set self = page.fileSlug + ".html" -%}
+{%- set own = relatedHrefs or [] -%}
 <nav class="related reveal" aria-label="Related pages">
   <h2>Related</h2>
   <ul>
+{%- if own.length %}
+{%- for href in own %}{% set item = related.lookup[href] %}{% if item and href != self %}
+    <li><a href="{{ href }}">{{ item.label }}</a><span>{{ item.blurb }}</span></li>
+{%- endif %}{% endfor %}
+{%- else %}
 {%- for item in related.dataTypes %}{% if item.href != self %}
     <li><a href="{{ item.href }}">{{ item.label }}</a><span>{{ item.blurb }}</span></li>
 {%- endif %}{% endfor %}
 {%- for item in related.guides %}{% if item.href != self %}
     <li><a href="{{ item.href }}">{{ item.label }}</a><span>{{ item.blurb }}</span></li>
 {%- endif %}{% endfor %}
+{%- endif %}
   </ul>
 </nav>
