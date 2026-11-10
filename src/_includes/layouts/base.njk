@@ -51,12 +51,14 @@
 </head>
 <body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
 <a class="skip-link" href="#main">Skip to content</a>
+{% if not hideAnnounce %}
 <div class="announce">
   <div class="wrap announce-inner">
-    <span>$50,000 or 6% referral fee <span class="announce-note">&middot; paid by the data buyer</span></span>
-    <a href="refer.html">Terms &rarr;</a>
+    <span>Records you already own <span class="announce-note">&middot; buyers publish $100K&ndash;$5M</span></span>
+    <a href="index.html#paid">What you get paid &rarr;</a>
   </div>
 </div>
+{% endif %}
 {% include "partials/header.njk" %}
 {% if bodyClass != "home" and not noindex %}
 {% include "partials/crumbs.njk" %}
