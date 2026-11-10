@@ -1745,6 +1745,9 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   font-family: var(--font-serif, Georgia, serif); font-size: 64px; letter-spacing: 0.04em;
   color: var(--dl-text-2); background: var(--dl-panel); border: 1px solid var(--dl-line);
 }
+/* Keep the bio at a readable measure; the 264px portrait column leaves
+   the rest of the grid wide enough to run past 90 characters a line. */
+.about-grid .prose { max-width: 62ch; }
 @media (max-width: 760px) {
   .about-grid { grid-template-columns: 1fr; gap: 24px; }
   .author-portrait { width: 176px; }
