@@ -98,3 +98,25 @@
   }, { threshold: 0.6 });
   nums.forEach(function (el) { io.observe(el); });
 })();
+
+/* ---------- #buyer-view: what the buyer receives, as you narrow it ---------- */
+(function () {
+  var demo = document.querySelector('[data-redact]');
+  if (!demo) return;
+  var picks = demo.querySelectorAll('input[data-share]');
+  var count = demo.querySelector('[data-redact-count]');
+  function sync() {
+    var on = 0;
+    Array.prototype.forEach.call(picks, function (input) {
+      var out = demo.querySelector('[data-out="' + input.getAttribute('data-share') + '"]');
+      if (input.checked) on += 1;
+      if (!out) return;
+      out.classList.toggle('is-out', !input.checked);
+      var value = out.querySelector('b');
+      value.textContent = input.checked ? value.getAttribute('data-show') : 'excluded';
+    });
+    if (count) count.textContent = on;
+  }
+  demo.addEventListener('change', sync);
+  sync();
+})();

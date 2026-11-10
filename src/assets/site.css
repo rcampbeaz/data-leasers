@@ -1518,3 +1518,18 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   max-width: 74ch; font-size: var(--text-sm); line-height: 1.6; color: var(--color-text-muted);
 }
 .sources-list a { color: var(--dl-teal-ink); }
+
+/* ---------- Interactive redaction demo (#buyer-view) ---------- */
+.redact-hint { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
+.redact-pick { cursor: pointer; align-items: center; }
+.redact-pick span { display: inline-flex; align-items: center; gap: var(--space-2); }
+.redact-pick input { width: 16px; height: 16px; accent-color: var(--dl-teal-ink); margin: 0; flex: none; }
+.redact-pick:hover span { color: var(--dl-teal-ink); }
+.redact-pick b { color: var(--color-text-muted); font-weight: 500; }
+.redact-row.is-out span { color: var(--color-text-muted); }
+.redact-panel.buyer .redact-row.is-out b { color: #8A5A2B; font-style: italic; }
+.redact-count {
+  margin: var(--space-4) 0 0; padding-top: var(--space-3);
+  border-top: 1px solid #BFE0DA; font-size: var(--text-sm); color: var(--color-text-muted);
+}
+.redact-count b { color: var(--dl-teal-ink); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }

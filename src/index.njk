@@ -41,7 +41,7 @@ inlineScript: |
           out.innerHTML = '<strong>You may fit the data buyer&rsquo;s criteria.</strong> The records worth reviewing first are the ones AI teams look for: customer conversations, support tickets, document and proposal history, and sales notes. The next step is a short call to confirm what you hold and whether it can be licensed.<div class="q-result-actions"><a class="btn" href="contact.html">Tell us about your data</a><a class="btn btn-ghost" href="#buyer-view">See what a buyer sees</a></div>';
         } else {
           out.className = 'q-result q-review';
-          out.innerHTML = '<strong>You may not fit yet.</strong> The data buyer&rsquo;s criteria are strict, so a call may not be the right next step. If you know a company that does fit, you can <a href="refer.html">refer it to us</a>.';
+          out.innerHTML = '<strong>On these answers, a call would waste your time.</strong> The floors are published above and the buyer applies them as written, so there is nothing to negotiate on a call. The useful next step is a different one: if you work with a company that clears all four, <a href="refer.html">refer it to us</a> and we will take it from there.';
         }
         out.setAttribute('tabindex', '-1');
         out.focus();
@@ -120,7 +120,7 @@ inlineScript: |
       <div class="section-head reveal">
         <p class="kicker"><span class="kicker-num">01</span>Quick check</p>
         <h2>Four questions, about a minute.</h2>
-        <p>These are the data buyer&rsquo;s published minimums, and the four questions below follow them. Your company also has to own the records in those systems. Nothing you enter here is stored &mdash; see our <a href="privacy.html">privacy policy</a>.</p>
+        <p>These are the data buyer&rsquo;s published minimums, and the four questions below follow them. Your company also has to own the records in those systems. If the answer is no, we say so on this page rather than on a call. Nothing you enter here is stored &mdash; see our <a href="privacy.html">privacy policy</a>.</p>
       </div>
       <div class="fit-panel reveal">
         <div class="fit-progress" aria-hidden="true"><span id="fit-bar"></span></div>
@@ -313,23 +313,27 @@ inlineScript: |
           <p>Scope, purpose and length of license are set in the terms you approve, and every introduction runs past you first.</p>
         </div>
       </div>
-      <div class="redact">
+      <div class="redact redact-demo" data-redact>
         <div class="redact-panel">
           <h3>In your systems</h3>
-          <p class="redact-row"><span>Customer name</span><b>present</b></p>
-          <p class="redact-row"><span>Email address</span><b>present</b></p>
-          <p class="redact-row"><span>Issue</span><b>billing sync failed</b></p>
-          <p class="redact-row"><span>Resolution</span><b>card re-authorized</b></p>
+          <p class="redact-hint">Untick anything you would hold back.</p>
+          <label class="redact-row redact-pick"><span><input type="checkbox" checked data-share="name"> Customer name</span><b>Avery Doe</b></label>
+          <label class="redact-row redact-pick"><span><input type="checkbox" checked data-share="email"> Email address</span><b>avery@example.com</b></label>
+          <label class="redact-row redact-pick"><span><input type="checkbox" checked data-share="account"> Account number</span><b>AC-4821-90</b></label>
+          <label class="redact-row redact-pick"><span><input type="checkbox" checked data-share="issue"> Issue</span><b>billing sync failed</b></label>
+          <label class="redact-row redact-pick"><span><input type="checkbox" checked data-share="resolution"> Resolution</span><b>card re-authorized</b></label>
         </div>
         <div class="redact-panel buyer">
           <h3>In the licensed scope</h3>
-          <p class="redact-row"><span>Customer name</span><b>[redacted]</b></p>
-          <p class="redact-row"><span>Email address</span><b>[redacted]</b></p>
-          <p class="redact-row"><span>Issue</span><b>billing sync failed</b></p>
-          <p class="redact-row"><span>Resolution</span><b>card re-authorized</b></p>
+          <p class="redact-row" data-out="name"><span>Customer name</span><b data-show="[redacted]">[redacted]</b></p>
+          <p class="redact-row" data-out="email"><span>Email address</span><b data-show="[redacted]">[redacted]</b></p>
+          <p class="redact-row" data-out="account"><span>Account number</span><b data-show="[redacted]">[redacted]</b></p>
+          <p class="redact-row" data-out="issue"><span>Issue</span><b data-show="billing sync failed">billing sync failed</b></p>
+          <p class="redact-row" data-out="resolution"><span>Resolution</span><b data-show="card re-authorized">card re-authorized</b></p>
+          <p class="redact-count"><b data-redact-count>5</b> of 5 fields in scope</p>
         </div>
       </div>
-      <p class="flow-note">Illustrative example, not a real record. Every dataset is reviewed on its own terms. <a href="trust.html">How we handle your data</a></p>
+      <p class="flow-note" data-redact-note>Illustrative example, not a real record. What you hold back is your call: a narrower scope is a smaller dataset, and the buyer prices what it can use. Every dataset is reviewed on its own terms. <a href="trust.html">How we handle your data</a></p>
     </div>
   </section>
 
