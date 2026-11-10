@@ -1200,3 +1200,17 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems .sys-item { display: inline-flex; align-items: center; gap: 7px; }
 .section.ink .systems .sys-or { margin: 0 6px; color: rgba(15, 42, 71, 0.5); }
 .section.ink .systems .sys-list li { padding: 6px 18px 6px 6px; }
+
+/* ---------- Quick check: a cool band between the cream strip and the navy ----------
+   The section after this one is the navy "what you can sell" band, so this is a
+   pale steel tint rather than another deep blue: it separates from the cream
+   trust strip above without running into the navy below, and body text keeps
+   the same dark ink it already used. */
+.section.quick-band {
+  background-color: #E3ECF2;
+  background-image:
+    radial-gradient(720px 360px at 92% -8%, rgba(45, 212, 191, 0.12), transparent 68%),
+    radial-gradient(520px 300px at 0% 104%, rgba(15, 42, 71, 0.07), transparent 70%),
+    linear-gradient(180deg, #E9F0F5 0%, #D5E2EB 100%);
+}
+.section.quick-band::after { opacity: 0.12; }
