@@ -43,7 +43,7 @@ hr { border: 0; border-top: 1px solid var(--dl-line); margin: var(--space-8) 0; 
 /* The published buyer band, shown before the fold answer rather than three pages in. */
 .hero-money {
   display: grid; gap: var(--space-3);
-  margin: var(--space-6) 0 var(--space-5); padding-top: var(--space-5);
+  margin: var(--space-6) 0; padding-top: var(--space-6);
   border-top: 1px solid rgba(232, 237, 243, 0.16);
 }
 .hero-money strong {
