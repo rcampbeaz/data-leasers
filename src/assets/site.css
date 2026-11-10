@@ -1158,3 +1158,27 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems-label { margin: var(--space-12) 0 var(--space-3); }
 .section.ink .systems { margin-top: 0; padding: var(--space-3) 0; }
 .section.ink .systems-marquee { margin-top: 0; }
+
+/* ---------- Systems band: warm sand, matched to the cream and gold accents ---------- */
+.section.ink .systems {
+  background: linear-gradient(180deg, #EDE2CB 0%, #E2D4B6 100%);
+  border-top: 1px solid rgba(15, 42, 71, 0.12);
+  border-bottom: 1px solid rgba(15, 42, 71, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(15, 42, 71, 0.05);
+}
+.section.ink .systems .sys-list li {
+  background: rgba(255, 255, 255, 0.66);
+  border-color: rgba(15, 42, 71, 0.14);
+  color: var(--dl-navy);
+}
+.section.ink .systems .sys-icon { background: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(15, 42, 71, 0.1); }
+
+/* ---------- Eyebrow labels: banner headline and guide label now match ---------- */
+.section.ink .systems-label,
+.read-next-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dl-dark-muted);
+}
