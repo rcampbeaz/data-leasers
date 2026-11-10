@@ -1455,3 +1455,41 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
     radial-gradient(760px 380px at 88% -12%, rgba(45, 212, 191, 0.10), transparent 68%),
     linear-gradient(180deg, #EFF3F6 0%, #E2E9EF 100%);
 }
+
+/* ---------- Who this is for: a quiet motif per row ----------
+   The rows are wide and empty on the right. A low-contrast pattern there gives
+   the list some feeling without touching the copy: a white gradient sits over the
+   left of each row so the text reads on clean paper, and the motif shows through
+   in the space beside it. One pattern per row, all in the same navy at ~12%. */
+@media (min-width: 720px) {
+  .section#who .tiles .tile:nth-child(1) {
+    background-image:
+      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
+      radial-gradient(circle, rgba(15, 42, 71, 0.13) 1.1px, transparent 1.4px);
+    background-size: 100% 100%, 15px 15px;
+    background-repeat: no-repeat, repeat;
+  }
+  .section#who .tiles .tile:nth-child(2) {
+    background-image:
+      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
+      repeating-radial-gradient(circle, rgba(15, 42, 71, 0.12) 0 1px, transparent 1px 12px);
+    background-size: 100% 100%, 260px 260px;
+    background-position: 0 0, 100% 50%;
+    background-repeat: no-repeat, no-repeat;
+  }
+  .section#who .tiles .tile:nth-child(3) {
+    background-image:
+      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
+      repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.11) 0 1px, transparent 1px 10px);
+    background-size: auto, auto;
+    background-repeat: no-repeat, repeat;
+  }
+  .section#who .tiles .tile:nth-child(4) {
+    background-image:
+      linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 42%, rgba(255, 255, 255, 0.35) 72%, rgba(255, 255, 255, 0) 97%),
+      repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.10) 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(-45deg, rgba(15, 42, 71, 0.10) 0 1px, transparent 1px 14px);
+    background-size: auto, auto, auto;
+    background-repeat: no-repeat, repeat, repeat;
+  }
+}
