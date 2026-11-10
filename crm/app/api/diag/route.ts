@@ -39,6 +39,13 @@ export async function GET() {
     anonKeyRef: jwtRef(anonKey),
     serviceKeyRef: jwtRef(serviceKey),
     anonKeyLooksLikeJwt: Boolean(anonKey && anonKey.split('.').length === 3),
+    anonKeyFormat: !anonKey
+      ? '(unset)'
+      : anonKey.startsWith('sb_publishable_')
+        ? 'sb_publishable'
+        : anonKey.split('.').length === 3
+          ? 'legacy-jwt'
+          : 'unknown',
     keysMatchHost: hostRef(url) !== null && jwtRef(anonKey) === hostRef(url),
     serviceKeyMatchesHost: hostRef(url) !== null && jwtRef(serviceKey) === hostRef(url),
     anonKeyTail: anonKey ? anonKey.slice(-6) : null,
@@ -76,6 +83,35 @@ export async function GET() {
         hasPassword: (match.identities ?? []).some((i) => i.provider === 'email'),
       }
     : { exists: false };
+
+  // Does the anon key work at all? The email-link path depends on it.
+  try {
+    const res = await fetch(`${url}/auth/v1/settings`, {
+      headers: { apikey: anonKey ?? '', Authorization: `Bearer ${anonKey ?? ''}` },
+      cache: 'no-store',
+    });
+    out.settingsStatus = res.status;
+    const settings = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    out.emailProviderEnabled = Boolean((settings?.external as Record<string, unknown>)?.email);
+    out.mailerAutoconfirm = settings?.mailer_autoconfirm ?? null;
+    out.disableSignup = settings?.disable_signup ?? null;
+  } catch (e) {
+    out.settingsStatus = `fetch failed: ${(e as Error).message}`;
+  }
+
+  // The exact call the sign-in form makes, with a deliberately wrong password,
+  // to separate a bad key from a bad password.
+  const anon = createClient(url, anonKey ?? '', { auth: { persistSession: false } });
+  const probe = await anon.auth.signInWithPassword({
+    email: TEST_EMAIL,
+    password: 'not-the-real-password-probe',
+  });
+  out.passwordProbe = {
+    code: probe.error?.code ?? null,
+    status: probe.error?.status ?? null,
+    message: probe.error?.message ?? null,
+    returnedSession: Boolean(probe.data?.session),
+  };
 
   return NextResponse.json(out, { status: 200 });
 }
