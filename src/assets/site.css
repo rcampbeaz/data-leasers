@@ -1249,3 +1249,14 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   letter-spacing: 0.1em;
   line-height: 1.5;
 }
+
+/* ---------- What a buyer sees: warm sand, so it separates from the cream below ----------
+   The mist and the section after it were two creams within a few points of each
+   other, which read as one long pale block. Sand also picks up the tan band used
+   for the systems marquee, so it belongs to the page rather than being a new tone. */
+.section.mist.record-band {
+  background-color: #EDE3CE;
+  background-image:
+    radial-gradient(760px 380px at 90% -10%, rgba(45, 212, 191, 0.10), transparent 68%),
+    linear-gradient(180deg, #F1E9D8 0%, #E5D9BD 100%);
+}
