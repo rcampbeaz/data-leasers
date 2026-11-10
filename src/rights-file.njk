@@ -1,0 +1,156 @@
+---
+layout: layouts/base.njk
+permalink: "/rights-file.html"
+title: "The rights file | DataLeasers"
+description: "The document that answers a buyer's diligence questions: what a rights file records, why each field matters, and a template you can fill in before you talk to anyone."
+canonical: "https://dataleasers.com/rights-file.html"
+sources:
+  - label: "Data & Trust Alliance, data provenance standards"
+    href: "https://www.dtaalliance.org/news/leading-corporations-introduce-data-provenance-standards"
+    note: "the record fields: source, legal rights, privacy, generation date, data type, method, intended use and restrictions"
+  - label: "Datasheets for Datasets, Gebru et al., Microsoft Research (2018)"
+    href: "https://arxiv.org/abs/1803.09010"
+    note: "documenting motivation, composition, collection, processing and uses"
+  - label: "Data Cards, Pushkarna et al., Google Research (2021)"
+    href: "https://arxiv.org/abs/2204.01075"
+    note: "a shorter, reader-facing summary of what a dataset is and is not for"
+---
+<main id="main">
+  <section class="hero ink">
+    <div class="wrap">
+      <h1>The rights file.</h1>
+      <p class="lead">Every seller is told their rights matter. Almost none is handed the document that proves it. This is what we ask for, field by field, and you can start it before you speak to anyone &mdash; including us.</p>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Why it exists</p>
+        <h2>Diligence is a document, not a conversation.</h2>
+        <p>A buyer has to answer five questions before it can pay for anything: who owns these records, what may be done with them, who appears in them, how the personal data was handled, and what happens at the end of the term. A rights file answers all five in one place, per dataset, signed and versioned.</p>
+      </div>
+      <div class="cards">
+        <div class="card reveal">
+          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-shield"/></svg></span>
+          <h3>It shortens diligence</h3>
+          <p>A buyer who can read the position does not have to interview you for it. That is weeks off the calendar, and it is the part of the deal you control.</p>
+        </div>
+        <div class="card reveal">
+          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-doccheck"/></svg></span>
+          <h3>It gives counsel something to review</h3>
+          <p>Your lawyer can mark up a file with named clauses far faster than they can reconstruct the position from email threads.</p>
+        </div>
+        <div class="card reveal">
+          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-info"/></svg></span>
+          <h3>It records the gaps</h3>
+          <p>Where a position is unclear, it says so. An honest gap is easier to scope around than a confident guess, and it protects you later.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">The fields</p>
+        <h2>What goes in it.</h2>
+        <p>Twelve fields, one page per dataset. Anything you cannot fill in is itself a finding, and worth raising before an offer rather than after one.</p>
+      </div>
+      <div class="table-wrap reveal">
+        <table class="table">
+          <thead><tr><th>Field</th><th>What it records</th><th>Why the buyer needs it</th></tr></thead>
+          <tbody>
+            <tr><td>Dataset ID and version</td><td>A reference, and what it replaces</td><td>So every later document points at the same thing.</td></tr>
+            <tr><td>Source systems</td><td>Each tool the records came from</td><td>Rights and retention differ by system.</td></tr>
+            <tr><td>Date range</td><td>First and last record included</td><td>History is most of the value, and most of the risk.</td></tr>
+            <tr><td>Authorship</td><td>Employees, contractors, clients, third parties</td><td>Ownership follows authorship, not possession.</td></tr>
+            <tr><td>Rights basis</td><td>The contract or policy reviewed, by name and clause</td><td>&ldquo;We own it&rdquo; is not a position a lawyer can rely on.</td></tr>
+            <tr><td>Exclusions</td><td>What was left out, and why</td><td>A scope that is honest is easier to price.</td></tr>
+            <tr><td>Personal data</td><td>Categories present, and the de-identification method and version</td><td>Removing names is not anonymization, and buyers know it.</td></tr>
+            <tr><td>Processing log</td><td>What was done to the copy, in order</td><td>It shows the delivered file is the one described.</td></tr>
+            <tr><td>Delivery manifest</td><td>File list and hash</td><td>Proves what actually changed hands.</td></tr>
+            <tr><td>End of term</td><td>Deletion or return, with a date</td><td>The obligation outlives the payment.</td></tr>
+            <tr><td>Attestation</td><td>Name, title, signature, date</td><td>A statement with someone behind it.</td></tr>
+            <tr><td>Supersedes</td><td>The previous version, if any</td><td>So an old file cannot be mistaken for the current one.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Template</p>
+        <h2>A version you can fill in today.</h2>
+        <p>Copy this into a document, fill in what you know, and mark the rest as unknown. Do not delete a field because it is awkward; the gap is the useful part.</p>
+      </div>
+<pre class="template">RIGHTS FILE  ·  one per dataset  ·  version 1.0
+
+DATASET
+  id                     RS-____
+  name                   ______________________________________________
+  seller (legal entity)  ______________________________________________
+  prepared by / role     ______________________________________________
+  date                   ____-__-__
+  supersedes             RS-____  (or "none")
+
+SCOPE
+  systems included       ______________________________________________
+  date range             ____-__-__ to ____-__-__
+  record types           ______________________________________________
+  records excluded       ______________________________________________
+  estimated volume       ________ records  /  ________ GB
+
+RIGHTS BASIS  (one line per source: source, contract reviewed, clause, position)
+  ____________________________________________________________________
+  ____________________________________________________________________
+
+PERSONAL DATA
+  categories present     ______________________________________________
+  de-identification      method ______________  version ____
+  reviewed by            ______________________________________________
+  residual risk noted    ______________________________________________
+
+DELIVERY
+  manifest file          ______________________________________________
+  manifest hash          ______________________________________________
+  delivered to           ______________________________________________
+  delivery date          ____-__-__
+
+END OF TERM
+  deletion or return     ______________________________________________
+  deletion date          ____-__-__
+  certificate issued     yes / no
+
+ATTESTATION
+  "The statements above are true to the best of my knowledge, and the
+   rights described are held by the seller named above."
+  name / title           ______________________________________________
+  signature              ______________________________________________
+  date                   ____-__-__</pre>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="kicker">Standards</p>
+        <h2>It is not our format. It is the published one.</h2>
+        <p>The fields above follow the provenance standards the Data &amp; Trust Alliance set out &mdash; source, legal rights, privacy, generation date, data type, method, intended use, restrictions and a dataset-level identifier &mdash; and borrow the structure of Datasheets for Datasets and Data Cards. Using a recognised shape means a buyer&rsquo;s counsel has seen it before.</p>
+      </div>
+      <p class="reveal">A rights file is not legal advice, and it does not make unlicensable data licensable. It is a factual record, signed by the seller, of what is held and why it may be used.</p>
+      <p class="link-row reveal"><a href="what-affects-a-deal.html">What affects a deal</a> <a href="ai-buyers.html">Questions to ask any buyer</a></p>
+    </div>
+  </section>
+
+  {% include "partials/sources.njk" %}
+
+  <section class="section cta-band">
+    <div class="wrap reveal">
+      <h2>Want a second pair of eyes on yours?</h2>
+      <p><a class="btn" href="contact.html">Tell us about your data</a></p>
+    </div>
+  </section>
+</main>
