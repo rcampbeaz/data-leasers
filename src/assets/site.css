@@ -1664,3 +1664,16 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 @media (max-width: 860px) {
   .link-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-4); }
 }
+
+/* Between the pills and the phone menu there is not room for five labels, the
+   long CTA and the logo. The menu takes over there rather than squeezing the
+   row; the dropdown positioning repeats the narrow-screen rules on purpose. */
+@media (min-width: 900px) and (max-width: 1080px) {
+  .nav-desktop { display: none; }
+  .nav-disclosure { display: block; }
+  .nav-disclosure .nav {
+    position: absolute; left: 0; right: 0; top: 100%;
+    background: var(--dl-paper); border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md); padding: var(--space-4) var(--space-6) var(--space-6);
+  }
+}
