@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,9 @@
 <meta name="description" content="{{ description }}">
 <link rel="canonical" href="{{ canonical }}">
 <meta name="theme-color" content="#0F2A47">
+{%- if noindex %}
+<meta name="robots" content="noindex, follow">
+{%- endif %}
 {%- if analytics.searchConsoleVerification %}
 <meta name="google-site-verification" content="{{ analytics.searchConsoleVerification }}">
 {%- endif %}

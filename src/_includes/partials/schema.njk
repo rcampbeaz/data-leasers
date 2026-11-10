@@ -8,9 +8,11 @@
       "@type": "Organization",
       "@id": "{{ org }}",
       "name": "Data Leasers, LLC",
+      "legalName": "Data Leasers, LLC",
       "url": "{{ site.url }}/",
       "logo": { "@type": "ImageObject", "url": "{{ site.url }}/logo.svg" },
-      "description": "Data Leasers, LLC introduces operating companies to the data buyers and AI labs that license company data for AI."
+      "description": "Data Leasers, LLC introduces operating companies to the data buyers and AI labs that license company data for AI.",
+      "address": { "@type": "PostalAddress", "addressRegion": "AZ", "addressCountry": "US" }
     },
     {
       "@type": "WebSite",
@@ -24,18 +26,18 @@
       "@type": "WebPage",
       "@id": "{{ canonical }}#webpage",
       "url": "{{ canonical }}",
-      "name": "title",
-      "description": "description",
+      "name": {{ title | dump | safe }},
+      "description": {{ description | dump | safe }},
       "isPartOf": { "@id": "{{ site.url }}/#website" },
       "about": { "@id": "{{ org }}" },
       "primaryImageOfPage": { "@type": "ImageObject", "url": "{{ site.url }}/og-card.png" },
       "inLanguage": "en-US"
-    }{% if navKey %},
+    }{% if navKey or breadcrumb %},
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": "{{ site.url }}/" },
-        { "@type": "ListItem", "position": 2, "name": "crumbLabel", "item": "{{ canonical }}" }
+        { "@type": "ListItem", "position": 2, "name": {{ crumbLabel | dump | safe }}, "item": "{{ canonical }}" }
       ]
     }{% endif %}{% if bodyClass == "home" %},
     {
@@ -43,7 +45,12 @@
       "name": "Introductions to data buyers for company data licensing",
       "serviceType": "Company data licensing introductions",
       "provider": { "@id": "{{ org }}" },
-      "areaServed": { "@type": "Country", "name": "United States" },
+      "areaServed": [
+        { "@type": "Country", "name": "United States" },
+        { "@type": "Country", "name": "Canada" },
+        { "@type": "Country", "name": "United Kingdom" },
+        { "@type": "Country", "name": "Australia" }
+      ],
       "description": "DataLeasers introduces operating companies to the data buyers and AI labs that license company data for AI. The company keeps ownership and approves scope and terms in writing."
     }{% endif %}
   ]
