@@ -1323,3 +1323,75 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   box-shadow: 0 1px 2px rgba(15, 42, 71, 0.06), 0 10px 22px rgba(15, 42, 71, 0.05);
 }
 .section#who .criteria-num { margin-bottom: 2px; }
+
+/* ---------- Who this is for: one ruled stat card, one numbered index card ----------
+   Four identical white boxes followed by four more identical white boxes is what
+   made this section flat. The figures now share a single card divided by hairlines,
+   and the sectors read as an index: a serif numeral, the name, a one-line summary
+   and the link, in rows inside one card. Same markup, different composition. */
+.section#who .criteria {
+  gap: 1px;
+  padding: 0;
+  margin: var(--space-6) 0 var(--space-8);
+  background: rgba(15, 42, 71, 0.10);
+  border: 1px solid rgba(15, 42, 71, 0.12);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.section#who .criteria > div {
+  background: #FFFFFF;
+  border: 0; border-radius: 0; box-shadow: none;
+  padding: var(--space-6);
+}
+
+.section#who .tiles {
+  counter-reset: who-tile;
+  gap: 1px;
+  background: rgba(15, 42, 71, 0.10);
+  border: 1px solid rgba(15, 42, 71, 0.12);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.section#who .tiles .tile {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: baseline;
+  column-gap: var(--space-4);
+  row-gap: var(--space-1);
+  padding: var(--space-6);
+  background: #FFFFFF;
+  border: 0; border-radius: 0; box-shadow: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.section#who .tiles .tile::before {
+  counter-increment: who-tile;
+  content: "0" counter(who-tile);
+  grid-column: 1; grid-row: 1 / span 2;
+  font-family: var(--font-serif);
+  font-size: 30px; line-height: 1;
+  color: rgba(15, 42, 71, 0.22);
+  transition: color 0.2s ease;
+}
+.section#who .tiles .tile-label {
+  grid-column: 2; grid-row: 1;
+  font-family: var(--font-serif); font-weight: 600;
+  font-size: var(--text-lg); letter-spacing: -0.01em;
+  color: var(--dl-navy);
+}
+.section#who .tiles .tile-text { grid-column: 2; grid-row: 2; }
+.section#who .tiles .tile-cta {
+  grid-column: 3; grid-row: 1 / span 2;
+  align-self: center; white-space: nowrap;
+}
+.section#who .tiles .tile:hover { background: #FBFDFC; }
+.section#who .tiles .tile:hover::before { color: var(--dl-teal-ink); }
+
+@media (max-width: 640px) {
+  .section#who .tiles .tile {
+    grid-template-columns: 44px minmax(0, 1fr);
+    row-gap: var(--space-2);
+  }
+  .section#who .tiles .tile::before { font-size: 24px; grid-row: 1 / span 2; }
+  .section#who .tiles .tile-cta { grid-column: 2; grid-row: 3; justify-self: start; }
+}
