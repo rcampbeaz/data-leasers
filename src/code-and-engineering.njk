@@ -4,6 +4,10 @@ permalink: "/code-and-engineering.html"
 title: "Code and engineering | What you can sell | DataLeasers"
 description: "Pull request threads, reviews, issues and test history that show how software was changed, checked and corrected over several years of work."
 canonical: "https://dataleasers.com/code-and-engineering.html"
+relatedHrefs:
+  - documents.html
+  - operations.html
+  - can-i-sell-my-data.html
 ---
 <main id="main">
   <section class="hero ink">
@@ -45,6 +49,30 @@ canonical: "https://dataleasers.com/code-and-engineering.html"
         <li><strong>Licenses and third-party code</strong>Open-source and vendor code carries its own license terms.</li>
         <li><strong>Secrets</strong>Keys, tokens and credentials must be removed before any review.</li>
         <li><strong>Personal data in comments</strong>Reviews and issues can contain names and contact details.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap">
+      <h2 class="reveal">What a review thread teaches a model</h2>
+      <p class="reveal">A merged pull request is a decision with its reasoning attached. The code shows what changed; the review comments show why the first attempt was wrong, which is the part that generalizes to other codebases.</p>
+      <ul class="checklist reveal">
+        <li><strong>The objection and the answer</strong>A reviewer rejecting an approach, and the change that satisfied the objection.</li>
+        <li><strong>What testing caught</strong>The failure that appeared after the change, and the fix that followed it.</li>
+        <li><strong>How a fix was narrowed</strong>A broad change cut back to the smallest thing that solved the problem.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section teal-soft">
+    <div class="wrap">
+      <h2 class="reveal">What keeps a repository out of scope</h2>
+      <p class="reveal">Code is the category where a licence, rather than a contract with a customer, usually decides the answer.</p>
+      <ul class="checklist reveal">
+        <li><strong>Licences that forbid sublicensing</strong>Copyleft and vendor terms can rule out sharing the code with a buyer, even in your own repository.</li>
+        <li><strong>Secrets in commit history</strong>Keys, tokens and credentials have to be removed, and history has to be purged rather than overwritten.</li>
+        <li><strong>Customer data in issues and comments</strong>Tickets, logs and review notes can carry names, addresses and account details.</li>
       </ul>
     </div>
   </section>
