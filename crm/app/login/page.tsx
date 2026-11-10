@@ -66,7 +66,7 @@ async function signInWithPassword(formData: FormData) {
     // so say that instead of blaming the password. Everything else stays generic
     // and reveals nothing about whether the address exists.
     if (error.code === 'email_not_confirmed') redirect('/login?unconfirmed=1');
-    redirect('/login?error=1');
+    redirect(`/login?error=1&code=${encodeURIComponent(error.code ?? 'unknown')}`);
   }
   // Middleware sends staff to /mfa for two-factor setup or verification.
   redirect('/dashboard');
@@ -75,13 +75,14 @@ async function signInWithPassword(formData: FormData) {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string; unconfirmed?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; unconfirmed?: string; code?: string }>;
 }) {
-  const { sent, error, unconfirmed } = await searchParams;
+  const { sent, error, unconfirmed, code } = await searchParams;
   return (
     <main className="narrow">
       <h1>Sign in</h1>
       {error ? <p role="alert">Email or password is incorrect.</p> : null}
+      {error && code ? <p className="small muted">Reference: {code}</p> : null}
       {unconfirmed ? (
         <p role="alert">
           That address has not been confirmed yet. Use the sign-in link below to finish setting up
