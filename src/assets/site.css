@@ -507,7 +507,7 @@ textarea { min-height: 120px; }
 .section.ink .mock-versions b { background: rgba(255, 255, 255, 0.1); color: var(--dl-dark-fg); }
 .section.ink .mock-versions b.on { background: var(--dl-teal-bright); color: var(--dl-navy-deep); }
 .section.ink .mock-line.del { background: rgba(201, 162, 39, 0.16); color: #F0DFAE; }
-.section.ink .mock-line.add { background: rgba(31, 167, 154, 0.2); color: #C7F0EA; }
+.section.ink .mock-line.add { background: rgba(154, 82, 39, 0.2); color: #C7F0EA; }
 
 /* ---------- Before / after redaction pair ---------- */
 .redact { display: grid; gap: var(--space-4); margin-top: var(--space-8); }
@@ -880,7 +880,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
     radial-gradient(700px 240px at 20% -40%, rgba(232, 185, 138, 0.14), transparent 70%),
     linear-gradient(180deg, #F7F5F0 0%, #FBF8F2 100%);
 }
-.trust-item svg { filter: drop-shadow(0 2px 6px rgba(31, 167, 154, 0.28)); }
+.trust-item svg { filter: drop-shadow(0 2px 6px rgba(154, 82, 39, 0.28)); }
 
 .site-footer {
   position: relative;
@@ -932,7 +932,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 
 /* Cards and tiles lift with a soft teal edge */
 .card:hover, .tile:hover {
-  box-shadow: 0 18px 44px rgba(15, 42, 71, 0.13), 0 0 0 1px rgba(31, 167, 154, 0.32);
+  box-shadow: 0 18px 44px rgba(15, 42, 71, 0.13), 0 0 0 1px rgba(154, 82, 39, 0.32);
 }
 .tile-cta, .door-cta { display: inline-block; transition: transform 0.18s ease; }
 .tile:hover .tile-cta, .door:hover .door-cta { transform: translateX(4px); }
@@ -1084,7 +1084,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .cards-feature .mock-foot { color: var(--color-text-muted); }
 .section.ink .cards-feature .mock-subject { color: var(--dl-navy); }
 .section.ink .cards-feature .mock-avatar { background: rgba(15, 42, 71, 0.16); }
-.section.ink .cards-feature .mock-status { background: rgba(31, 167, 154, 0.14); color: var(--dl-approved-fg); }
+.section.ink .cards-feature .mock-status { background: rgba(154, 82, 39, 0.14); color: var(--dl-approved-fg); }
 .section.ink .cards-feature .mock-pill { background: var(--dl-teal-ink); color: #FFFFFF; }
 .section.ink .cards-feature .mock-timeline span { border-top-color: rgba(15, 42, 71, 0.18); color: var(--color-text-muted); }
 .section.ink .cards-feature .mock-timeline span.done { border-top-color: var(--dl-teal); color: var(--color-text); }
@@ -1412,7 +1412,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section#who .tiles .tile:hover,
 .section#who .tiles .tile:focus-visible {
   transform: translateY(-3px);
-  border-color: rgba(31, 167, 154, 0.5);
+  border-color: rgba(154, 82, 39, 0.5);
   box-shadow: 0 2px 4px rgba(15, 42, 71, 0.06), 0 22px 40px rgba(15, 42, 71, 0.12);
 }
 
@@ -1578,7 +1578,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 }
 .compare tbody th, .compare td { text-align: left; padding: 13px 14px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
 .compare tbody th { font-weight: 600; width: 27%; }
-.compare .is-us { background: rgba(31, 167, 154, .07); }
+.compare .is-us { background: rgba(154, 82, 39, .07); }
 .compare thead th.is-us { color: var(--dl-teal-ink); }
 
 /* ---------- Scope panel (#buyer-view) ---------- */
@@ -1657,7 +1657,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
    and an arrow that moves on hover. */
 .link-row a {
   display: inline-flex; align-items: center; gap: 7px;
-  border-bottom: 1px solid rgba(31, 167, 154, 0.38); padding-bottom: 2px;
+  border-bottom: 1px solid rgba(154, 82, 39, 0.38); padding-bottom: 2px;
 }
 .link-row a::after { content: "\2192"; font-weight: 500; transition: transform 0.18s ease; }
 .link-row a:hover::after { transform: translateX(3px); }
@@ -1715,4 +1715,11 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   .glossary { grid-template-columns: 13rem 1fr; align-items: baseline; }
   .glossary dt { grid-column: 1; }
   .glossary dd { grid-column: 2; margin-bottom: 1.1rem; }
+}
+
+/* The header redesign further up re-declared .nav-desktop as a flex row, which
+   beat the small-screen rule that hides it: at 320px the page measured 836px
+   wide and phones got a sideways-scrolling document. Restated last so it wins. */
+@media (max-width: 899px) {
+  .nav-desktop { display: none; }
 }
