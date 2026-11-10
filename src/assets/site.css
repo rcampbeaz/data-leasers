@@ -1444,3 +1444,14 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   .section#who .tiles .tile-label { font-size: var(--text-xl); }
   .section#who .tiles .tile-text { font-size: var(--text-sm); max-width: 54ch; }
 }
+
+/* ---------- Who this is for: its own cool band ----------
+   Sand above and navy below left this section as a cream gap with white cards
+   floating in it. A cool tint gives the cards something to sit against, and it
+   separates this band from the warm sand directly above it. */
+.section#who {
+  background-color: #EAEFF3;
+  background-image:
+    radial-gradient(760px 380px at 88% -12%, rgba(45, 212, 191, 0.10), transparent 68%),
+    linear-gradient(180deg, #EFF3F6 0%, #E2E9EF 100%);
+}
