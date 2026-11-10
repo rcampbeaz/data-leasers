@@ -761,7 +761,7 @@ textarea { min-height: 120px; }
 
 /* ============================================================
    Visual pass 2 — surface depth, texture and motion
-   Every surface is a stack: base colour, wash, pattern, content.
+   Every surface is a stack: base color, wash, pattern, content.
    ============================================================ */
 
 /* ---------- Type comfort ---------- */
@@ -1173,9 +1173,9 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
    The warm sand band was the only tan block inside a blue section, so it became
    cool steel. Pale, it sat within a few points of the sand section that follows
    it: different families, near-identical value. Each step since has taken the same
-   steel darker, holding the colour difference and the value difference together.
+   steel darker, holding the color difference and the value difference together.
    Navy text on the band used to cap how dark it could go; the chips are solid
-   white now, so nothing on the strip sits on this colour and it can keep going.
+   white now, so nothing on the strip sits on this color and it can keep going.
    #5F809B still reads as steel rather than navy, and the white chips clear 4:1
    against it. */
 .section.ink .systems {
@@ -1297,8 +1297,8 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
    uses an even dot field instead: texture, but no stripes. */
 .section.mist.record-band::after { display: none; }
 
-/* ---------- Record cards: colour key along the top, preview bled to the edges ----------
-   The category colour already existed per card; it now runs as a 3px rule across
+/* ---------- Record cards: color key along the top, preview bled to the edges ----------
+   The category color already existed per card; it now runs as a 3px rule across
    the top and tints the category chip, and the mock preview stops being an inset
    panel and becomes the card's lower half. */
 .section.ink .cards-feature .card {
