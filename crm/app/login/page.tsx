@@ -62,11 +62,20 @@ async function signInWithPassword(formData: FormData) {
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    // Only a real credential rejection is reported as a wrong password. A rate
+    // limit or a transport failure used to land on the same message, which sent
+    // people looking for a password problem that did not exist.
+    const code = error.code ?? 'unknown';
     // A staff account that never confirmed its address can still use the email link,
-    // so say that instead of blaming the password. Everything else stays generic
-    // and reveals nothing about whether the address exists.
-    if (error.code === 'email_not_confirmed') redirect('/login?unconfirmed=1');
-    redirect(`/login?error=1&code=${encodeURIComponent(error.code ?? 'unknown')}`);
+    // so say that instead of blaming the password.
+    if (code === 'email_not_confirmed') redirect('/login?unconfirmed=1');
+    if (code === 'over_request_rate_limit' || code === 'over_email_send_rate_limit') {
+      redirect('/login?limited=1');
+    }
+    if (code === 'invalid_credentials') {
+      redirect(`/login?error=1&code=${encodeURIComponent(code)}`);
+    }
+    redirect(`/login?failed=1&code=${encodeURIComponent(code)}`);
   }
   // Middleware sends staff to /mfa for two-factor setup or verification.
   redirect('/dashboard');
@@ -75,14 +84,33 @@ async function signInWithPassword(formData: FormData) {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string; unconfirmed?: string; code?: string }>;
+  searchParams: Promise<{
+    sent?: string;
+    error?: string;
+    failed?: string;
+    limited?: string;
+    unconfirmed?: string;
+    code?: string;
+  }>;
 }) {
-  const { sent, error, unconfirmed, code } = await searchParams;
+  const { sent, error, failed, limited, unconfirmed, code } = await searchParams;
   return (
     <main className="narrow">
       <h1>Sign in</h1>
       {error ? <p role="alert">Email or password is incorrect.</p> : null}
       {error && code ? <p className="small muted">Reference: {code}</p> : null}
+      {limited ? (
+        <p role="alert">
+          Too many attempts in a row. Wait a minute, then try again with the same password.
+        </p>
+      ) : null}
+      {failed ? (
+        <p role="alert">
+          Sign-in could not complete, which is not the same as a wrong password. Try again, or use
+          the email link below.
+        </p>
+      ) : null}
+      {failed && code ? <p className="small muted">Reference: {code}</p> : null}
       {unconfirmed ? (
         <p role="alert">
           That address has not been confirmed yet. Use the sign-in link below to finish setting up
