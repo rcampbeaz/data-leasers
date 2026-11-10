@@ -333,6 +333,29 @@ inlineScript: |
           <p class="redact-count"><b data-redact-count>5</b> of 5 fields in scope</p>
         </div>
       </div>
+      <div class="scope reveal">
+        <div class="scope-col">
+          <h3>What usually can be licensed</h3>
+          <ul class="scope-list">
+            <li>Resolved tickets with the fix attached</li>
+            <li>Playbooks, SOPs and their revision history</li>
+            <li>Proposal and document history</li>
+            <li>Deal notes, including why deals were lost</li>
+            <li>Transcripts of business meetings and calls</li>
+          </ul>
+        </div>
+        <div class="scope-col off">
+          <h3>What we will not take</h3>
+          <ul class="scope-list">
+            <li>Open litigation files, or anything under a protective order</li>
+            <li>Records you cannot show a right to license</li>
+            <li>Passwords, credentials and full card numbers</li>
+            <li>Client files where the client has not agreed</li>
+            <li>Health information without a documented consent path</li>
+          </ul>
+        </div>
+      </div>
+      <p class="flow-note">If what you hold is not on either list, ask. The answer usually arrives on the first call.</p>
       <p class="flow-note" data-redact-note>Illustrative example, not a real record. What you hold back is your call: a narrower scope is a smaller dataset, and the buyer prices what it can use. Every dataset is reviewed on its own terms. <a href="trust.html">How we handle your data</a></p>
     </div>
   </section>
@@ -428,25 +451,42 @@ inlineScript: |
     <div class="wrap">
       <div class="section-head reveal">
         <p class="kicker"><span class="kicker-num">05</span>The process</p>
-        <h2>From a first call to an agreement you approve.</h2>
+        <h2>From a first call to payment.</h2>
+        <p>The order is fixed. The dates are not, and pretending otherwise would waste your time.</p>
       </div>
-      <ol class="steps">
+      <ol class="timeline">
         <li class="reveal">
-          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-search"/></svg></span>
-          <h3>We learn about your data</h3>
-          <p>A short call on what your company holds and whether it fits what the data buyer looks for.</p>
+          <span class="timeline-num">01</span>
+          <h3>A short call</h3>
+          <p>What you hold, which systems, and whether it clears the published floors.</p>
+          <span class="slows">Half an hour, and you can stop there.</span>
         </li>
         <li class="reveal">
-          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-share"/></svg></span>
-          <h3>We put it in front of the buyers</h3>
-          <p>If there is a fit, we make the introductions and compare what each buyer comes back with.</p>
+          <span class="timeline-num">02</span>
+          <h3>Scope outline</h3>
+          <p>We map the categories worth reviewing and flag what looks unlicensable early.</p>
+          <span class="slows">Slowed by contracts that say nothing about third-party use.</span>
         </li>
         <li class="reveal">
-          <span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="icons.svg#i-check"/></svg></span>
-          <h3>You take the terms you want &mdash; and approve them</h3>
-          <p>Each buyer runs its own diligence. Nothing is agreed without your sign-off, and the records you do not license stay yours.</p>
+          <span class="timeline-num">03</span>
+          <h3>Buyer diligence</h3>
+          <p>Each interested buyer checks rights and personal data in its own process.</p>
+          <span class="slows">Slowed by records nobody can export cleanly.</span>
+        </li>
+        <li class="reveal">
+          <span class="timeline-num">04</span>
+          <h3>The lab reviews</h3>
+          <p>The buyer takes the agreed scope to the AI lab that would use it.</p>
+          <span class="slows">Slowed by a lab shifting its data priorities.</span>
+        </li>
+        <li class="reveal">
+          <span class="timeline-num">05</span>
+          <h3>Payment</h3>
+          <p>Net 30 after the lab accepts, on the buyer&rsquo;s published terms.</p>
+          <span class="slows">Slowed by an incomplete delivery manifest.</span>
         </li>
       </ol>
+      <p class="timeline-note reveal">About three months from the first conversation to payment is the buyer&rsquo;s own expectation. The clock sits in stages three to five, not with us. You approve the scope before anything is delivered, and you can stop at any stage.</p>
       <p class="link-row reveal"><a href="how-it-works.html">How it works in detail</a></p>
     </div>
   </section>
@@ -454,10 +494,82 @@ inlineScript: |
   <section class="section mist" id="buyer">
     <div class="wrap">
       <div class="section-head reveal">
-        <p class="kicker"><span class="kicker-num">06</span>Who we introduce you to</p>
-        <h2>Your data goes to more than one buyer. You choose.</h2>
-        <p>AI labs want different things: one may want support tickets, another documents and deal notes. We put your dataset in front of the buyers we work with, compare what comes back on price, scope and term, and bring you the version worth signing. Each agreement is between your company and the buyer you accept, and your records stay in your systems until the scope is agreed.</p>
+        <p class="kicker"><span class="kicker-num">06</span>Who sees it</p>
+        <h2>One dataset. Several buyers. You choose.</h2>
+        <p>Three buyers looked at the same archive. One passed, and two wanted different slices of it. That is the reason to work with more than one: scope, term and price are set by what each of them can actually use.</p>
       </div>
+      <div class="board reveal">
+        <div class="board-source">
+          <span class="board-label">Your dataset</span>
+          <p class="board-title">Support archive and product docs</p>
+          <ul class="board-facts">
+            <li>2019&ndash;2025</li>
+            <li>4 systems</li>
+            <li>Names and emails removed</li>
+            <li>You approve every buyer</li>
+          </ul>
+        </div>
+        <div class="buyer-card">
+          <div class="board-buyer-head">
+            <span class="buyer-name">Buyer A</span>
+            <span class="buyer-status is-review">In review</span>
+          </div>
+          <p class="buyer-role">Frontier model developer</p>
+          <dl class="buyer-rows">
+            <dt>Wants</dt><dd>Tickets with the fix attached</dd>
+            <dt>Term</dt><dd>3 years</dd>
+            <dt>Condition</dt><dd>Call transcripts included</dd>
+          </dl>
+        </div>
+        <div class="buyer-card">
+          <div class="board-buyer-head">
+            <span class="buyer-name">Buyer B</span>
+            <span class="buyer-status is-term">Term sheet</span>
+          </div>
+          <p class="buyer-role">Applied AI team, support tools</p>
+          <dl class="buyer-rows">
+            <dt>Wants</dt><dd>Resolved tickets only</dd>
+            <dt>Term</dt><dd>2 years</dd>
+            <dt>Condition</dt><dd>No billing fields</dd>
+          </dl>
+        </div>
+        <div class="buyer-card is-passed">
+          <div class="board-buyer-head">
+            <span class="buyer-name">Buyer C</span>
+            <span class="buyer-status is-pass">Passed</span>
+          </div>
+          <p class="buyer-role">Evaluation group</p>
+          <dl class="buyer-rows">
+            <dt>Wanted</dt><dd>Benchmark sets</dd>
+            <dt>Term</dt><dd>None agreed</dd>
+            <dt>Reason</dt><dd>Nothing held matched</dd>
+          </dl>
+        </div>
+      </div>
+      <p class="flow-note">Illustrative buyers, not real offers. A buyer that passes on one category often wants another, which is why the same records are shown more than once.</p>
+
+      <h3 class="compare-title reveal">Why not just email the labs?</h3>
+      <div class="compare-wrap reveal">
+        <table class="compare">
+          <caption>How a dataset reaches a buyer, three ways</caption>
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Direct to a lab</th>
+              <th scope="col">A marketplace</th>
+              <th scope="col" class="is-us">DataLeasers</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Who finds the buyer</th><td>You do</td><td>Whoever browses the listing</td><td class="is-us">We do</td></tr>
+            <tr><th scope="row">Offers to compare</th><td>One</td><td>Depends on traffic</td><td class="is-us">Several</td></tr>
+            <tr><th scope="row">Rights and personal-data review</th><td>Yours to run</td><td>Yours to run</td><td class="is-us">Run inside each buyer</td></tr>
+            <tr><th scope="row">What it costs you</th><td>Time</td><td>A commission from the price</td><td class="is-us">Nothing; the buyer pays us</td></tr>
+            <tr><th scope="row">Time to payment</th><td>The lab&rsquo;s queue</td><td>Varies</td><td class="is-us">About three months</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="flow-note">No arrangement guarantees a sale. What changes is how many buyers see the dataset and who carries the work to get it there.</p>
       <p class="link-row reveal"><a href="ai-buyers.html">How the buyers work</a> <a href="trust.html">How we handle your data</a></p>
     </div>
   </section>
