@@ -1171,17 +1171,18 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems { margin-top: 0; padding: var(--space-3) 0; }
 .section.ink .systems-marquee { margin-top: 0; }
 
-/* ---------- Systems band: mid steel, so it separates from the sand below ----------
+/* ---------- Systems band: mid steel, two steps down from the first pale pass ----------
    The warm sand band was the only tan block inside a blue section, so it became
-   cool steel. At the pale end it then sat within a few points of the sand section
-   that follows it: different families, near-identical value. This is the same
-   steel taken a step darker, which holds the colour difference and the value
-   difference at the same time. Text stays navy throughout. */
+   cool steel. Pale, it sat within a few points of the sand section that follows
+   it: different families, near-identical value. Each step since has taken the same
+   steel darker, holding the colour difference and the value difference together.
+   Text stays navy throughout; #8AA7BE is as dark as this can go before the navy
+   labels and the "or" separators drop under 4.5:1. */
 .section.ink .systems {
-  background: linear-gradient(180deg, #C0D4E1 0%, #9CB6C9 100%);
-  border-top: 1px solid rgba(15, 42, 71, 0.16);
-  border-bottom: 1px solid rgba(15, 42, 71, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(15, 42, 71, 0.08);
+  background: linear-gradient(180deg, #B2C8D7 0%, #8AA7BE 100%);
+  border-top: 1px solid rgba(15, 42, 71, 0.20);
+  border-bottom: 1px solid rgba(15, 42, 71, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -1px 0 rgba(15, 42, 71, 0.10);
 }
 .section.ink .systems .sys-list li {
   background: rgba(255, 255, 255, 0.66);
@@ -1204,7 +1205,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems .sys-list { gap: var(--space-3); padding-right: var(--space-3); }
 .section.ink .systems .sys-list li {
   background: transparent;
-  border-color: rgba(15, 42, 71, 0.30);
+  border-color: rgba(15, 42, 71, 0.34);
   color: var(--dl-navy);
   padding: 8px 20px 8px 7px;
 }
@@ -1217,7 +1218,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .systems .sys-item { display: inline-flex; align-items: center; gap: 7px; }
 /* 50% navy on the sand band measured about 2.9:1, too faint to read; 72% keeps
    it quiet but legible. */
-.section.ink .systems .sys-or { margin: 0 6px; color: rgba(15, 42, 71, 0.85); }
+.section.ink .systems .sys-or { margin: 0 6px; color: rgba(15, 42, 71, 0.90); }
 .section.ink .systems .sys-list li { padding: 6px 18px 6px 6px; }
 
 /* ---------- Quick check: a cool band between the cream strip and the navy ----------
