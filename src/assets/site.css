@@ -1700,7 +1700,10 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 
 
 /* Byline: only rendered once an author is configured. */
-.byline { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin: 10px 0 0; padding: 0 0 0; font-size: .82rem; color: #5B6B7C; }
+/* The byline is the only strip outside a .wrap, so it used to start at the
+   very edge of the screen while the breadcrumb above it was inset. Same
+   container metrics as .wrap, so the two columns line up. */
+.byline { display: flex; flex-wrap: wrap; gap: .4rem .9rem; max-width: var(--container); margin: 10px auto 0; padding: 0 var(--space-6); font-size: .82rem; color: #5B6B7C; }
 .byline a { color: #0F2A47; text-decoration: none; border-bottom: 1px solid rgba(15,42,71,.3); }
 .byline a:hover, .byline a:focus-visible { border-bottom-color: #0F2A47; }
 .byline span + span::before { content: "\00B7"; margin-right: .9rem; color: #AEB7C1; }
