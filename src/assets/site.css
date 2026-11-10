@@ -42,15 +42,20 @@ hr { border: 0; border-top: 1px solid var(--dl-line); margin: var(--space-8) 0; 
 
 /* The published buyer band, shown before the fold answer rather than three pages in. */
 .hero-money {
-  display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2) var(--space-4);
-  margin: var(--space-6) 0 0; padding-top: var(--space-4);
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-3) var(--space-5);
+  margin: var(--space-6) 0 var(--space-5); padding-top: var(--space-5);
   border-top: 1px solid rgba(232, 237, 243, 0.16);
 }
 .hero-money strong {
-  font-family: var(--font-sans); font-size: clamp(24px, 3.2vw, 34px);
-  font-weight: 750; letter-spacing: -0.01em; color: var(--dl-electric-lift); white-space: nowrap;
+  font-family: var(--font-sans); font-size: clamp(30px, 4.4vw, 42px);
+  font-weight: 780; line-height: 1; letter-spacing: -0.025em;
+  color: var(--dl-electric-lift); white-space: nowrap;
 }
-.hero-money span { flex: 1 1 260px; font-size: var(--text-sm); line-height: 1.55; color: var(--dl-dark-muted); }
+.hero-money span { flex: 1 1 240px; max-width: 46ch; font-size: var(--text-sm); line-height: 1.6; color: var(--dl-dark-muted); }
+@media (max-width: 560px) {
+  .hero-money { gap: var(--space-3) 0; }
+  .hero-money span { flex-basis: 100%; }
+}
 .wrap { max-width: var(--container); margin: 0 auto; padding: 0 var(--space-6); }
 
 .skip-link {
