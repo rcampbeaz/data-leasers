@@ -21,7 +21,7 @@ body {
   font-size: var(--text-base);
   line-height: var(--leading-body);
   color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--dl-cream);
   -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; display: block; }
@@ -771,8 +771,8 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 /* ---------- Light sections: wash plus paper grain ---------- */
 .section {
   position: relative;
-  background-color: #FFFFFF;
-  background-image: linear-gradient(180deg, #FFFFFF 0%, #FCFAF5 64%, #F7F4EC 100%);
+  background-color: #FBF8F2;
+  background-image: linear-gradient(180deg, #FBF8F2 0%, #FCFAF5 64%, #F7F4EC 100%);
 }
 .section > .wrap { position: relative; z-index: 1; }
 .section::after {
@@ -784,7 +784,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.mist {
   background-color: #F7F5F0;
   background-image:
-    linear-gradient(180deg, #FBF9F4 0%, #F3EFE6 100%),
+    linear-gradient(180deg, #F7F4EC 0%, #F3EFE6 100%),
     radial-gradient(rgba(15, 42, 71, 0.05) 1px, transparent 1px);
   background-size: auto, 26px 26px;
 }
@@ -870,7 +870,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
   background-color: var(--dl-cream);
   background-image:
     radial-gradient(700px 240px at 20% -40%, rgba(45, 212, 191, 0.14), transparent 70%),
-    linear-gradient(180deg, #F8F6F1 0%, #FCFAF4 100%);
+    linear-gradient(180deg, #F7F5F0 0%, #FBF8F2 100%);
 }
 .trust-item svg { filter: drop-shadow(0 2px 6px rgba(31, 167, 154, 0.28)); }
 
