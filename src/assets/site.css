@@ -1493,3 +1493,96 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
     background-repeat: no-repeat, repeat, repeat;
   }
 }
+
+/* ---------- Who this is for: four matched cards, not a two-column rail ----------
+   The rail put a tall stack of figures beside a shorter list, so the two columns
+   never ended together and the composition made no sense. Now the section runs in
+   one rhythm: a full-width strip of figures, then four equal cards, each with an
+   art panel on top like the reference. */
+.section#who > .wrap { display: block; }
+.section#who .section-head { max-width: 760px; margin-bottom: var(--space-8); }
+.section#who .criteria { grid-template-columns: minmax(0, 1fr); margin: 0 0 var(--space-12); }
+@media (min-width: 720px) {
+  .section#who .criteria { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.section#who .tiles,
+.section#who .tiles .tile:nth-child(n) { background-image: none; }
+.section#who .tiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+@media (min-width: 720px) {
+  .section#who .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1100px) {
+  .section#who .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.section#who .tiles .tile {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 42, 71, 0.12);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(15, 42, 71, 0.05), 0 16px 34px rgba(15, 42, 71, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.section#who .tiles .tile::before,
+.section#who .tiles .tile::after { content: none; }
+.section#who .tiles .tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(31, 167, 154, 0.5);
+  box-shadow: 0 2px 4px rgba(15, 42, 71, 0.06), 0 24px 44px rgba(15, 42, 71, 0.13);
+}
+
+/* The art panel is the part the eye lands on; the copy sits under it on white. */
+.section#who .tiles .tile-art {
+  display: block;
+  height: clamp(148px, 17vw, 192px);
+  background-color: #EFF4F6;
+  border-bottom: 1px solid rgba(15, 42, 71, 0.08);
+}
+.section#who .tiles .tile:nth-child(1) .tile-art {
+  background-image: radial-gradient(circle, rgba(15, 42, 71, 0.26) 1.5px, transparent 1.8px);
+  background-size: 16px 16px; background-position: 8px 8px;
+}
+.section#who .tiles .tile:nth-child(2) .tile-art {
+  background-image: repeating-radial-gradient(circle at 50% 50%, rgba(15, 42, 71, 0.24) 0 1px, transparent 1px 14px);
+  background-size: 190px 190px; background-position: 50% 50%;
+}
+.section#who .tiles .tile:nth-child(3) .tile-art {
+  background-image: repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.18) 0 1px, transparent 1px 12px);
+}
+.section#who .tiles .tile:nth-child(4) .tile-art {
+  background-image:
+    repeating-linear-gradient(45deg, rgba(15, 42, 71, 0.15) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(-45deg, rgba(15, 42, 71, 0.15) 0 1px, transparent 1px 16px);
+}
+
+.section#who .tiles .tile-label {
+  font-family: var(--font-serif); font-weight: 600;
+  font-size: var(--text-xl); letter-spacing: -0.01em;
+  color: var(--dl-navy);
+  margin: var(--space-6) var(--space-6) var(--space-2);
+}
+.section#who .tiles .tile-text {
+  margin: 0 var(--space-6) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  max-width: 46ch;
+}
+.section#who .tiles .tile-cta {
+  margin: 0 var(--space-6) var(--space-6);
+  font-size: var(--text-sm); font-weight: 650;
+  color: var(--dl-teal-ink);
+  white-space: normal; align-self: flex-start;
+}
+.section#who .tiles .tile:hover .tile-cta { color: var(--dl-navy); }
