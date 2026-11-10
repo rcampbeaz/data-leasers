@@ -80,10 +80,11 @@ export default async function DashboardPage() {
   }));
 
   // Dataset status
+  // State colours from the brand system, so the charts match the site.
   const statusColors: Record<string, string> = {
-    Approved: '#0F7C7A',
-    Review: '#B45309',
-    Blocked: '#8A1C14',
+    Approved: '#6EE7A8',
+    Review: '#F5C063',
+    Blocked: '#FF9C90',
   };
   const datasetSeries = ['Approved', 'Review', 'Blocked'].map((s) => ({
     label: s,

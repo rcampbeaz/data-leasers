@@ -61,7 +61,13 @@ async function signInWithPassword(formData: FormData) {
   );
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect('/login?error=1');
+  if (error) {
+    // A staff account that never confirmed its address can still use the email link,
+    // so say that instead of blaming the password. Everything else stays generic
+    // and reveals nothing about whether the address exists.
+    if (error.code === 'email_not_confirmed') redirect('/login?unconfirmed=1');
+    redirect('/login?error=1');
+  }
   // Middleware sends staff to /mfa for two-factor setup or verification.
   redirect('/dashboard');
 }
@@ -69,13 +75,19 @@ async function signInWithPassword(formData: FormData) {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; unconfirmed?: string }>;
 }) {
-  const { sent, error } = await searchParams;
+  const { sent, error, unconfirmed } = await searchParams;
   return (
     <main className="narrow">
       <h1>Sign in</h1>
       {error ? <p role="alert">Email or password is incorrect.</p> : null}
+      {unconfirmed ? (
+        <p role="alert">
+          That address has not been confirmed yet. Use the sign-in link below to finish setting up
+          the account.
+        </p>
+      ) : null}
       <form action={signInWithPassword}>
         <label>
           Work email
