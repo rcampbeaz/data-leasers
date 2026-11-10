@@ -72,5 +72,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // The public intake endpoint is handled before this matcher runs.
-  matcher: ['/((?!api/leads|api/reminders|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)'],
+  matcher: ['/((?!api/leads|api/reminders|api/diag|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)'],
 };
