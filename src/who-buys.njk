@@ -4,6 +4,10 @@ permalink: "/who-buys.html"
 title: "Who buys | DataLeasers"
 description: "The kinds of AI teams that look for business data, what they use it for, and why buyers are reached through the data buyer rather than directly by us."
 canonical: "https://dataleasers.com/who-buys.html"
+sources:
+  - label: "Nixon Peabody LLP, Five diligence questions before you buy AI training data"
+    href: "https://www.nixonpeabody.com/insights/alerts/2026/10/26/shopping-for-ai-training-data-five-diligence-questions-before-you-buy"
+    note: "the questions a buyer has to answer before it can use a dataset"
 ---
 <main id="main">
   <section class="hero ink">
@@ -37,11 +41,27 @@ canonical: "https://dataleasers.com/who-buys.html"
 
   <section class="section teal-soft">
     <div class="wrap">
+      <h2 class="reveal">What a buyer asks before it prices anything</h2>
+      <p class="reveal">A buyer is not only deciding whether the records are interesting. It has to satisfy itself that it can use them, which is a different question from whether your company holds them.</p>
+      <ul class="checklist reveal">
+        <li><strong>Can you transfer it?</strong>Whether the company can license these records to this buyer at all.</li>
+        <li><strong>Can it be used for this purpose?</strong>Training, testing and commercial use are separate permissions.</li>
+        <li><strong>Where did it come from?</strong>The system of record, how the export was made, and what rights attach to it.</li>
+        <li><strong>How is personal data handled?</strong>The de-identification method and how it is checked, not just that names were removed.</li>
+        <li><strong>What happens at the end?</strong>Whether copies are deleted or returned, and what becomes of models already trained.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="wrap">
       <h2 class="reveal">Why buyers are not contacted directly</h2>
       <p class="reveal">Introductions and terms go through the data buyer. This keeps negotiations, confidentiality and approvals in one place, and it means you only deal with buyers you have agreed to.</p>
       <p class="link-row reveal"><a href="ai-buyers.html">Learn about the data buyer</a> <a href="trust.html">How we handle data</a></p>
     </div>
   </section>
+
+  {% include "partials/sources.njk" %}
 
   <section class="section cta-band">
     <div class="wrap reveal">

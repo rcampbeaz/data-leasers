@@ -1,0 +1,12 @@
+{%- if sources and sources.length %}
+<section class="section sources-section">
+  <div class="wrap">
+    <h2 class="sources-title">Sources</h2>
+    <ol class="sources-list">
+      {%- for item in sources %}
+      <li><a href="{{ item.href }}" rel="noopener">{{ item.label }}</a>{% if item.note %} &mdash; {{ item.note }}{% endif %}</li>
+      {%- endfor %}
+    </ol>
+  </div>
+</section>
+{%- endif %}
