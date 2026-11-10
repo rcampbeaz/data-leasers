@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>05 / the process — restyle mock</title>
+<style>
+  @font-face { font-family: "InterVar"; src: url("/fonts/inter-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Source Serif 4"; src: url("/fonts/source-serif-4-latin.woff2") format("woff2"); font-weight: 200 900; font-display: swap; }
+  :root {
+    --navy: #0F2A47; --deep: #0A1E33; --teal: #1FA79A; --teal-bright: #2DD4BF;
+    --dark-fg: #EAF2F7; --dark-muted: #BFCFDD;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "InterVar", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--navy); }
+  body { font-family: var(--sans); color: var(--dark-fg); -webkit-font-smoothing: antialiased; }
+
+  /* stage is a fixed 1600px desktop canvas, scaled down so the cloud browser's
+     narrow viewport can photograph it */
+  .stage { width: 1600px; transform-origin: top left; }
+
+  .section { position: relative; padding: 96px 0; }
+  .section::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      linear-gradient(rgba(255,255,255,.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.032) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+  .wrap { position: relative; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* header: heading left, single link bottom-aligned right */
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 56px; margin-bottom: 60px; }
+  .kicker {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 14px;
+    font-size: 13.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-bright);
+  }
+  .kicker::before { content: ""; width: 26px; height: 1px; background: currentColor; opacity: .7; }
+  h2 {
+    margin: 0; max-width: 21ch; color: #fff;
+    font-family: var(--serif); font-weight: 600; font-size: 44px; line-height: 1.1; letter-spacing: -.02em;
+  }
+  .head-link {
+    flex: 0 0 auto; padding-bottom: 6px;
+    font-size: 15px; font-weight: 650; color: var(--teal-bright); text-decoration: none;
+    border-bottom: 1px solid rgba(45,212,191,.45);
+  }
+  .head-link::after { content: " →"; }
+
+  /* steps: one ruled strip, three equal cells, shared top rule */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid rgba(255,255,255,.20); }
+  .step { position: relative; padding: 40px 40px 4px 0; }
+  .step + .step { padding-left: 40px; border-left: 1px solid rgba(255,255,255,.12); }
+  .step::before { content: ""; position: absolute; top: -1px; left: 0; width: 30px; height: 2px; background: var(--teal-bright); }
+  .step + .step::before { left: 40px; }
+  .step-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+  .num { font-family: var(--serif); font-size: 32px; font-weight: 500; line-height: 1; color: var(--teal-bright); letter-spacing: -.01em; }
+  .glyph { color: rgba(234,242,247,.55); }
+  .glyph svg { width: 22px; height: 22px; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  h3 { margin: 0 0 10px; max-width: 22ch; color: #fff; font-size: 20px; font-weight: 650; line-height: 1.3; letter-spacing: -.01em; }
+  .step p { margin: 0; max-width: 32ch; font-size: 15px; line-height: 1.62; color: var(--dark-muted); }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <section class="section">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <p class="kicker">05 &nbsp;The process</p>
+          <h2>From a first call to an agreement you approve.</h2>
+        </div>
+        <a class="head-link" href="#">How it works in detail</a>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-top">
+            <span class="num">01</span>
+            <span class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></span>
+          </div>
+          <h3>We learn about your data</h3>
+          <p>A short call on what your company holds and whether it fits what the data buyer looks for.</p>
+        </div>
+        <div class="step">
+          <div class="step-top">
+            <span class="num">02</span>
+            <span class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h13"/><path d="m12 6 6 6-6 6"/></svg></span>
+          </div>
+          <h3>We introduce you to the data buyer</h3>
+          <p>If there is a fit, we make the introduction and hand over the conversation.</p>
+        </div>
+        <div class="step">
+          <div class="step-top">
+            <span class="num">03</span>
+            <span class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg></span>
+          </div>
+          <h3>The data buyer takes it forward, you decide</h3>
+          <p>The data buyer leads the discussion with AI teams. Nothing is agreed without your sign-off.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  (function () {
+    var s = parseFloat(new URLSearchParams(location.search).get('s') || '1');
+    var stage = document.getElementById('stage');
+    stage.style.transform = 'scale(' + s + ')';
+    document.body.style.width = (1600 * s) + 'px';
+    document.body.style.height = (stage.offsetHeight * s) + 'px';
+  })();
+</script>
+</body>
+</html>

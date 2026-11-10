@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>contrast audit</title>
+<style>html,body{margin:0;background:#888}iframe{border:0;display:block}</style>
+</head>
+<body>
+<iframe id="f"></iframe>
+<script>
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function parse(c) {
+  const m = String(c).match(/rgba?\(([^)]+)\)/);
+  if (!m) return [0, 0, 0, 1];
+  const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number);
+  return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+}
+function over(fg, bg) {
+  const a = fg[3];
+  return [fg[0] * a + bg[0] * (1 - a), fg[1] * a + bg[1] * (1 - a), fg[2] * a + bg[2] * (1 - a), 1];
+}
+function lum(c) {
+  const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+}
+function ratio(a, b) {
+  const l1 = lum(a), l2 = lum(b);
+  const hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+  return (hi + 0.05) / (lo + 0.05);
+}
+function hex(c) {
+  const h = n => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+  return '#' + h(c[0]) + h(c[1]) + h(c[2]);
+}
+function sel(el) {
+  let s = el.tagName.toLowerCase();
+  if (el.className && typeof el.className === 'string') {
+    s += '.' + el.className.trim().split(/\s+/).slice(0, 3).join('.');
+  }
+  const p = el.closest('section');
+  return (p && p.id ? '#' + p.id + ' ' : '') + s;
+}
+
+function auditDoc(doc, win) {
+  const rootBg = parse(win.getComputedStyle(doc.documentElement).backgroundColor);
+  const findings = [];
+  for (const el of doc.body.querySelectorAll('*')) {
+    if (el.closest('[aria-hidden="true"]')) continue;
+    const direct = [...el.childNodes].filter(n => n.nodeType === 3 && n.textContent.trim().length > 1);
+    if (!direct.length) continue;
+    const cs = win.getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.15) continue;
+    const box = el.getBoundingClientRect();
+    if (box.width < 2 || box.height < 2) continue;
+
+    const chain = [];
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) chain.unshift(n);
+    let bg = rootBg[3] > 0 ? rootBg : [255, 255, 255, 1];
+    let overImage = false;
+    for (const n of chain) {
+      const s = win.getComputedStyle(n);
+      if (s.backgroundImage && s.backgroundImage !== 'none') overImage = true;
+      const bc = parse(s.backgroundColor);
+      if (bc[3] > 0) bg = over(bc, bg);
+    }
+    const fg = over(parse(cs.color), bg);
+    const cr = ratio(fg, bg);
+    const fs = parseFloat(cs.fontSize);
+    const fw = parseInt(cs.fontWeight, 10) || 400;
+    const large = fs >= 24 || (fs >= 18.66 && fw >= 700);
+    const need = large ? 3 : 4.5;
+    const text = direct.map(n => n.textContent.trim()).join(' ').slice(0, 60);
+    if (cr < need) {
+      findings.push({ kind: overImage ? 'over-image' : 'contrast', s: sel(el), text, fs, fw, color: hex(fg), bg: hex(bg), cr: +cr.toFixed(2) });
+    } else if (fs < 12 && text.length > 3) {
+      findings.push({ kind: 'tiny', s: sel(el), text, fs, fw, color: hex(fg), bg: hex(bg), cr: +cr.toFixed(2) });
+    }
+  }
+  return findings;
+}
+
+window.__results = {};
+window.__queue = [];
+window.__done = 0;
+window.__total = 0;
+
+window.startAudit = function (urls, width) {
+  const f = document.getElementById('f');
+  f.style.width = width + 'px';
+  f.style.height = '1000px';
+  window.__queue = urls.slice();
+  window.__total = urls.length;
+  window.__done = 0;
+  window.__results = {};
+  window.__width = width;
+  if (window.__running) return 'busy';
+  window.__running = true;
+  (async function loop() {
+    while (window.__queue.length) {
+      const url = window.__queue.shift();
+      await new Promise(res => { f.onload = res; f.src = url + (url.includes('?') ? '&' : '?') + 'audit=1'; });
+      const d = f.contentDocument, w = f.contentWindow;
+      try { await d.fonts.ready; } catch (e) {}
+      await sleep(180);
+      d.querySelectorAll('.reveal, .steps li').forEach(e => e.classList.add('in'));
+      await sleep(160);
+      w.scrollTo(0, d.documentElement.scrollHeight);
+      await sleep(120);
+      w.scrollTo(0, 0);
+      await sleep(120);
+      const seen = {};
+      for (const x of auditDoc(d, w)) {
+        const k = x.kind + '|' + x.s + '|' + x.color + '|' + x.bg;
+        if (!seen[k]) seen[k] = Object.assign({}, x, { n: 0 });
+        seen[k].n++;
+        if (x.cr < seen[k].cr) seen[k].cr = x.cr;
+      }
+      window.__results[url] = Object.values(seen).sort((a, b) => a.cr - b.cr);
+      window.__done++;
+    }
+    window.__running = false;
+  })();
+  return 'started';
+};
+</script>
+</body>
+</html>
