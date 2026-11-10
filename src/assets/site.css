@@ -1612,6 +1612,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 /* The comparison stacks on a phone rather than scrolling sideways. */
 @media (max-width: 700px) {
   .compare { min-width: 0; }
+  .compare caption { display: block; width: 100%; }
   .compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .compare, .compare tbody, .compare tr, .compare th, .compare td { display: block; width: auto; }
   .compare tbody tr { padding: 14px 0 10px; border-bottom: 1px solid var(--color-border); }
