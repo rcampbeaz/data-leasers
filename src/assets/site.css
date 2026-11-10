@@ -85,7 +85,7 @@ hr { border: 0; border-top: 1px solid var(--dl-line); margin: var(--space-8) 0; 
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
   padding: 14px var(--space-6); border-radius: var(--radius-sm);
   font-family: var(--font-sans); font-size: var(--text-base); font-weight: 650;
-  text-decoration: none; background: var(--dl-teal-ink); color: #FFFFFF;
+  text-decoration: none; background: var(--dl-electric-deep); color: #FFFFFF;
   border: 1px solid var(--dl-teal-ink);
   transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 }
@@ -140,7 +140,7 @@ section[id] { scroll-margin-top: 92px; }
 .hero .wrap { position: relative; z-index: 1; }
 .hero-grid { display: grid; gap: var(--space-12); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-8) 0 var(--space-4); }
-.hero-home .btn { background: var(--dl-teal-bright); border-color: var(--dl-teal-bright); color: var(--dl-text); }
+.hero-home .btn { background: var(--dl-electric-deep); border-color: var(--dl-teal-bright); color: var(--dl-text); }
 .hero-home .btn:hover { background: #232A33; border-color: #3A4551; color: var(--dl-text); }
 .hero-home .btn-ghost { background: transparent; color: #FFFFFF; border-color: rgba(255, 255, 255, 0.42); }
 .hero-home .btn-ghost:hover { background: rgba(27, 33, 40, 0.10); border-color: #3A4551; color: #FFFFFF; }
@@ -323,7 +323,7 @@ section[id] { scroll-margin-top: 92px; }
 .cta-band { background: var(--dl-gunmetal-deep); color: var(--dl-dark-fg); text-align: center; }
 .cta-band h2 { color: #FFFFFF; margin-top: 0; }
 .cta-band p { margin-left: auto; margin-right: auto; }
-.cta-band .btn { background: var(--dl-teal-bright); border-color: var(--dl-teal-bright); color: var(--dl-text); }
+.cta-band .btn { background: var(--dl-electric-deep); border-color: var(--dl-teal-bright); color: var(--dl-text); }
 .cta-band .btn:hover { background: #232A33; border-color: #3A4551; color: var(--dl-text); }
 /* The band paints every .btn teal, so the ghost variant has to clear that
    background or it becomes white text on bright teal. The kicker needs the
@@ -459,7 +459,7 @@ textarea { min-height: 120px; }
 }
 .section.ink .examples { color: var(--dl-dark-fg); }
 .section.ink .examples li { background: rgba(27, 33, 40, 0.06); border-color: var(--dl-line-strong); }
-.section.ink .examples li::before { background: var(--dl-teal-bright); }
+.section.ink .examples li::before { background: var(--dl-electric-deep); }
 
 /* ---------- Criteria strip: the figures the check looks for ---------- */
 .criteria {
@@ -485,7 +485,7 @@ textarea { min-height: 120px; }
 .mock-avatar { width: 22px; height: 22px; border-radius: 50%; background: #232A33; }
 .mock-name { display: block; font-weight: 650; }
 .mock-subject { margin: var(--space-2) 0 0; font-weight: 650; font-size: var(--text-sm); }
-.mock-pill { display: inline-block; margin-top: var(--space-3); padding: 4px 10px; border-radius: var(--radius-pill); background: var(--dl-teal-ink); color: #FFFFFF; font-weight: 700; font-size: 11px; }
+.mock-pill { display: inline-block; margin-top: var(--space-3); padding: 4px 10px; border-radius: var(--radius-pill); background: var(--dl-electric-deep); color: #FFFFFF; font-weight: 700; font-size: 11px; }
 .mock-timeline { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
 .mock-timeline span { flex: 1; border-top: 2px solid #333C47; padding-top: var(--space-2); color: var(--color-text-muted); }
 .mock-timeline span.done { border-top-color: var(--dl-teal); color: var(--color-text); }
@@ -500,11 +500,11 @@ textarea { min-height: 120px; }
 .section.ink .mock-tag, .section.ink .mock-foot { color: var(--dl-dark-muted); }
 .section.ink .mock-avatar { background: rgba(27, 33, 40, 0.2); }
 .section.ink .mock-status { background: rgba(216, 168, 166, 0.16); color: var(--dl-electric-ink); }
-.section.ink .mock-pill { background: var(--dl-teal-bright); color: var(--dl-text); }
+.section.ink .mock-pill { background: var(--dl-electric-deep); color: var(--dl-text); }
 .section.ink .mock-timeline span { border-top-color: rgba(255, 255, 255, 0.2); color: var(--dl-dark-muted); }
 .section.ink .mock-timeline span.done { border-top-color: var(--dl-teal-bright); color: #FFFFFF; }
 .section.ink .mock-versions b { background: rgba(27, 33, 40, 0.1); color: var(--dl-dark-fg); }
-.section.ink .mock-versions b.on { background: var(--dl-teal-bright); color: var(--dl-text); }
+.section.ink .mock-versions b.on { background: var(--dl-electric-deep); color: var(--dl-text); }
 .section.ink .mock-line.del { background: rgba(201, 162, 39, 0.16); color: #F0DFAE; }
 .section.ink .mock-line.add { background: rgba(125, 46, 62, 0.2); color: #C7F0EA; }
 
@@ -648,9 +648,9 @@ textarea { min-height: 120px; }
     width: var(--space-4); height: 1px; background: var(--color-border);
   }
   .flow-num { display: inline-flex; align-items: center; gap: var(--space-2); }
-  .flow-num::after { content: ""; width: 18px; height: 1px; background: var(--dl-teal-ink); opacity: 0.45; }
+  .flow-num::after { content: ""; width: 18px; height: 1px; background: var(--dl-electric-deep); opacity: 0.45; }
   .section.ink .flow-step + .flow-step::before { background: var(--dl-border-dark); }
-  .section.ink .flow-num::after { background: var(--dl-teal-bright); opacity: 0.6; }
+  .section.ink .flow-num::after { background: var(--dl-electric-deep); opacity: 0.6; }
 }
 
 /* ---------- Sticky call bar on small screens: appears after the hero,
@@ -897,7 +897,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 
 .announce-inner > span::before {
   content: ""; display: inline-block; width: 7px; height: 7px; margin-right: var(--space-2);
-  border-radius: 50%; background: var(--dl-teal-bright); vertical-align: middle;
+  border-radius: 50%; background: var(--dl-electric-deep); vertical-align: middle;
   animation: dotPulse 2.6s ease-in-out infinite;
 }
 
@@ -1065,14 +1065,14 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .section.ink .cards-feature .card h3 { color: var(--dl-text); font-family: var(--font-sans); font-size: var(--text-lg); font-weight: 650; letter-spacing: -0.01em; margin: 0 0 var(--space-2); }
 .card-line { margin: 0 0 var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); }
 
-.section.ink .cards-feature .mock { margin-top: auto; border: 1px solid rgba(15, 42, 71, 0.08); background: var(--tint, #232A33); color: var(--color-text); border-radius: var(--radius-md); padding: var(--space-4); }
+.section.ink .cards-feature .mock { margin-top: auto; border: 1px solid rgba(15, 42, 71, 0.08); background: #232A33; color: var(--color-text); border-radius: var(--radius-md); padding: var(--space-4); }
 .section.ink .cards-feature .mock-head { color: var(--dl-text); }
 .section.ink .cards-feature .mock-tag,
 .section.ink .cards-feature .mock-foot { color: var(--color-text-muted); }
 .section.ink .cards-feature .mock-subject { color: var(--dl-text); }
 .section.ink .cards-feature .mock-avatar { background: rgba(15, 42, 71, 0.16); }
 .section.ink .cards-feature .mock-status { background: rgba(125, 46, 62, 0.14); color: var(--dl-approved-fg); }
-.section.ink .cards-feature .mock-pill { background: var(--dl-teal-ink); color: #FFFFFF; }
+.section.ink .cards-feature .mock-pill { background: var(--dl-electric-deep); color: #FFFFFF; }
 .section.ink .cards-feature .mock-timeline span { border-top-color: rgba(15, 42, 71, 0.18); color: var(--color-text-muted); }
 .section.ink .cards-feature .mock-timeline span.done { border-top-color: var(--dl-teal); color: var(--color-text); }
 .section.ink .cards-feature .mock-versions b { background: rgba(15, 42, 71, 0.09); color: var(--color-text); }
@@ -1533,7 +1533,7 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 .board-title { margin: var(--space-2) 0 var(--space-3); font-weight: 600; line-height: 1.3; }
 .board-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: var(--text-sm); color: var(--color-text-muted); }
 .board-facts li { display: flex; gap: 9px; align-items: baseline; }
-.board-facts li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--dl-teal-ink); flex: none; }
+.board-facts li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--dl-electric-deep); flex: none; }
 .board-buyer-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .buyer-name { font-weight: 600; font-size: var(--text-sm); letter-spacing: .02em; }
 .buyer-status {
@@ -1710,3 +1710,20 @@ a:not(.btn):not(.tile):hover { text-decoration-thickness: 2px; }
 @media (max-width: 899px) {
   .nav-desktop { display: none; }
 }
+
+/* Device mockups inside the feature cards sat on a translucent tint that stayed
+   light after the dark conversion. Pinned to the raised surface so their text
+   keeps its contrast on every card accent. */
+.section.ink .cards-feature .card .mock,
+.section.ink .cards-feature .mock,
+.type-split .mock { background: #232A33; color: #E8EDF3; border-color: #333C47; }
+.section.ink .cards-feature .card .mock .mock-tag,
+.section.ink .cards-feature .card .mock .mock-foot { color: #96A4B4; }
+
+/* Filled buttons (every variant except ghost): deep electric blue with a pure white
+   label. 5.17:1 against the fill, and it out-specifies the per-section button rules. */
+.btn.btn:not(.btn-ghost):not(.btn-quiet), a.btn.btn:not(.btn-ghost):not(.btn-quiet) {
+  background: var(--dl-electric-deep); color: #FFFFFF; border-color: transparent;
+}
+.btn.btn:not(.btn-ghost):not(.btn-quiet):hover, a.btn.btn:not(.btn-ghost):not(.btn-quiet):hover,
+.btn.btn:not(.btn-ghost):not(.btn-quiet):focus-visible { background: var(--dl-electric); color: #FFFFFF; }
