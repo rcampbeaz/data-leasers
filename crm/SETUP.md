@@ -107,6 +107,14 @@ Environment for sending:
 17 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://app.dataleasers.com/api/outbound/guard
 ```
 
+5. Add the weekly partner deadline report, Monday morning. It emails admins and introducers the open referrals bucketed by how long is left on the six-month window, with the overdue ones first, and a link to the ledger:
+
+```
+0 7 * * 1 curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://app.dataleasers.com/api/partners/report
+```
+
+The same report is on the Partners page, so a person and the inbox cannot disagree. With no open referrals the run sends nothing and says so in its response.
+
 A hold stops new mail to that domain; the contacts stay in the sequence and the step is not consumed. Release a domain from the Deliverability page, with a note. The sweep will not re-hold a released domain for a week, so a release cannot be undone within the hour; after that, if the rolling rate is still over the line, it holds again. The sweep also reports domains that are over the threshold on too little volume rather than acting on them, because one complaint in a dozen sends is noise rather than evidence.
 
 Ramp slowly: a handful of sends a day for the first week, then watch bounces and complaints before adding volume. Keep the complaint rate under 0.1%.
@@ -132,7 +140,6 @@ Environment:
 3. The limit is 600 requests in five minutes, and one search is one request. The importer asks for a single page of up to 100 results and reports the true total, so a large search is read in slices rather than page by page.
 4. The register is published under the Open Government Licence, so the results may be stored. Keep the company number and register link on the row, which the importer does.
 
-## Two-factor, booking and inbound email
-- `MFA_REQUIRED=true` makes the middleware require an authenticator code. Enrol at `/mfa` first, then set the flag, or the account locks itself out.
+## Two-factor, booking and inbound email- `MFA_REQUIRED=true` makes the middleware require an authenticator code. Enrol at `/mfa` first, then set the flag, or the account locks itself out.
 - `BOOKING_URL` adds a booking link to a company header.
 - `INBOUND_EMAIL_SECRET` enables `POST /api/inbound/email`, which logs a forwarded email as an activity: send the header `x-inbound-secret` with `{"company_id": "...", "from": "...", "subject": "...", "text": "..."}`.

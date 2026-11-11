@@ -3,6 +3,7 @@ import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { addPartner, anonymisePartner, registerReferral, updateReferral } from '@/lib/deal-actions';
 import { REFERRAL_STATUSES, daysUntil, money, referralFee } from '@/lib/deals';
+import { BUCKET_LABELS, buildPartnerReport } from '@/lib/partner-report';
 
 type Partner = {
   id: string;
@@ -67,6 +68,17 @@ export default async function PartnersPage({
 
   const openReferrals = referralRows.filter((r) => ['registered', 'introduced'].includes(r.status));
   const atRisk = openReferrals.filter((r) => daysUntil(r.deadline_on) <= 30);
+
+  const report = buildPartnerReport(
+    openReferrals.map((r) => ({
+      id: r.id,
+      company_id: r.company_id,
+      company_name: r.company_name,
+      partnerName: partnerName.get(r.partner_id) ?? 'Unknown partner',
+      deadline_on: r.deadline_on,
+      status: r.status,
+    })),
+  );
 
   return (
     <main className="page">
@@ -233,6 +245,73 @@ export default async function PartnersPage({
           <p className="muted small-note">The deadline is set to six months from the registration date.</p>
         </details>
       ) : null}
+
+      <section className="panel">
+        <h2>Weekly deadline report</h2>
+        <p className="muted">
+          Open referrals ordered by how long is left on the six-month window. This is the same
+          report that is emailed to admins and introducers on Monday morning, so what is on screen
+          and what lands in the inbox agree.
+        </p>
+
+        <div className="kpis" aria-label="Referral deadline figures">
+          <div className="kpi"><span>Open</span><strong>{report.openTotal}</strong></div>
+          <div className="kpi">
+            <span>Past deadline</span>
+            <strong className={report.counts.overdue ? 'overdue' : ''}>{report.counts.overdue}</strong>
+          </div>
+          <div className="kpi">
+            <span>Inside 7 days</span>
+            <strong className={report.counts.week ? 'overdue' : ''}>{report.counts.week}</strong>
+          </div>
+          <div className="kpi"><span>Inside 30 days</span><strong>{report.counts.month}</strong></div>
+        </div>
+
+        {report.rows.length === 0 ? (
+          <p className="muted">No open referrals, so nothing is running out of time.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Partner</th>
+                <th>Status</th>
+                <th>Deadline</th>
+                <th>Time left</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.rows.slice(0, 25).map((row) => (
+                <tr key={row.id}>
+                  <td>
+                    {row.company_id ? (
+                      <Link href={`/companies/${row.company_id}`}>{row.company_name}</Link>
+                    ) : (
+                      row.company_name
+                    )}
+                  </td>
+                  <td>{row.partnerName}</td>
+                  <td><span className="stage">{row.status}</span></td>
+                  <td>{String(row.deadline_on).slice(0, 10)}</td>
+                  <td>
+                    <span
+                      className={`status ${row.bucket === 'overdue' ? 'blocked' : row.bucket === 'week' || row.bucket === 'month' ? 'review' : 'approved'}`}
+                    >
+                      {row.daysLeft === null
+                        ? 'no deadline'
+                        : row.daysLeft < 0
+                          ? `${Math.abs(row.daysLeft)}d overdue`
+                          : `${row.daysLeft}d`}
+                    </span>
+                  </td>
+                  <td className="muted small">{BUCKET_LABELS[row.bucket]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
       <section className="panel">
         <h2>Registered referrals</h2>
