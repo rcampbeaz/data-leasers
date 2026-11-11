@@ -60,7 +60,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0011_outbound.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0012_prospect_import.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
@@ -101,6 +101,19 @@ Environment for sending:
 ```
 
 Ramp slowly: a handful of sends a day for the first week, then watch bounces and complaints before adding volume. Keep the complaint rate under 0.1%.
+
+## Prospect import (0012)
+- **Import** now has a Companies House search and a queue. A search writes candidates, not companies; a person accepts a candidate before it enters the pipeline at New lead.
+- A candidate whose company number or normalised name already exists in the CRM is stored as a duplicate and cannot be accepted, so the same firm is never worked twice.
+- Re-running a search never overwrites a decision: the queue is unique on the source and the register's company number.
+- The score is a ranking, not a gate on legality: sector 40, age 25, legal form 10, active 10, address 5, minus 15 for a name that reads as a holding company. 70+ is strong, 45-69 worth a look, below 45 weak. The reasons are stored with the row and copied into the company as a note on acceptance.
+- The register publishes no headcount, so size is confirmed on the call. The sector floors shown in the form are the published eligibility rules, not something the score can verify.
+
+Environment:
+1. Register a free application at the Companies House developer hub and take the API key. No OAuth is needed for search.
+2. Set `COMPANIES_HOUSE_API_KEY` in `.env`. It is sent as the basic-auth username with an empty password, as Companies House documents.
+3. The limit is 600 requests in five minutes, and one search is one request. The importer asks for a single page of up to 100 results and reports the true total, so a large search is read in slices rather than page by page.
+4. The register is published under the Open Government Licence, so the results may be stored. Keep the company number and register link on the row, which the importer does.
 
 ## Two-factor, booking and inbound email
 - `MFA_REQUIRED=true` makes the middleware require an authenticator code. Enrol at `/mfa` first, then set the flag, or the account locks itself out.
