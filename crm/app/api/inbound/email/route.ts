@@ -54,5 +54,25 @@ export async function POST(request: Request) {
   });
   if (error) return NextResponse.json({ error: 'could not save the email' }, { status: 500 });
 
+  // A reply stops the sequence. Matching on the sender address is enough here: if the
+  // address is one we are mailing, nothing further should go out without a person
+  // looking at it first.
+  if (from) {
+    const { data: contact } = await supabase
+      .from('outreach_contacts')
+      .select('id')
+      .eq('email', from.toLowerCase())
+      .maybeSingle();
+
+    if (contact) {
+      await supabase
+        .from('sequence_enrolments')
+        .update({ status: 'replied', stopped_reason: 'Replied by email' })
+        .eq('contact_id', contact.id)
+        .in('status', ['pending_approval', 'active', 'sending', 'paused']);
+      await supabase.from('outreach_contacts').update({ status: 'replied' }).eq('id', contact.id);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

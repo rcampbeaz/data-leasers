@@ -60,7 +60,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0010_company_profile.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0011_outbound.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
@@ -84,6 +84,23 @@ Environment for sending:
 ```
 
 Until `SOCIAL_API_URL` is set, the Marketing page says so rather than appearing broken. LinkedIn company-page publishing needs the provider's own approval, and TikTok needs its audit: before that audit a TikTok post can only go out as a private draft.
+
+## Outbound email (0011)
+- Open **Outbound**. A contact cannot be added without a country and a lawful basis, and the guard refuses a basis that is not lawful for that country: the US allows an opt-out basis, Canada and Australia need consent, and the UK allows corporate subscribers.
+- Nothing sends until a person clicks **Approve first send** on the enrolment. A reply, an unsubscribe or a suppression stops the sequence permanently.
+- `/unsubscribe?token=…` is public and needs no sign-in. It suppresses the address globally and stops every live enrolment.
+- `/api/inbound/email` also stops a sequence when the sender matches a contact, so forwarding a reply is enough to halt outreach.
+
+Environment for sending:
+1. Add a sending subdomain, for example `mail.dataleasers.com`, verify it in Resend, and publish SPF, DKIM and DMARC for it. Do not send cold mail from the domain that sends client email.
+2. Set `OUTBOUND_FROM_EMAIL` to an address on that subdomain, and `POSTAL_ADDRESS` to the sender's real physical address. The route returns 503 rather than mailing without them.
+3. Add a cron entry, every ten minutes:
+
+```
+*/10 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://app.dataleasers.com/api/outbound/send
+```
+
+Ramp slowly: a handful of sends a day for the first week, then watch bounces and complaints before adding volume. Keep the complaint rate under 0.1%.
 
 ## Two-factor, booking and inbound email
 - `MFA_REQUIRED=true` makes the middleware require an authenticator code. Enrol at `/mfa` first, then set the flag, or the account locks itself out.
