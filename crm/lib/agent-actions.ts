@@ -9,6 +9,9 @@ import { currentStaff } from '@/lib/data';
 // in the Agents page, and sending is a separate step that is not built yet.
 
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
+// Any OpenAI-compatible endpoint works, so a free provider can replace a paid OpenAI key by
+// changing two values. Blank keeps OpenAI.
+const OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '');
 
 function fail(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -40,7 +43,7 @@ async function checkBeforeRun(path: string) {
 
 // One call to the OpenAI chat API. Returns the text and token counts.
 async function callOpenAI(system: string, user: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,

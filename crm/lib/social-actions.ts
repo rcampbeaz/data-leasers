@@ -18,6 +18,9 @@ import {
 
 const PATH = '/marketing';
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
+// Any OpenAI-compatible endpoint works, so a free provider (Groq, Google AI Studio, OpenRouter) can
+// replace a paid OpenAI key by changing two values. Blank keeps OpenAI.
+const OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '');
 
 function fail(message: string): never {
   redirect(`${PATH}?error=${encodeURIComponent(message)}`);
@@ -114,7 +117,7 @@ export async function generateDraft(formData: FormData) {
   let completionTokens: number | null = null;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
