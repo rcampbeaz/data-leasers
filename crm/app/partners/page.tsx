@@ -25,7 +25,12 @@ type Referral = {
   status: string;
   fee_amount: number | null;
   paid_on: string | null;
+  // Optional because 0014 and 0015 may not have been run yet; the ledger still renders.
+  chase_task_id?: string | null;
+  escalation_task_id?: string | null;
 };
+
+type ChaseTask = { id: string; title: string; due_on: string; done: boolean };
 
 export default async function PartnersPage({
   searchParams,
@@ -42,10 +47,8 @@ export default async function PartnersPage({
     await Promise.all([
       // Every column, so the page still renders if 0008 has not been run yet.
       supabase.from('partners').select('*').order('name'),
-      supabase
-        .from('referrals')
-        .select('id, partner_id, company_id, company_name, registered_on, deadline_on, status, fee_amount, paid_on')
-        .order('registered_on', { ascending: false }),
+      // Every column, so the ledger still renders before 0014/0015 have been run.
+      supabase.from('referrals').select('*').order('registered_on', { ascending: false }),
       supabase.from('offers').select('company_id, amount, currency, status'),
       supabase.from('companies').select('id, name').order('name'),
     ]);
@@ -65,6 +68,33 @@ export default async function PartnersPage({
 
   const partnerName = new Map(partnerRows.map((p) => [p.id, p.name]));
   const partnerById = new Map(partnerRows.map((p) => [p.id, p]));
+
+  // The chase tasks the daily sweep created, so the ledger shows the same thing the Tasks page
+  // does rather than a separate claim about whether a referral is being chased.
+  const chaseIds = referralRows
+    .flatMap((r) => [r.chase_task_id, r.escalation_task_id])
+    .filter((id): id is string => Boolean(id));
+  const chaseTaskById = new Map<string, ChaseTask>();
+  if (chaseIds.length > 0) {
+    const { data: chaseTasks } = await supabase
+      .from('tasks')
+      .select('id, title, due_on, done')
+      .in('id', chaseIds);
+    for (const task of (chaseTasks ?? []) as ChaseTask[]) chaseTaskById.set(task.id, task);
+  }
+
+  const chaseLine = (label: string, taskId?: string | null) => {
+    if (!taskId) return <div className="muted small">{label}: none</div>;
+    const task = chaseTaskById.get(taskId);
+    // A task id with no row means it was deleted after the sweep linked it, or RLS hid it.
+    if (!task) return <div className="muted small">{label}: missing</div>;
+    return (
+      <div className="small">
+        {label}: <strong>{task.done ? 'done' : 'open'}</strong>{' '}
+        <span className="muted">{task.due_on}</span>
+      </div>
+    );
+  };
 
   const openReferrals = referralRows.filter((r) => ['registered', 'introduced'].includes(r.status));
   const atRisk = openReferrals.filter((r) => daysUntil(r.deadline_on) <= 30);
@@ -325,6 +355,7 @@ export default async function PartnersPage({
                 <th>Partner</th>
                 <th>Registered</th>
                 <th>Deadline</th>
+                <th>Chases</th>
                 <th>Status</th>
                 <th>Fee</th>
                 <th></th>
@@ -351,6 +382,10 @@ export default async function PartnersPage({
                     <td className={open && days <= 30 ? 'overdue' : ''}>
                       {referral.deadline_on}
                       {open ? <span className="muted small"> ({days}d)</span> : null}
+                    </td>
+                    <td>
+                      {chaseLine('Routine', referral.chase_task_id)}
+                      {chaseLine('Escalation', referral.escalation_task_id)}
                     </td>
                     <td>
                       <span className="stage">{referral.status}</span>
