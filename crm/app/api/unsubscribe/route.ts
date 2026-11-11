@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 import { unsubscribeByToken } from '@/lib/unsubscribe';
+import { unsubscribeUrl } from '@/lib/outbound';
+
+// Behind the reverse proxy `request.url` carries the internal origin (localhost:3000), so a
+// redirect built from it sends a real recipient nowhere. The public origin is configuration.
+function publicOrigin(): string {
+  return process.env.CRM_ORIGIN ?? 'https://app.dataleasers.com';
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -8,10 +15,8 @@ export const dynamic = 'force-dynamic';
 // one-click. The GET hands off to the page, which explains what happened.
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const token = url.searchParams.get('token') ?? '';
-  const target = new URL('/unsubscribe', url.origin);
-  if (token) target.searchParams.set('token', token);
+  const token = new URL(request.url).searchParams.get('token') ?? '';
+  const target = token ? unsubscribeUrl(token) : `${publicOrigin()}/unsubscribe`;
   return NextResponse.redirect(target, 302);
 }
 
