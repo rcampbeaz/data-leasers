@@ -36,7 +36,7 @@ export default async function CompanyPage({
 
   const { data: company } = await supabase
     .from('companies')
-    .select('id, name, stage, close_reason, source, owner_id, introduced_by, next_action, next_action_due, lead_id, created_at')
+    .select('id, name, stage, close_reason, source, owner_id, introduced_by, next_action, next_action_due, lead_id, created_at, legal_name, website, industry, employee_count, founded_year, registration_number, phone, country, staff_countries, address_line1, address_line2, city, region, postal_code')
     .eq('id', id)
     .maybeSingle();
   if (!company) notFound();
@@ -188,6 +188,62 @@ export default async function CompanyPage({
           </form>
         </section>
       </div>
+
+      <section className="panel">
+        <h2>Company profile</h2>
+        <p className="muted small">
+          What a buyer asks for before it will look at records: the registered entity, where it is,
+          how many people work there and which countries they work in.
+        </p>
+        <form action={updateCompanyWithId} className="stack">
+          <label>Registered legal name
+            <input name="legalName" defaultValue={company.legal_name ?? ''} maxLength={200} />
+          </label>
+          <label>Website
+            <input name="website" defaultValue={company.website ?? ''} maxLength={300} placeholder="https://" />
+          </label>
+          <label>Industry
+            <input name="industry" defaultValue={company.industry ?? ''} maxLength={100} placeholder="Accounting, law, medical, software" />
+          </label>
+          <label>Employees
+            <input type="number" name="employeeCount" defaultValue={company.employee_count ?? ''} min={0} max={1000000} />
+          </label>
+          <label>Founded
+            <input type="number" name="foundedYear" defaultValue={company.founded_year ?? ''} min={1800} max={2200} />
+          </label>
+          <label>Registration number
+            <input name="registrationNumber" defaultValue={company.registration_number ?? ''} maxLength={100} />
+          </label>
+          <label>Phone
+            <input name="phone" defaultValue={company.phone ?? ''} maxLength={60} />
+          </label>
+          <label>Address line 1
+            <input name="addressLine1" defaultValue={company.address_line1 ?? ''} maxLength={200} />
+          </label>
+          <label>Address line 2
+            <input name="addressLine2" defaultValue={company.address_line2 ?? ''} maxLength={200} />
+          </label>
+          <label>City
+            <input name="city" defaultValue={company.city ?? ''} maxLength={120} />
+          </label>
+          <label>State or region
+            <input name="region" defaultValue={company.region ?? ''} maxLength={120} />
+          </label>
+          <label>Postal code
+            <input name="postalCode" defaultValue={company.postal_code ?? ''} maxLength={30} />
+          </label>
+          <label>Country (two letters)
+            <input name="country" defaultValue={company.country ?? ''} maxLength={2} placeholder="US" />
+          </label>
+          <label>Countries the staff work in
+            <input name="staffCountries" defaultValue={(company.staff_countries ?? []).join(', ')} placeholder="US, CA" />
+          </label>
+          <p className="muted small">
+            Staff countries, not the head office: the published rule is about where the people are.
+          </p>
+          <button className="btn" type="submit">Save profile</button>
+        </form>
+      </section>
 
       <section className="panel">
         <h2>Datasets and rights status</h2>

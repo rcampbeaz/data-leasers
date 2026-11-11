@@ -234,6 +234,33 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const due = text(formData, 'nextActionDue', 10);
   if (due && Number.isNaN(Date.parse(due))) fail(path, 'The due date is not valid.');
 
+  // Whole numbers only, and fail loudly rather than silently storing NaN.
+  const whole = (key: string, min: number, max: number): number | null => {
+    const raw = String(formData.get(key) ?? '').trim();
+    if (!raw) return null;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < min || value > max) {
+      fail(path, `Enter a whole number for ${key}.`);
+    }
+    return value;
+  };
+
+  const country = text(formData, 'country', 2);
+  if (country && !/^[A-Za-z]{2}$/.test(country)) {
+    fail(path, 'The country must be a two-letter code, such as US.');
+  }
+
+  // Staff countries drive the published eligibility rule, so they are normalised to
+  // upper-case two-letter codes and de-duplicated on the way in.
+  const staffCountries = Array.from(
+    new Set(
+      String(formData.get('staffCountries') ?? '')
+        .split(',')
+        .map((code) => code.trim().toUpperCase())
+        .filter((code) => /^[A-Z]{2}$/.test(code)),
+    ),
+  ).slice(0, 20);
+
   const { error } = await supabase
     .from('companies')
     .update({
@@ -241,9 +268,23 @@ export async function updateCompany(companyId: string, formData: FormData) {
       introduced_by: text(formData, 'introducedBy', 64),
       next_action: text(formData, 'nextAction', 300),
       next_action_due: due,
+      legal_name: text(formData, 'legalName', 200),
+      website: text(formData, 'website', 300),
+      industry: text(formData, 'industry', 100),
+      employee_count: whole('employeeCount', 0, 1000000),
+      founded_year: whole('foundedYear', 1800, 2200),
+      registration_number: text(formData, 'registrationNumber', 100),
+      phone: text(formData, 'phone', 60),
+      address_line1: text(formData, 'addressLine1', 200),
+      address_line2: text(formData, 'addressLine2', 200),
+      city: text(formData, 'city', 120),
+      region: text(formData, 'region', 120),
+      postal_code: text(formData, 'postalCode', 30),
+      country: country ? country.toUpperCase() : null,
+      staff_countries: staffCountries,
     })
     .eq('id', companyId);
-  if (error) fail(path, 'Could not save. Check the staff member selected.');
+  if (error) fail(path, 'Could not save. Check the staff member selected and the profile fields.');
 
   refresh(companyId);
   redirect(path);
