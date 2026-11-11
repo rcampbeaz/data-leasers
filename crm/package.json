@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "audit:routes": "node scripts/audit-routes.mjs"
+    "audit:routes": "node scripts/audit-routes.mjs",
+    "preflight": "node scripts/preflight.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
