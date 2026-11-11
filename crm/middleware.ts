@@ -79,8 +79,9 @@ export const config = {
   // Routes that authenticate themselves with their own secret and must not be sent to
   // the sign-in screen: the website intake, the reminder job, the inbound email hook,
   // the social publisher and the outbound sender (cron, CRON_SECRET, answers 401).
-  // The unsubscribe page is public by design: it is the opt-out the law requires.
+  // The unsubscribe page and its one-click POST are public by design: they are the opt-out
+  // the law requires, and a mail client posting to them has no session to offer.
   matcher: [
-    '/((?!api/leads|api/reminders|api/inbound|api/social|api/outbound|unsubscribe|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
+    '/((?!api/leads|api/reminders|api/inbound|api/social|api/outbound|api/unsubscribe|unsubscribe|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
   ],
 };

@@ -5,6 +5,7 @@ import {
   normaliseEmail,
   renderEmail,
   sendGuard,
+  unsubscribeHeaders,
   unsubscribeUrl,
 } from '@/lib/outbound';
 
@@ -130,7 +131,14 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from, to: [contact.email], subject: next.subject, text: body }),
+      body: JSON.stringify({
+        from,
+        to: [contact.email],
+        subject: next.subject,
+        text: body,
+        // Created per message, because the token belongs to this contact.
+        headers: unsubscribeHeaders(contact.unsubscribe_token as string),
+      }),
     });
 
     const raw = await response.text();

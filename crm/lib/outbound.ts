@@ -101,6 +101,23 @@ export function unsubscribeUrl(token: string): string {
   return `${base}/unsubscribe?token=${encodeURIComponent(token)}`;
 }
 
+// RFC 8058: the mail client's own unsubscribe button posts here, so the address has to be
+// removed without the recipient opening a page. This is the URI that goes in the header.
+export function oneClickUnsubscribeUrl(token: string): string {
+  const base = process.env.CRM_ORIGIN ?? 'https://app.dataleasers.com';
+  return `${base}/api/unsubscribe?token=${encodeURIComponent(token)}`;
+}
+
+// List-Unsubscribe gives the button a target; List-Unsubscribe-Post tells the client it may
+// act on it with a single POST and no confirmation. Without the second header most clients
+// fall back to opening a browser, which is the behaviour this replaces.
+export function unsubscribeHeaders(token: string): Record<string, string> {
+  return {
+    'List-Unsubscribe': `<${oneClickUnsubscribeUrl(token)}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  };
+}
+
 // CAN-SPAM requires the postal address; every market requires an identifiable sender and a
 // working opt-out. Generated at send time so the link carries the contact's own token.
 export function complianceFooter(opts: { postalAddress: string; unsubscribe: string }): string {

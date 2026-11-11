@@ -89,6 +89,7 @@ Until `SOCIAL_API_URL` is set, the Marketing page says so rather than appearing 
 - Open **Outbound**. A contact cannot be added without a country and a lawful basis, and the guard refuses a basis that is not lawful for that country: the US allows an opt-out basis, Canada and Australia need consent, and the UK allows corporate subscribers.
 - Nothing sends until a person clicks **Approve first send** on the enrolment. A reply, an unsubscribe or a suppression stops the sequence permanently.
 - `/unsubscribe?token=…` is public and needs no sign-in. It suppresses the address globally and stops every live enrolment.
+- Every message carries `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click`, pointing at `/api/unsubscribe?token=…`. A mail client's own unsubscribe button therefore works without the recipient opening a page, and the same URL hands a person who clicks it to the confirmation page. Both paths run the same code, so an opt-out cannot take a different route depending on which button was used.
 - `/api/inbound/email` also stops a sequence when the sender matches a contact, so forwarding a reply is enough to halt outreach.
 
 Environment for sending:
