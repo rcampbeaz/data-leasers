@@ -103,7 +103,13 @@ Environment for sending:
 
 Ramp slowly: a handful of sends a day for the first week, then watch bounces and complaints before adding volume. Keep the complaint rate under 0.1%.
 
-The **Deliverability** page reports this per month and per recipient domain: sent, bounced, complaints, unsubscribes and suppressions added, with a verdict per domain (complaint watch at 0.05%, stop at 0.1%; bounce watch at 2%, stop at 5%). Bounces and complaints are counted from suppression rows with those reasons, so record them on the Outbound page when a provider or a person reports one - without a provider webhook, an unrecorded bounce is invisible to the report.
+The **Deliverability** page reports this per month and per recipient domain: sent, bounced, complaints, unsubscribes and suppressions added, with a verdict per domain (complaint watch at 0.05%, stop at 0.1%; bounce watch at 2%, stop at 5%).
+
+### Bounce and complaint webhook
+1. In Resend, open **Webhooks**, add an endpoint at `https://app.dataleasers.com/api/webhooks/resend`, and subscribe it to `email.bounced` and `email.complained`.
+2. Copy the signing secret (it starts with `whsec_`) into `.env` as `RESEND_WEBHOOK_SECRET`. Without it the route answers 503 rather than trusting an unsigned event.
+3. A permanent bounce and a spam complaint both become a global suppression, mark the contact `bounced` or `paused`, and stop every live enrolment. A temporary bounce is ignored: it means the far end was busy, and suppressing on it would delete good addresses.
+4. The signature is checked before the body is parsed, with a five-minute replay window. Retries from Resend repeat the same `svix-id`, and recording a suppression twice is harmless because the address is the primary key.
 
 ## Prospect import (0012)
 - **Import** now has a Companies House search and a queue. A search writes candidates, not companies; a person accepts a candidate before it enters the pipeline at New lead.

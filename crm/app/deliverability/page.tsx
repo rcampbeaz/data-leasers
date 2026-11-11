@@ -226,10 +226,10 @@ export default async function DeliverabilityPage({
           </li>
           <li>
             <strong>Bounced</strong> and <strong>complaints</strong> count suppression rows with
-            those reasons, dated when they were recorded. There is no provider webhook yet, so a
-            bounce appears here once somebody records it on the Outbound page, or once the sender
-            blocks an address before sending. Treat a zero as "nothing recorded", not "nothing
-            happened".
+            those reasons, dated when they were recorded. The provider's webhook records a
+            permanent bounce and a spam complaint automatically; anything reported by hand is
+            recorded on the Outbound page. A zero still means "nothing recorded", not "nothing
+            happened", because a temporary bounce is deliberately not counted as a bounce.
           </li>
           <li>
             <strong>Verdicts.</strong> Complaint: watch at 0.05%, stop at 0.1% - the published

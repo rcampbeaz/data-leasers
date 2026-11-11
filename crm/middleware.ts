@@ -81,7 +81,9 @@ export const config = {
   // the social publisher and the outbound sender (cron, CRON_SECRET, answers 401).
   // The unsubscribe page and its one-click POST are public by design: they are the opt-out
   // the law requires, and a mail client posting to them has no session to offer.
+  // The provider webhook authenticates itself with a signed request, so it cannot be sent
+  // to the sign-in screen either.
   matcher: [
-    '/((?!api/leads|api/reminders|api/inbound|api/social|api/outbound|api/unsubscribe|unsubscribe|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
+    '/((?!api/leads|api/reminders|api/inbound|api/social|api/outbound|api/unsubscribe|api/webhooks|unsubscribe|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
   ],
 };
