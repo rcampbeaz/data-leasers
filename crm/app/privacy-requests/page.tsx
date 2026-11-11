@@ -17,8 +17,9 @@ export default async function PrivacyRequestsPage({
         <h1>Privacy requests</h1>
         <p className="muted">
           Erase a person&apos;s enquiry and contact records when they ask. Company records are kept, and the link to
-          the erased enquiry is cleared. The erasure is logged with counts only, not the email address.
-          Check the request with counsel before acting on anything unusual.
+          the erased enquiry is cleared. A referral partner found under the same address is anonymised rather than
+          deleted, so the fee history on their referrals survives. The erasure is logged with counts only, not the
+          email address. Check the request with counsel before acting on anything unusual.
         </p>
       </header>
 

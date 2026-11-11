@@ -364,6 +364,34 @@ export async function addDocument(companyId: string, formData: FormData) {
   redirect(path);
 }
 
+// A partner is an outside person, so their record has to answer an erasure request
+// too. The row is anonymised rather than deleted: deleting it would cascade the
+// referrals and destroy the fee history the ledger exists to keep.
+export async function anonymisePartner(partnerId: string) {
+  const path = '/partners';
+  const { supabase, me } = await requireWriter(path);
+  if (me.role !== 'admin') fail(path, 'Only an admin can erase a partner record.');
+
+  const { error } = await supabase
+    .from('partners')
+    .update({
+      name: `Erased partner ${partnerId.slice(0, 8)}`,
+      email: null,
+      organisation: null,
+      notes: null,
+      erased_at: new Date().toISOString(),
+    })
+    .eq('id', partnerId)
+    .is('erased_at', null);
+  if (error) {
+    fail(path, 'Could not erase the partner details. Check that 0008_partner_erasure.sql has been run.');
+  }
+
+  await audit(me.user_id, 'partner', partnerId, 'details_erased', {});
+  refreshDeal();
+  redirect(`${path}?erased=1`);
+}
+
 export async function removeDocument(companyId: string, documentId: string) {
   const path = `/companies/${companyId}`;
   const { supabase, me } = await requireWriter(path);

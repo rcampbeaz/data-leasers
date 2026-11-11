@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
-import { addPartner, registerReferral, updateReferral } from '@/lib/deal-actions';
+import { addPartner, anonymisePartner, registerReferral, updateReferral } from '@/lib/deal-actions';
 import { REFERRAL_STATUSES, daysUntil, money, referralFee } from '@/lib/deals';
 
 type Partner = {
@@ -11,6 +11,7 @@ type Partner = {
   organisation: string | null;
   fee_rate: number;
   fee_floor: number;
+  erased_at?: string | null;
 };
 
 type Referral = {
@@ -28,19 +29,18 @@ type Referral = {
 export default async function PartnersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; saved?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; erased?: string }>;
 }) {
-  const { error, saved } = await searchParams;
+  const { error, saved, erased } = await searchParams;
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const canEdit = me?.role === 'admin' || me?.role === 'introducer';
+  const isAdmin = me?.role === 'admin';
 
   const [{ data: partners, error: partnersError }, { data: referrals }, { data: offers }, { data: companies }] =
     await Promise.all([
-      supabase
-        .from('partners')
-        .select('id, name, email, organisation, fee_rate, fee_floor')
-        .order('name'),
+      // Every column, so the page still renders if 0008 has not been run yet.
+      supabase.from('partners').select('*').order('name'),
       supabase
         .from('referrals')
         .select('id, partner_id, company_id, company_name, registered_on, deadline_on, status, fee_amount, paid_on')
@@ -81,6 +81,12 @@ export default async function PartnersPage({
 
       {error ? <p className="notice blocked">{error}</p> : null}
       {saved ? <p className="notice">Saved.</p> : null}
+      {erased ? (
+        <p className="notice">
+          Partner anonymised. Their name, email and notes are gone; the referral ledger and the fees
+          on it are unchanged.
+        </p>
+      ) : null}
       {atRisk.length > 0 ? (
         <p className="notice review">
           {atRisk.length} open {atRisk.length === 1 ? 'referral is' : 'referrals are'} inside 30 days
@@ -138,6 +144,7 @@ export default async function PartnersPage({
                 <th>Rate</th>
                 <th>Referrals</th>
                 <th>Paid to date</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -151,6 +158,7 @@ export default async function PartnersPage({
                     <td>
                       {partner.name}
                       {partner.organisation ? <span className="muted"> · {partner.organisation}</span> : null}
+                      {partner.erased_at ? <span className="muted"> · details erased on request</span> : null}
                     </td>
                     <td>{partner.email ?? '-'}</td>
                     <td>
@@ -161,6 +169,15 @@ export default async function PartnersPage({
                       {mine.length >= 5 ? <span className="muted"> · confirm the rate after the fifth</span> : null}
                     </td>
                     <td>{paid ? money(paid) : '-'}</td>
+                    <td>
+                      {isAdmin && !partner.erased_at ? (
+                        <form action={anonymisePartner.bind(null, partner.id)} className="inline-form">
+                          <button className="btn" type="submit">
+                            Erase details
+                          </button>
+                        </form>
+                      ) : null}
+                    </td>
                   </tr>
                 );
               })}
@@ -177,11 +194,13 @@ export default async function PartnersPage({
               Partner
               <select name="partnerId" required defaultValue="">
                 <option value="">Choose a partner</option>
-                {partnerRows.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
+                {partnerRows
+                  .filter((p) => !p.erased_at)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
               </select>
             </label>
             <label>

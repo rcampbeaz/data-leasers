@@ -174,10 +174,34 @@ export async function eraseByEmail(formData: FormData) {
 
   const { data: contacts } = await admin.from('contacts').delete().ilike('email', pattern).select('id');
 
+  // A referral partner is an outside person too. Their row is anonymised rather
+  // than deleted, because the referrals hang off it and carry the fee history.
+  // Before 0008 has run this query fails harmlessly and nothing is changed.
+  const { data: partners } = await admin
+    .from('partners')
+    .select('id')
+    .ilike('email', pattern)
+    .is('erased_at', null);
+  let partnerCount = 0;
+  for (const partner of partners ?? []) {
+    const { error: partnerError } = await admin
+      .from('partners')
+      .update({
+        name: `Erased partner ${String(partner.id).slice(0, 8)}`,
+        email: null,
+        organisation: null,
+        notes: null,
+        erased_at: new Date().toISOString(),
+      })
+      .eq('id', partner.id);
+    if (!partnerError) partnerCount += 1;
+  }
+
   await audit(me.user_id, 'erasure', me.user_id, 'erased', {
     leads: leadIds.length,
     contacts: (contacts ?? []).length,
     drafts: draftCount,
+    partners: partnerCount,
   });
 
   revalidatePath('/privacy-requests');
