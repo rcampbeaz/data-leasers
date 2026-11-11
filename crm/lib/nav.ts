@@ -12,6 +12,7 @@ export const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/tasks', label: 'Tasks', roles: ['admin', 'introducer', 'viewer'] },
   { href: '/marketing', label: 'Marketing', roles: ['admin', 'introducer', 'viewer'] },
   { href: '/outbound', label: 'Outbound', roles: ['admin', 'introducer', 'viewer'] },
+  { href: '/deliverability', label: 'Deliverability', roles: ['admin', 'introducer', 'viewer'] },
   { href: '/import', label: 'Import', roles: ['admin', 'introducer'] },
   { href: '/agents', label: 'Agents', roles: ['admin', 'introducer'] },
   { href: '/review', label: 'Review queue', roles: ['admin', 'reviewer'] },

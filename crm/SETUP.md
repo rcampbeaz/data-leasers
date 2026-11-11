@@ -103,6 +103,8 @@ Environment for sending:
 
 Ramp slowly: a handful of sends a day for the first week, then watch bounces and complaints before adding volume. Keep the complaint rate under 0.1%.
 
+The **Deliverability** page reports this per month and per recipient domain: sent, bounced, complaints, unsubscribes and suppressions added, with a verdict per domain (complaint watch at 0.05%, stop at 0.1%; bounce watch at 2%, stop at 5%). Bounces and complaints are counted from suppression rows with those reasons, so record them on the Outbound page when a provider or a person reports one - without a provider webhook, an unrecorded bounce is invisible to the report.
+
 ## Prospect import (0012)
 - **Import** now has a Companies House search and a queue. A search writes candidates, not companies; a person accepts a candidate before it enters the pipeline at New lead.
 - A candidate whose company number or normalised name already exists in the CRM is stored as a duplicate and cannot be accepted, so the same firm is never worked twice.
