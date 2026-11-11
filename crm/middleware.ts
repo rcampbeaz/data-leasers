@@ -76,8 +76,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // The public intake endpoint is handled before this matcher runs.
+  // Routes that authenticate themselves with their own secret and must not be sent to
+  // the sign-in screen: the website intake, the reminder job, the inbound email hook
+  // and the social publisher, which cron calls with CRON_SECRET and which answers 401.
   matcher: [
-    '/((?!api/leads|api/reminders|api/inbound|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
+    '/((?!api/leads|api/reminders|api/inbound|api/social|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
   ],
 };
