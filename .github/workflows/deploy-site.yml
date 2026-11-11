@@ -90,16 +90,20 @@ jobs:
             echo "::warning::No <title> found in _site/index.html; skipping the content check."
           fi
 
+          # The CDN in front of the site caches by path and ignores the query
+          # string, so a stale copy can only be waited out, not busted. Thirty
+          # seconds was not enough: a deploy that changed the homepage title
+          # failed this check while the new page was already live.
           code=""
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in $(seq 1 12); do
             body=$(curl -sS --max-time 15 https://dataleasers.com/ || true)
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 https://dataleasers.com/ || true)
             if [ "$code" = "200" ] && { [ -z "$marker" ] || printf '%s' "$body" | grep -qF "$marker"; }; then
               echo "dataleasers.com is serving the deployed build (Http-Status $code)."
               break
             fi
-            echo "Attempt $attempt: status $code, content not updated yet. Retrying in 5s."
-            sleep 5
+            echo "Attempt $attempt: status $code, content not updated yet. Retrying in 10s."
+            sleep 10
           done
 
           if [ "$code" != "200" ]; then
