@@ -4,9 +4,11 @@ import { CHASE_WINDOW_DAYS, planChaseTasks, type ReferralRow } from '@/lib/refer
 
 export const dynamic = 'force-dynamic';
 
-// The daily referral chase. Reads open referrals inside the last 30 days of their six-month window,
-// and creates one task for each so it lands on the Tasks page and in the reminder email. A referral
-// that already has a chase task is left alone; the column is the idempotency key, not the title.
+// The daily referral chase. Reads open referrals inside the last 30 days of their six-month window
+// and creates a task for each so it lands on the Tasks page and in the reminder email. Inside the
+// last seven days the task is an escalation instead of the routine chase, so the referral is raised
+// again at the point it is most likely to be lost. Each window has its own column, and that column
+// is the idempotency key - not the title, which a person may rewrite.
 
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
 
   const { data: referralData, error: referralError } = await supabase
     .from('referrals')
-    .select('id, company_id, company_name, deadline_on, status, chase_task_id')
+    .select('id, company_id, company_name, deadline_on, status, chase_task_id, escalation_task_id')
     .in('status', ['registered', 'introduced'])
     .lte('deadline_on', horizon)
     .order('deadline_on');
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
     { today },
   );
 
-  const created: { referralId: string; companyName: string; title: string }[] = [];
+  const created: { referralId: string; companyName: string; kind: string; title: string }[] = [];
   const failed: { referralId: string; reason: string }[] = [];
 
   for (const item of plan.create) {
@@ -74,9 +76,10 @@ export async function POST(request: Request) {
       continue;
     }
 
+    const column = item.kind === 'escalation' ? 'escalation_task_id' : 'chase_task_id';
     const { error: linkError } = await supabase
       .from('referrals')
-      .update({ chase_task_id: task.id })
+      .update({ [column]: task.id })
       .eq('id', item.referralId);
 
     if (linkError) {
@@ -89,6 +92,7 @@ export async function POST(request: Request) {
     created.push({
       referralId: item.referralId,
       companyName: item.companyName,
+      kind: item.kind,
       title: item.title,
     });
   }

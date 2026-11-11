@@ -121,7 +121,7 @@ The same report is on the Partners page, so a person and the inbox cannot disagr
 8 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://app.dataleasers.com/api/partners/chase
 ```
 
-One task per referral, not one per day: `referrals.chase_task_id` records the task, so a referral already being chased is skipped. Delete the task and the referral becomes eligible again. A referral that is not linked to a company record cannot carry a task, because `tasks.company_id` is required; the sweep lists those in `skipped` so they can be linked by hand.
+Two chases per referral, not one per day. `referrals.chase_task_id` records the routine task at 30 days and `escalation_task_id` records the second one inside seven days; each column is its own idempotency key, so neither is created twice. Delete a task and that chase becomes eligible again; complete one and the other is untouched. Inside seven days the sweep raises only the escalation, because two tasks for one referral in the same hour is how a task list stops being read. A referral that is not linked to a company record cannot carry a task, because `tasks.company_id` is required; the sweep lists those in `skipped` so they can be linked by hand.
 
 A hold stops new mail to that domain; the contacts stay in the sequence and the step is not consumed. Release a domain from the Deliverability page, with a note. The sweep will not re-hold a released domain for a week, so a release cannot be undone within the hour; after that, if the rolling rate is still over the line, it holds again. The sweep also reports domains that are over the threshold on too little volume rather than acting on them, because one complaint in a dozen sends is noise rather than evidence.
 
