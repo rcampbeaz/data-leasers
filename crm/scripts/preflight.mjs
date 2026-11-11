@@ -9,7 +9,31 @@
 // Run it where the environment lives (on the server, `cd crm && node scripts/preflight.mjs`).
 // Exit 1 means something below would fail for a signed-in user or a cron job.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+
+// Plain node does not read .env, and saying "17 names missing" on a server that has them all would
+// make this script worse than useless. Values are loaded but never printed or logged. Names already
+// in the real environment win, matching how the app resolves them under pm2.
+function loadEnvFile(path) {
+  if (!existsSync(path)) return false;
+  for (const raw of readFileSync(path, 'utf8').split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq < 1) continue;
+    const name = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    const quoted =
+      (value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"));
+    if (quoted && value.length > 1) value = value.slice(1, -1);
+    if (process.env[name] === undefined) process.env[name] = value;
+  }
+  return true;
+}
+
+// .env.local first so a local override is not overwritten by .env, as Next.js does it.
+loadEnvFile('.env.local');
+const hadEnvFile = loadEnvFile('.env');
 
 const ORIGIN = process.env.CRM_ORIGIN ?? 'https://app.dataleasers.com';
 
@@ -65,7 +89,7 @@ for (const [group, names] of GROUPS) {
   });
   console.log(`  ${group.padEnd(10)} ${states.join('  ')}`);
 }
-if (!existsSync('.env') && !existsSync('.env.local')) {
+if (!hadEnvFile && !existsSync('.env.local')) {
   console.log('  note       no .env in this directory; run this where the app reads its environment');
 }
 
@@ -91,17 +115,26 @@ console.log('\nSchema (migrations 0009-0015)');
 if (!url || !key) {
   console.log('  skipped    needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
 } else {
-  for (const [table, migration] of TABLES) {
-    const result = await probeRest(`${table}?select=*&limit=1`);
+  // A bad URL or key must report as unverified rather than throwing: the answer to "is the schema
+  // there" is then "cannot tell", which is a problem, not a pass.
+  const rows = [
+    ...TABLES.map(([table, migration]) => [`${table}?select=*&limit=1`, `table ${table}`, migration]),
+    ...COLUMNS.map(([table, column, migration]) => [
+      `${table}?select=${column}&limit=1`,
+      `${table}.${column}`,
+      migration,
+    ]),
+  ];
+  for (const [select, label, migration] of rows) {
+    const result = await probeRest(select).catch(() => null);
+    if (!result) {
+      schemaProblems++;
+      console.log(`  UNKNOWN    ${label.padEnd(34)} could not reach Supabase`);
+      continue;
+    }
     const bad = missingSchema(result);
     if (bad) schemaProblems++;
-    console.log(`  ${bad ? 'MISSING  ' : 'present  '} table ${table.padEnd(24)} ${bad ? migration : ''}`);
-  }
-  for (const [table, column, migration] of COLUMNS) {
-    const result = await probeRest(`${table}?select=${column}&limit=1`);
-    const bad = missingSchema(result);
-    if (bad) schemaProblems++;
-    console.log(`  ${bad ? 'MISSING  ' : 'present  '} ${table}.${column.padEnd(28)} ${bad ? migration : ''}`);
+    console.log(`  ${bad ? 'MISSING  ' : 'present  '} ${label.padEnd(34)} ${bad ? migration : ''}`);
   }
 }
 
