@@ -2,6 +2,14 @@ import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { CHANNELS, channelSpec, providerConfigured } from '@/lib/social';
 import { addChannel, cancelPost, generateDraft, scheduleContent } from '@/lib/social-actions';
+import { approveContent, setMarketingControls } from '@/lib/marketing-controls';
+import { mergeControls, type MarketingControls } from '@/lib/marketing-settings';
+import { BarChart, DonutChart } from '@/components/charts';
+
+const DAY = 24 * 60 * 60 * 1000;
+
+// Brand colours for the donut, in the same family the dashboard uses.
+const PALETTE = ['var(--dl-teal)', '#F5C063', '#7C9CFF', '#6EE7A8', '#FF9C90', '#B7A6FF'];
 
 type ContentRow = {
   id: string;
@@ -17,6 +25,7 @@ type PostRow = {
   id: string;
   status: string;
   scheduled_for: string;
+  published_at: string | null;
   body: string;
   permalink: string | null;
   last_error: string | null;
@@ -26,10 +35,24 @@ type PostRow = {
 
 // A joined channel comes back as an object or a one-item array depending on the
 // relationship, so the label is read defensively rather than assumed.
+function channelRow(channel: unknown): { platform: string; display_name: string } | null {
+  const row = (Array.isArray(channel) ? channel[0] : channel) as
+    | { platform?: string; display_name?: string }
+    | null
+    | undefined;
+  if (!row?.platform) return null;
+  return { platform: row.platform, display_name: row.display_name ?? row.platform };
+}
+
 function channelLabel(channel: unknown): string {
-  const row = (Array.isArray(channel) ? channel[0] : channel) as { platform?: string } | null | undefined;
-  if (!row?.platform) return 'unknown';
+  const row = channelRow(channel);
+  if (!row) return 'unknown';
   return channelSpec(row.platform)?.label ?? row.platform;
+}
+
+function platformColor(platform: string): string {
+  const i = CHANNELS.findIndex((c) => c.key === platform);
+  return PALETTE[(i < 0 ? 0 : i) % PALETTE.length];
 }
 
 // The next hour in Phoenix, as the value a datetime-local input expects. Phoenix is
@@ -41,28 +64,47 @@ function defaultSlot(): string {
 export default async function MarketingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; drafted?: string; scheduled?: string; channel?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    drafted?: string;
+    scheduled?: string;
+    channel?: string;
+    saved?: string;
+  }>;
 }) {
-  const { error, drafted, scheduled, channel } = await searchParams;
+  const { error, drafted, scheduled, channel, saved } = await searchParams;
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const isAdmin = me?.role === 'admin';
   const canWrite = me?.role === 'admin' || me?.role === 'introducer';
 
-  const [{ data: channels }, { data: contents }, { data: posts }] = await Promise.all([
-    supabase.from('social_channels').select('id, platform, display_name, status, token_expires_at, last_ok_at').order('platform'),
-    supabase
-      .from('social_contents')
-      .select('id, title, body, variants, link, status, created_at')
-      .in('status', ['draft', 'approved'])
-      .order('created_at', { ascending: false })
-      .limit(10),
-    supabase
-      .from('social_posts')
-      .select('id, status, scheduled_for, body, permalink, last_error, attempts, channel:social_channels(platform, display_name)')
-      .order('scheduled_for', { ascending: false })
-      .limit(30),
-  ]);
+  const now = Date.now();
+  const windowStart = new Date(now - 90 * DAY).toISOString();
+
+  const [{ data: channels }, { data: contents }, { data: posts }, { data: setting }] =
+    await Promise.all([
+      supabase
+        .from('social_channels')
+        .select('id, platform, display_name, status, token_expires_at, last_ok_at')
+        .order('platform'),
+      supabase
+        .from('social_contents')
+        .select('id, title, body, variants, link, status, created_at')
+        .in('status', ['draft', 'approved'])
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase
+        .from('social_posts')
+        .select(
+          'id, status, scheduled_for, published_at, body, permalink, last_error, attempts, channel:social_channels(platform, display_name)',
+        )
+        .gte('scheduled_for', windowStart)
+        .order('scheduled_for', { ascending: false })
+        .limit(500),
+      supabase.from('app_settings').select('value').eq('key', 'marketing').maybeSingle(),
+    ]);
+
+  const controls: MarketingControls = mergeControls(setting?.value);
 
   const channelRows = (channels ?? []) as {
     id: string;
@@ -76,6 +118,61 @@ export default async function MarketingPage({
   const postRows = (posts ?? []) as unknown as PostRow[];
   const due = defaultSlot();
 
+  // ---- figures -------------------------------------------------------------
+
+  const scheduledNext7 = postRows.filter(
+    (p) =>
+      p.status === 'scheduled' &&
+      new Date(p.scheduled_for).getTime() >= now &&
+      new Date(p.scheduled_for).getTime() <= now + 7 * DAY,
+  ).length;
+  const published30 = postRows.filter(
+    (p) => p.status === 'published' && new Date(p.published_at ?? p.scheduled_for).getTime() >= now - 30 * DAY,
+  ).length;
+  const needsAttention = postRows.filter((p) => p.status === 'failed' || p.status === 'needs_manual').length;
+  const liveChannels = channelRows.filter((c) => c.status === 'active').length;
+  const awaitingApproval = draftRows.filter((d) => d.status === 'draft').length;
+
+  // Posts per day, last 14 days, oldest first.
+  const days: { key: string; label: string }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now - i * DAY);
+    days.push({
+      key: d.toISOString().slice(0, 10),
+      label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+    });
+  }
+  const perDay = new Map(days.map((d) => [d.key, 0]));
+  for (const p of postRows) {
+    if (p.status === 'cancelled') continue;
+    const key = String(p.scheduled_for).slice(0, 10);
+    if (perDay.has(key)) perDay.set(key, (perDay.get(key) ?? 0) + 1);
+  }
+  const perDaySeries = days.map((d) => ({ label: d.label, value: perDay.get(d.key) ?? 0 }));
+
+  // Channel mix over the 90-day window.
+  const mixCounts = new Map<string, number>();
+  for (const p of postRows) {
+    if (p.status === 'cancelled') continue;
+    const row = channelRow(p.channel);
+    const key = row?.platform ?? 'unknown';
+    mixCounts.set(key, (mixCounts.get(key) ?? 0) + 1);
+  }
+  const mixSeries = Array.from(mixCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([platform, value]) => ({
+      label: channelSpec(platform)?.label ?? platform,
+      value,
+      color: platformColor(platform),
+    }));
+
+  const statusSeries = [
+    { label: 'Scheduled', value: postRows.filter((p) => p.status === 'scheduled').length },
+    { label: 'Published', value: postRows.filter((p) => p.status === 'published').length },
+    { label: 'Failed', value: postRows.filter((p) => p.status === 'failed').length },
+    { label: 'Needs manual', value: postRows.filter((p) => p.status === 'needs_manual').length },
+  ];
+
   return (
     <main className="page">
       <header className="page-head">
@@ -87,6 +184,7 @@ export default async function MarketingPage({
       </header>
 
       {error ? <p className="notice blocked">{error}</p> : null}
+      {saved ? <p className="notice">Switches saved. They apply to the next run.</p> : null}
       {drafted ? <p className="notice">Draft written. Check it below, then schedule it.</p> : null}
       {scheduled ? <p className="notice">Scheduled. The publisher picks it up within a few minutes.</p> : null}
       {channel ? <p className="notice">Channel connected.</p> : null}
@@ -97,6 +195,103 @@ export default async function MarketingPage({
           until <code>SOCIAL_API_URL</code> and <code>SOCIAL_API_KEY</code> are set on the server.
         </p>
       ) : null}
+      {!controls.publishing_enabled ? (
+        <p className="notice review">
+          Publishing is switched off. Scheduled posts stay queued and nothing is sent until it is
+          switched back on.
+        </p>
+      ) : null}
+
+      <section className="kpis" aria-label="Marketing figures">
+        <div className="kpi"><span>Drafts waiting</span><strong>{draftRows.length}</strong></div>
+        <div className="kpi"><span>Awaiting approval</span><strong className={awaitingApproval ? 'overdue' : ''}>{awaitingApproval}</strong></div>
+        <div className="kpi"><span>Scheduled, next 7 days</span><strong>{scheduledNext7}</strong></div>
+        <div className="kpi"><span>Published, 30 days</span><strong>{published30}</strong></div>
+        <div className="kpi"><span>Failed or manual</span><strong className={needsAttention ? 'overdue' : ''}>{needsAttention}</strong></div>
+        <div className="kpi"><span>Channels live</span><strong>{liveChannels}</strong></div>
+      </section>
+
+      <div className="two-col">
+        <section className="panel">
+          <h2>Posts per day, last 14 days</h2>
+          {postRows.length === 0 ? (
+            <p className="muted">Nothing scheduled yet, so there is nothing to chart.</p>
+          ) : (
+            <BarChart
+              data={perDaySeries}
+              ariaLabel="Bar chart of scheduled or published posts per day for the last 14 days"
+            />
+          )}
+        </section>
+        <section className="panel">
+          <h2>Channel mix, 90 days</h2>
+          {mixSeries.length === 0 ? (
+            <p className="muted">No posts in the last 90 days.</p>
+          ) : (
+            <DonutChart data={mixSeries} ariaLabel="Donut chart of posts per social channel over the last 90 days" />
+          )}
+        </section>
+      </div>
+
+      <section className="panel">
+        <h2>Queue health, 90 days</h2>
+        <BarChart
+          data={statusSeries}
+          ariaLabel="Bar chart of posts by status: scheduled, published, failed and needs manual"
+        />
+        {needsAttention > 0 ? (
+          <p className="muted small">
+            Failed posts retry on their own a few times; anything marked <strong>needs manual</strong>{' '}
+            needs a person, usually because the provider rejected the account or the token expired.
+          </p>
+        ) : null}
+      </section>
+
+      <section className="panel">
+        <h2>Switches</h2>
+        <p className="muted">
+          These are real gates, not labels. Publishing off stops the sender even with a full queue;
+          drafting off stops the agent spending anything; approval on means a draft cannot be
+          scheduled until a person approves it.
+        </p>
+        {isAdmin ? (
+          <form action={setMarketingControls} className="stack">
+            <div className="switches">
+              <label className="switch">
+                <input type="checkbox" name="publishingEnabled" defaultChecked={controls.publishing_enabled} />
+                <span className="track" aria-hidden="true" />
+                <span className="switch-text">
+                  <strong>Publishing</strong>
+                  <span>Send scheduled posts. Off holds the queue without losing it.</span>
+                </span>
+              </label>
+              <label className="switch">
+                <input type="checkbox" name="draftingEnabled" defaultChecked={controls.drafting_enabled} />
+                <span className="track" aria-hidden="true" />
+                <span className="switch-text">
+                  <strong>Agent drafting</strong>
+                  <span>Let an agent write drafts. Still bounded by the daily cap on the Agents page.</span>
+                </span>
+              </label>
+              <label className="switch">
+                <input type="checkbox" name="requireApproval" defaultChecked={controls.require_approval} />
+                <span className="track" aria-hidden="true" />
+                <span className="switch-text">
+                  <strong>Approval required</strong>
+                  <span>A draft has to be approved before it can be scheduled.</span>
+                </span>
+              </label>
+            </div>
+            <button className="btn" type="submit">Save switches</button>
+          </form>
+        ) : (
+          <ul className="list">
+            <li>Publishing: <strong>{controls.publishing_enabled ? 'on' : 'off'}</strong></li>
+            <li>Agent drafting: <strong>{controls.drafting_enabled ? 'on' : 'off'}</strong></li>
+            <li>Approval required: <strong>{controls.require_approval ? 'yes' : 'no'}</strong></li>
+          </ul>
+        )}
+      </section>
 
       <section className="panel">
         <h2>Channels</h2>
@@ -165,6 +360,7 @@ export default async function MarketingPage({
           <article key={d.id} className="panel">
             <header>
               <strong>{d.title ?? 'Untitled draft'}</strong>{' '}
+              <span className={`status ${d.status === 'approved' ? 'approved' : 'review'}`}>{d.status}</span>{' '}
               <span className="muted">{new Date(d.created_at).toLocaleString('en-US')}</span>
             </header>
             <pre className="wrap-cell">{d.body}</pre>
@@ -192,6 +388,12 @@ export default async function MarketingPage({
                 <button className="btn" type="submit">Schedule</button>
               </form>
             ) : null}
+            {canWrite && controls.require_approval && d.status === 'draft' ? (
+              <form action={approveContent.bind(null, d.id)} className="inline-form">
+                <span className="muted small">Approval is required before this can be scheduled.</span>
+                <button className="btn" type="submit">Approve</button>
+              </form>
+            ) : null}
           </article>
         ))}
       </section>
@@ -204,7 +406,7 @@ export default async function MarketingPage({
               <tr><th>When (Phoenix)</th><th>Channel</th><th>Status</th><th>Post</th><th>Result</th><th></th></tr>
             </thead>
             <tbody>
-              {postRows.map((p) => {
+              {postRows.slice(0, 40).map((p) => {
                 const when = new Date(new Date(p.scheduled_for).getTime() - 7 * 60 * 60 * 1000);
                 return (
                   <tr key={p.id}>

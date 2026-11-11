@@ -19,6 +19,22 @@ export async function POST(request: Request) {
   }
 
   const admin = createIntakeClient();
+
+  // The kill switch. It is read at send time, not at schedule time, so switching it
+  // off stops a queue that is already full.
+  const { data: setting } = await admin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'marketing')
+    .maybeSingle();
+  const controls = (setting?.value ?? {}) as { publishing_enabled?: boolean };
+  if (controls.publishing_enabled === false) {
+    return NextResponse.json(
+      { paused: true, message: 'Publishing is switched off in the Marketing console.' },
+      { status: 409 },
+    );
+  }
+
   const { data: claimed, error } = await admin.rpc('claim_social_posts', { batch_size: 10 });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -51,11 +51,17 @@ export async function generateDraft(formData: FormData) {
   if (!topic) fail('Describe what the post is about first.');
   const link = text(formData, 'link', 1000);
 
-  const { data: setting } = await supabase
-    .from('app_settings')
-    .select('value')
-    .eq('key', 'agents')
-    .maybeSingle();
+  // Two switches gate a drafting run: the agent switch on the Agents page, and the
+  // drafting switch on this console, so either place can stop spending money.
+  const [{ data: setting }, { data: marketing }] = await Promise.all([
+    supabase.from('app_settings').select('value').eq('key', 'agents').maybeSingle(),
+    supabase.from('app_settings').select('value').eq('key', 'marketing').maybeSingle(),
+  ]);
+  const marketingControls = (marketing?.value ?? {}) as { drafting_enabled?: boolean };
+  if (marketingControls.drafting_enabled === false) {
+    fail('Agent drafting is switched off in the Marketing console.');
+  }
+
   const controls = (setting?.value ?? { enabled: false, daily_cap: 0 }) as {
     enabled?: boolean;
     daily_cap?: number;
@@ -200,6 +206,18 @@ export async function scheduleContent(contentId: string, formData: FormData) {
   if (!content) fail('That draft could not be found.');
   if (!['draft', 'approved'].includes(String(content.status))) {
     fail('That content has already been scheduled or cancelled.');
+  }
+
+  // Approval is a real gate, not a banner: with the switch on, an unapproved draft
+  // cannot be scheduled at all.
+  const { data: marketing } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'marketing')
+    .maybeSingle();
+  const requireApproval = ((marketing?.value ?? {}) as { require_approval?: boolean }).require_approval === true;
+  if (requireApproval && content.status !== 'approved') {
+    fail('Approval is required. Approve this draft first, then schedule it.');
   }
 
   const variants = (content.variants ?? {}) as Record<string, string>;
