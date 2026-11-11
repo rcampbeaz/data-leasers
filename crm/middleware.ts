@@ -82,8 +82,9 @@ export const config = {
   // The unsubscribe page and its one-click POST are public by design: they are the opt-out
   // the law requires, and a mail client posting to them has no session to offer.
   // The provider webhook authenticates itself with a signed request, so it cannot be sent
-  // to the sign-in screen either.
+  // to the sign-in screen either. The partner report is a cron job with CRON_SECRET, and a
+  // redirect to /login would have looked like a working schedule while sending nothing.
   matcher: [
-    '/((?!api/leads|api/reminders|api/inbound|api/social|api/outbound|api/unsubscribe|api/webhooks|unsubscribe|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
+    '/((?!api/leads|api/reminders|api/inbound|api/social|api/outbound|api/partners|api/unsubscribe|api/webhooks|unsubscribe|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
   ],
 };
