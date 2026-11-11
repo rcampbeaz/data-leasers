@@ -27,6 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A route left behind the sign-in middleware answers 307 to /login, which looks like a working
+      # schedule and does nothing. This runs before the server is touched, so a regressed exclusion
+      # fails the deploy in seconds instead of silently disabling a cron job. No install needed: the
+      # script uses Node built-ins only.
+      - name: Audit route middleware exclusions
+        working-directory: crm
+        run: node scripts/audit-routes.mjs
+
       - name: Set up SSH key
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
