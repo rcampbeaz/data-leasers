@@ -1,4 +1,4 @@
-import { createStaffClient, createIntakeClient } from '@/lib/supabase';
+import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { runLeadTriage, runFollowUpDraft, decideDraft } from '@/lib/agent-actions';
 import { setAgentControls } from '@/lib/admin-actions';
@@ -23,9 +23,10 @@ export default async function AgentsPage({
   const canRun = me?.role === 'admin' || me?.role === 'introducer';
   const isAdmin = me?.role === 'admin';
 
-  const admin = createIntakeClient();
+  // Staff can read app_settings under row-level security, so this page does not
+  // need the service-role client it used to build just to read one row.
   const [{ data: settings }, { data: drafts }, { data: leads }, { data: companies }] = await Promise.all([
-    admin.from('app_settings').select('value').eq('key', 'agents').maybeSingle(),
+    supabase.from('app_settings').select('value').eq('key', 'agents').maybeSingle(),
     supabase
       .from('agent_drafts')
       .select('id, kind, title, body, status, created_at')

@@ -63,10 +63,14 @@ export function money(amount: number | string | null | undefined, currency = 'US
   if (amount === null || amount === undefined || amount === '') return '-';
   const value = Number(amount);
   if (!Number.isFinite(value)) return '-';
+  // Show cents only when the figure has them, so an offer reads $250,000 and a
+  // referral fee of $15,000.06 is not quietly rounded to $15,000.
+  const hasCents = Math.round(value * 100) % 100 !== 0;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency || 'USD',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: hasCents ? 2 : 0,
   }).format(value);
 }
 
