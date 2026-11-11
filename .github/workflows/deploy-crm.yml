@@ -8,6 +8,9 @@ on:
       - ".github/workflows/deploy-crm.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-crm
   cancel-in-progress: false
@@ -20,6 +23,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +43,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
+          set -euo pipefail
           rsync -avz --delete \
             --exclude '.env' --exclude '.env.*' \
             --exclude 'node_modules/' --exclude '.next/' \
@@ -64,3 +69,26 @@ jobs:
           fi
           npx --yes pm2 save
           REMOTE
+
+      - name: Verify the CRM answers
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          set -uo pipefail
+          code=""
+          for attempt in 1 2 3 4 5 6 7 8; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 https://app.dataleasers.com/login || true)
+            if [ "$code" = "200" ]; then
+              echo "app.dataleasers.com/login is up (Http-Status $code)."
+              exit 0
+            fi
+            echo "Attempt $attempt: status $code. Retrying in 5s."
+            sleep 5
+          done
+
+          echo "::error::app.dataleasers.com/login returned $code after deploy"
+          echo "----- last 60 lines of the $PM2_NAME log -----"
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "npx --yes pm2 logs '${PM2_NAME}' --nostream --lines 60" || true
+          exit 1
