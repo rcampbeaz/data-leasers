@@ -26,6 +26,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The ancestry check below needs history: in a shallow clone merge-base cannot tell which
+          # of two commits came first, so the guard would be a coin flip.
+          fetch-depth: 0
 
       # A route left behind the sign-in middleware answers 307 to /login, which looks like a working
       # schedule and does nothing. This runs before the server is touched, so a regressed exclusion
@@ -45,26 +49,67 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
+      # A queued run for an older commit can wait behind the runner queue for a long time and then
+      # start, rsyncing stale files over a newer deploy. A cancel does not always work on a run that
+      # never started. Comparing against the commit the server says it is running makes such a run a
+      # no-op instead of a silent rollback.
+      - name: Is this commit newer than the one deployed?
+        id: freshness
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          deployed=$(ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cat '${REMOTE_DIR}/.deployed-sha' 2>/dev/null || true" | tr -d '[:space:]')
+          echo "server is running: ${deployed:-nothing recorded yet}"
+          if [ -z "$deployed" ]; then
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git cat-file -e "${deployed}^{commit}" 2>/dev/null; then
+            echo "That commit is not in this checkout, so freshness cannot be judged. Deploying."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Re-running the commit that is already live is legitimate (a forced redeploy); ancestry
+          # alone would call it a no-op, because a commit is an ancestor of itself.
+          if [ "$deployed" = "$GITHUB_SHA" ]; then
+            echo "Already running this commit. Redeploying anyway."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # An ancestor of the deployed commit is older: deploying it would roll the server back.
+          if git merge-base --is-ancestor "$GITHUB_SHA" "$deployed"; then
+            echo "::notice::$GITHUB_SHA is older than the deployed $deployed. Skipping this run."
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Copy CRM source to server
-        # Excludes .env so the server copy of secrets is never overwritten.
+        if: steps.freshness.outputs.superseded != 'true'
+        # Excludes .env so the server copy of secrets is never overwritten, and .deployed-sha
+        # because that record belongs to the server rather than to the repository.
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           set -euo pipefail
           rsync -avz --delete \
-            --exclude '.env' --exclude '.env.*' \
+            --exclude '.env' --exclude '.env.*' --exclude '.deployed-sha' \
             --exclude 'node_modules/' --exclude '.next/' \
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
             crm/ "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
       - name: Install, build, and (re)start on server
+        if: steps.freshness.outputs.superseded != 'true'
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "REMOTE_DIR=${REMOTE_DIR} PM2_NAME=${PM2_NAME} APP_PORT=${APP_PORT} bash -s" <<'REMOTE'
+            "REMOTE_DIR=${REMOTE_DIR} PM2_NAME=${PM2_NAME} APP_PORT=${APP_PORT} DEPLOYED_SHA=${GITHUB_SHA} bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$REMOTE_DIR"
           test -f .env || { echo "Missing $REMOTE_DIR/.env on server. Create it first."; exit 1; }
@@ -76,9 +121,12 @@ jobs:
             npx --yes pm2 start npm --name "$PM2_NAME" -- start -- -p "$APP_PORT"
           fi
           npx --yes pm2 save
+          # Record what is actually running, so an older queued run recognises itself and stops.
+          printf '%s\n' "$DEPLOYED_SHA" > "$REMOTE_DIR/.deployed-sha"
           REMOTE
 
       - name: Verify the CRM answers
+        if: steps.freshness.outputs.superseded != 'true'
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
