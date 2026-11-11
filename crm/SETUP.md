@@ -22,7 +22,8 @@ Menu labels change between Supabase releases. Match the settings by name if they
 
 ## 4. Create your admin account
 Sign-up is off, so the account must exist before you can sign in.
-1. **Authentication > Users > Add user**, enter your work email. Do not set a password.
+1. **Authentication > Users > Add user**, enter your work email. A password is optional: leave it blank and sign in with the emailed link, or give the account one with
+   `npm run set-password -- you@example.com 'a password of 12+ characters'` (see Recovery).
 2. In **SQL Editor**, run this with your own email and name:
 
 ```sql
@@ -57,6 +58,21 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 
 ## Recovery
 - **Lost phone or authenticator app:** in **Authentication > Users**, open your user and remove the MFA factor. Sign in again to re-enrol. Keep a second device enrolled if you can.
+- **"Email or password is incorrect" on first sign-in:** an account added without a password has no
+  credential to match, so every password fails with `invalid_credentials`. On the VPS, in the
+  directory holding `.env`:
+
+  ```
+  npm run set-password -- you@example.com 'a password of 12+ characters'
+  ```
+
+  It reads `.env` itself, sets the password, confirms the address, then verifies by making the same
+  call the sign-in form makes, so a verified result means the next attempt works. Add `--recreate`
+  if the password cannot be set and the account may be deleted and rebuilt. If it reports that the
+  address does not exist, the app is pointed at a different Supabase project from the one holding
+  the user: check the `Project:` line it prints first.
+- **Signed in but sent to `/no-access`:** the account exists but has no `crm_staff` row, which is the
+  SQL in step 4. Signing in again will not fix it.
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
