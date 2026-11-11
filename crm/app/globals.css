@@ -383,3 +383,12 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
   .form-grid { grid-template-columns: 1fr; }
   .form-grid .span-2 { grid-column: auto; }
 }
+
+/* ---------- Wide tables scroll inside the panel, not the page ---------- */
+@media (max-width: 720px) {
+  .table { display: block; overflow-x: auto; }
+  .table > thead,
+  .table > tbody { display: table; width: 100%; min-width: 640px; }
+  .table th { white-space: nowrap; }
+  .table td.wrap-cell { white-space: normal; }
+}

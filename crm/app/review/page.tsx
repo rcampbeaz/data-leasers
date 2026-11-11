@@ -8,6 +8,7 @@ type Row = {
   status: string;
   status_reason: string | null;
   company_id: string;
+  created_at: string;
   companies: { name: string } | { name: string }[] | null;
 };
 
@@ -20,7 +21,7 @@ export default async function ReviewPage({
   const supabase = await createStaffClient();
   const { data, error } = await supabase
     .from('datasets')
-    .select('id, name, status, status_reason, company_id, companies(name)')
+    .select('id, name, status, status_reason, company_id, created_at, companies(name)')
     .in('status', ['Blocked', 'Review'])
     .order('created_at');
 
@@ -50,6 +51,7 @@ export default async function ReviewPage({
             <tr>
               <th>Company</th>
               <th>Dataset</th>
+              <th>Waiting</th>
               <th>Status</th>
               <th>Reason</th>
               <th>Change status</th>
@@ -64,6 +66,9 @@ export default async function ReviewPage({
                     <Link href={`/companies/${row.company_id}`}>{company?.name ?? 'Unknown'}</Link>
                   </td>
                   <td>{row.name}</td>
+                  <td className="muted small">
+                    {Math.max(0, Math.round((Date.now() - new Date(row.created_at).getTime()) / 86_400_000))}d
+                  </td>
                   <td>
                     <span className={`status ${row.status.toLowerCase()}`}>{row.status}</span>
                   </td>

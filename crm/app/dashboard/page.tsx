@@ -27,10 +27,22 @@ export default async function DashboardPage() {
   const since = new Date(Date.now() - 365 * DAY).toISOString();
   const thirtyDaysAgo = Date.now() - 30 * DAY;
   const weekAhead = new Date(Date.now() + 7 * DAY).toISOString().slice(0, 10);
+  const soonIso = new Date(Date.now() + 30 * DAY).toISOString().slice(0, 10);
+  const staleIso = new Date(Date.now() - 14 * DAY).toISOString();
+  const staleOfferIso = new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10);
 
-  const [leadsRes, companiesRes, datasetsRes, tasksRes, historyRes] = await Promise.all([
+  const [
+    leadsRes,
+    companiesRes,
+    datasetsRes,
+    tasksRes,
+    historyRes,
+    referralsRes,
+    deletionsRes,
+    offersRes,
+  ] = await Promise.all([
     supabase.from('leads').select('created_at').gte('created_at', since),
-    supabase.from('companies').select('id, name, stage, close_reason, closed_at, next_action, next_action_due'),
+    supabase.from('companies').select('id, name, stage, close_reason, closed_at, next_action, next_action_due, updated_at'),
     supabase.from('datasets').select('status'),
     supabase.from('tasks').select('id, title, due_on, done').eq('done', false),
     supabase
@@ -38,6 +50,21 @@ export default async function DashboardPage() {
       .select('from_stage, to_stage, changed_at, companies(name)')
       .order('changed_at', { ascending: false })
       .limit(8),
+    supabase
+      .from('referrals')
+      .select('id, company_name, deadline_on, status')
+      .in('status', ['registered', 'introduced'])
+      .lte('deadline_on', soonIso),
+    supabase
+      .from('agreements')
+      .select('id, company_id, deletion_due')
+      .not('deletion_due', 'is', null)
+      .lte('deletion_due', soonIso),
+    supabase
+      .from('offers')
+      .select('id, company_id, amount, currency, offered_on')
+      .eq('status', 'offered')
+      .lt('offered_on', staleOfferIso),
   ]);
 
   const leads = leadsRes.data ?? [];
@@ -52,6 +79,15 @@ export default async function DashboardPage() {
   }[];
 
   const error = leadsRes.error || companiesRes.error || datasetsRes.error || tasksRes.error;
+
+  // Anything that needs a person today, rather than a figure to look at.
+  const staleCompanies = companies.filter(
+    (c) => c.stage !== 'Closed' && String(c.updated_at ?? '') < staleIso,
+  );
+  const dueReferrals = (referralsRes.data ?? []) as { id: string; company_name: string }[];
+  const dueDeletions = (deletionsRes.data ?? []) as { id: string; deletion_due: string }[];
+  const staleOffers = (offersRes.data ?? []) as { id: string; amount: number; currency: string }[];
+  const attention = staleCompanies.length + dueReferrals.length + dueDeletions.length + staleOffers.length;
 
   // KPIs
   const newLeads30 = leads.filter((l) => new Date(l.created_at).getTime() >= thirtyDaysAgo).length;
@@ -118,6 +154,44 @@ export default async function DashboardPage() {
         <div className="kpi"><span>Tasks overdue</span><strong className={overdueTasks ? 'overdue' : ''}>{overdueTasks}</strong></div>
         <div className="kpi"><span>Tasks due this week</span><strong>{dueThisWeek}</strong></div>
         <div className="kpi"><span>Blocked datasets</span><strong className={blockedDatasets ? 'overdue' : ''}>{blockedDatasets}</strong></div>
+      </section>
+
+      <section className="panel">
+        <h2>Needs attention</h2>
+        {attention === 0 ? (
+          <p className="muted">Nothing overdue.</p>
+        ) : (
+          <ul className="list">
+            {staleCompanies.length > 0 ? (
+              <li>
+                <strong>{staleCompanies.length}</strong>{' '}
+                {staleCompanies.length === 1 ? 'open company has' : 'open companies have'} had no
+                change in 14 days.
+              </li>
+            ) : null}
+            {staleOffers.length > 0 ? (
+              <li>
+                <strong>{staleOffers.length}</strong>{' '}
+                {staleOffers.length === 1 ? 'offer has' : 'offers have'} been open for more than 14
+                days without a decision.
+              </li>
+            ) : null}
+            {dueReferrals.length > 0 ? (
+              <li>
+                <strong>{dueReferrals.length}</strong>{' '}
+                {dueReferrals.length === 1 ? 'referral is' : 'referrals are'} inside 30 days of the
+                six-month deadline. <Link href="/partners">Open partners</Link>
+              </li>
+            ) : null}
+            {dueDeletions.length > 0 ? (
+              <li>
+                <strong>{dueDeletions.length}</strong>{' '}
+                {dueDeletions.length === 1 ? 'agreement has' : 'agreements have'} a deletion date
+                inside 30 days.
+              </li>
+            ) : null}
+          </ul>
+        )}
       </section>
 
       <div className="two-col">

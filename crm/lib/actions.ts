@@ -158,6 +158,16 @@ export async function moveStage(companyId: string, formData: FormData) {
   const problem = validateMove(to, closeReason);
   if (problem) fail(path, problem);
 
+  // No introduction, no introduction stage. The buyer used to be implied by the
+  // stage name; now it has to be recorded before a company can get there.
+  if (rankOf(to) >= rankOf('Introduced to buyer')) {
+    const { count } = await supabase
+      .from('introductions')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+    if (!count) fail(path, 'Record an introduction to a buyer before moving to that stage.');
+  }
+
   const hasBlocked = state.datasets.some((d) => d.status === 'Blocked');
   if (to !== 'Closed' && hasBlocked && rankOf(to) > rankOf('Data assessed')) {
     fail(path, 'A dataset is blocked. Resolve it before moving past Data assessed.');
@@ -195,6 +205,16 @@ export async function dragMoveStage(companyId: string, to: string): Promise<{ er
   const hasBlocked = state.datasets.some((d) => d.status === 'Blocked');
   if (hasBlocked && rankOf(to as Stage) > rankOf('Data assessed')) {
     return { error: 'A dataset is blocked. Resolve it before moving past Data assessed.' };
+  }
+
+  if (rankOf(to as Stage) >= rankOf('Introduced to buyer')) {
+    const { count } = await supabase
+      .from('introductions')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+    if (!count) {
+      return { error: 'Record an introduction to a buyer before moving to that stage.' };
+    }
   }
 
   const { error } = await supabase

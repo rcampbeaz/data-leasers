@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { loadStaff, todayIso } from '@/lib/data';
-import { STAGES, suggestStage, type DatasetStatus, type Stage } from '@/lib/pipeline';
+import { STAGES, normalizeStage, suggestStage, type DatasetStatus, type Stage } from '@/lib/pipeline';
 import {
   addActivity,
   addContact,
@@ -13,6 +13,15 @@ import {
   toggleTask,
   updateCompany,
 } from '@/lib/actions';
+import {
+  addAgreement,
+  addDocument,
+  addIntroduction,
+  addOffer,
+  removeDocument,
+  setOfferStatus,
+} from '@/lib/deal-actions';
+import { money } from '@/lib/deals';
 
 export default async function CompanyPage({
   params,
@@ -32,21 +41,57 @@ export default async function CompanyPage({
     .maybeSingle();
   if (!company) notFound();
 
-  const [contacts, activities, datasets, tasks, history, staff] = await Promise.all([
+  const [
+    contacts,
+    activities,
+    datasets,
+    tasks,
+    history,
+    staff,
+    buyers,
+    introductions,
+    offers,
+    agreements,
+    documents,
+  ] = await Promise.all([
     supabase.from('contacts').select('id, name, email, role_title').eq('company_id', id).order('created_at'),
     supabase.from('activities').select('id, kind, body, call_at, created_at').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('datasets').select('id, name, status, status_reason').eq('company_id', id).order('created_at'),
     supabase.from('tasks').select('id, title, due_on, done, assigned_to').eq('company_id', id).order('due_on'),
     supabase.from('stage_history').select('from_stage, to_stage, changed_at').eq('company_id', id).order('changed_at', { ascending: false }),
     loadStaff(supabase),
+    supabase.from('buyers').select('id, name, active').order('name'),
+    supabase
+      .from('introductions')
+      .select('id, buyer_id, introduced_on, introduced_by, notes')
+      .eq('company_id', id)
+      .order('introduced_on', { ascending: false }),
+    supabase
+      .from('offers')
+      .select('id, buyer_id, amount, currency, term_months, exclusivity_months, status, offered_on')
+      .eq('company_id', id)
+      .order('offered_on', { ascending: false }),
+    supabase
+      .from('agreements')
+      .select('id, buyer_id, licence_start, licence_end, exclusivity_end, delivered_on, deletion_due, audit_right, status, signed_on')
+      .eq('company_id', id)
+      .order('licence_start', { ascending: false }),
+    supabase
+      .from('documents')
+      .select('id, kind, title, location, signed_on')
+      .eq('company_id', id)
+      .order('created_at', { ascending: false }),
   ]);
 
   const staffName = (uid: string | null) => staff.find((s) => s.user_id === uid)?.full_name ?? '-';
+  const buyerList = (buyers.data ?? []) as { id: string; name: string; active: boolean }[];
+  const buyerName = (buyerId: string | null) =>
+    buyerList.find((b) => b.id === buyerId)?.name ?? 'Unknown buyer';
 
   // Suggested stage: shown for a person to confirm, never applied here.
   const datasetRows = (datasets.data ?? []).map((d) => ({ status: d.status as DatasetStatus }));
   const suggestion = suggestStage({
-    stage: company.stage as Stage,
+    stage: normalizeStage(company.stage),
     closeReason: company.close_reason,
     datasets: datasetRows,
     noteCount: (activities.data ?? []).filter((a) => a.kind === 'note').length,
@@ -60,13 +105,23 @@ export default async function CompanyPage({
   const addContactWithId = addContact.bind(null, id);
   const addDatasetWithId = addDataset.bind(null, id);
   const addTaskWithId = addTask.bind(null, id);
+  const addIntroductionWithId = addIntroduction.bind(null, id);
+  const addOfferWithId = addOffer.bind(null, id);
+  const addAgreementWithId = addAgreement.bind(null, id);
+  const addDocumentWithId = addDocument.bind(null, id);
 
   return (
     <main className="page">
       <header className="page-head">
         <p className="muted small"><Link href="/companies">Companies</Link> / {company.name}</p>
         <h1>{company.name}</h1>
-        <p><span className="stage">{company.stage}</span>{company.close_reason ? <span className="muted"> ({company.close_reason})</span> : null}</p>
+        <p>
+          <span className="stage">{normalizeStage(company.stage)}</span>
+          {company.close_reason ? <span className="muted"> ({company.close_reason})</span> : null}
+          {process.env.BOOKING_URL ? (
+            <> · <a href={process.env.BOOKING_URL} target="_blank" rel="noreferrer">Book a call</a></>
+          ) : null}
+        </p>
       </header>
 
       {error ? <p className="notice blocked">{error}</p> : null}
@@ -78,7 +133,7 @@ export default async function CompanyPage({
         <section className="panel">
           <h2>Stage</h2>
           <form action={moveStageWithId} className="inline-form">
-            <select name="stage" defaultValue={company.stage}>
+            <select name="stage" defaultValue={normalizeStage(company.stage)}>
               {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <select name="closeReason" defaultValue={company.close_reason ?? ''}>
@@ -165,6 +220,203 @@ export default async function CompanyPage({
           </select>
           <input name="reason" placeholder="Reason" maxLength={1000} />
           <button className="btn" type="submit">Add dataset</button>
+        </form>
+      </section>
+
+      <section className="panel">
+        <h2>Introductions to buyers</h2>
+        {(introductions.data ?? []).length === 0 ? (
+          <p className="muted">No introductions yet. A company cannot move past Data assessed without one.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr><th>Buyer</th><th>Introduced</th><th>By</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              {(introductions.data ?? []).map((intro) => (
+                <tr key={intro.id}>
+                  <td>{buyerName(intro.buyer_id)}</td>
+                  <td>{intro.introduced_on}</td>
+                  <td>{staffName(intro.introduced_by)}</td>
+                  <td className="wrap-cell">{intro.notes ?? '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <form action={addIntroductionWithId} className="inline-form">
+          <select name="buyerId" required defaultValue="">
+            <option value="">Choose a buyer</option>
+            {buyerList.filter((b) => b.active).map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <input type="date" name="introducedOn" defaultValue={todayIso()} />
+          <input name="notes" placeholder="Notes" maxLength={2000} />
+          <button className="btn" type="submit">Record introduction</button>
+        </form>
+      </section>
+
+      <section className="panel">
+        <h2>Offers</h2>
+        {(offers.data ?? []).length === 0 ? (
+          <p className="muted">No offers recorded yet.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Buyer</th><th>Amount</th><th>Term</th><th>Exclusivity</th><th>Offered</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {(offers.data ?? []).map((offer) => (
+                <tr key={offer.id}>
+                  <td>{buyerName(offer.buyer_id)}</td>
+                  <td>{money(offer.amount, offer.currency)}</td>
+                  <td>{offer.term_months ? `${offer.term_months} months` : '-'}</td>
+                  <td>{offer.exclusivity_months ? `${offer.exclusivity_months} months` : '-'}</td>
+                  <td>{offer.offered_on}</td>
+                  <td><span className="stage">{offer.status}</span></td>
+                  <td>
+                    <form action={setOfferStatus.bind(null, id, offer.id)} className="inline-form">
+                      <select name="status" defaultValue={offer.status}>
+                        <option>offered</option><option>accepted</option><option>declined</option><option>withdrawn</option>
+                      </select>
+                      <button className="btn" type="submit">Set</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <form action={addOfferWithId} className="form-grid">
+          <label>Buyer
+            <select name="buyerId" required defaultValue="">
+              <option value="">Choose a buyer</option>
+              {buyerList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </label>
+          <label>Amount
+            <input name="amount" inputMode="decimal" required placeholder="250000" />
+          </label>
+          <label>Currency
+            <input name="currency" defaultValue="USD" maxLength={3} />
+          </label>
+          <label>Offered on
+            <input type="date" name="offeredOn" defaultValue={todayIso()} />
+          </label>
+          <label>Term (months)
+            <input name="termMonths" inputMode="numeric" maxLength={3} />
+          </label>
+          <label>Exclusivity (months)
+            <input name="exclusivityMonths" inputMode="numeric" maxLength={3} />
+          </label>
+          <label className="span-2">Notes
+            <input name="notes" maxLength={2000} />
+          </label>
+          <button className="btn" type="submit">Record offer</button>
+        </form>
+      </section>
+
+      <section className="panel">
+        <h2>Agreement and term dates</h2>
+        {(agreements.data ?? []).length === 0 ? (
+          <p className="muted">No agreement recorded yet.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Buyer</th><th>Start</th><th>Ends</th><th>Exclusivity to</th><th>Deletion due</th><th>Audit</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(agreements.data ?? []).map((agreement) => (
+                <tr key={agreement.id}>
+                  <td>{buyerName(agreement.buyer_id)}</td>
+                  <td>{agreement.licence_start}</td>
+                  <td>{agreement.licence_end ?? '-'}</td>
+                  <td>{agreement.exclusivity_end ?? '-'}</td>
+                  <td>{agreement.deletion_due ?? '-'}</td>
+                  <td>{agreement.audit_right ? 'Yes' : 'No'}</td>
+                  <td><span className="stage">{agreement.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <form action={addAgreementWithId} className="form-grid">
+          <label>Buyer
+            <select name="buyerId" defaultValue="">
+              <option value="">Choose a buyer</option>
+              {buyerList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </label>
+          <label>Licence start
+            <input type="date" name="licenceStart" required defaultValue={todayIso()} />
+          </label>
+          <label>Licence term (months)
+            <input name="licenceMonths" inputMode="numeric" maxLength={3} />
+          </label>
+          <label>Exclusivity (months)
+            <input name="exclusivityMonths" inputMode="numeric" maxLength={3} />
+          </label>
+          <label>Delivered on
+            <input type="date" name="deliveredOn" />
+          </label>
+          <label>Signed on
+            <input type="date" name="signedOn" defaultValue={todayIso()} />
+          </label>
+          <label className="span-2">
+            <span><input type="checkbox" name="auditRight" /> Audit right included</span>
+          </label>
+          <button className="btn" type="submit">Record agreement</button>
+        </form>
+        <p className="muted small-note">The deletion date is set to 120 days after delivery, the term the buyer program publishes.</p>
+      </section>
+
+      <section className="panel">
+        <h2>Documents</h2>
+        {(documents.data ?? []).length === 0 ? (
+          <p className="muted">No documents recorded. The rights file and the signed agreement belong here.</p>
+        ) : (
+          <ul className="list">
+            {(documents.data ?? []).map((doc) => (
+              <li key={doc.id}>
+                <strong>{doc.title}</strong> · {doc.kind}
+                {doc.signed_on ? ` · signed ${doc.signed_on}` : ''}
+                {doc.location ? <> · <a href={doc.location} target="_blank" rel="noreferrer">Open</a></> : null}
+                {' '}
+                <form action={removeDocument.bind(null, id, doc.id)} style={{ display: 'inline' }}>
+                  <button className="link-button" type="submit">Remove</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form action={addDocumentWithId} className="form-grid">
+          <label>Type
+            <select name="kind" defaultValue="rights-file">
+              <option value="rights-file">Rights file</option>
+              <option value="agreement">Agreement</option>
+              <option value="nda">NDA</option>
+              <option value="export-manifest">Export manifest</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Title
+            <input name="title" required maxLength={200} />
+          </label>
+          <label className="span-2">Link
+            <input name="location" maxLength={1000} placeholder="https://..." />
+          </label>
+          <label>Signed on
+            <input type="date" name="signedOn" />
+          </label>
+          <label>Notes
+            <input name="notes" maxLength={2000} />
+          </label>
+          <button className="btn" type="submit">Save document</button>
         </form>
       </section>
 

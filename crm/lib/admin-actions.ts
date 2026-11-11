@@ -52,6 +52,16 @@ export async function addLead(formData: FormData) {
   if (!company) fail(path, 'Enter the company name.');
 
   const admin = createIntakeClient();
+
+  // Same person enquiring twice is common; keep one record and say so.
+  const { data: duplicate } = await admin
+    .from('leads')
+    .select('id')
+    .ilike('email', email)
+    .limit(1)
+    .maybeSingle();
+  if (duplicate) fail(path, 'A lead with that email address already exists.');
+
   const { data, error } = await admin
     .from('leads')
     .insert({

@@ -19,16 +19,20 @@ type Lead = {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; saved?: string; q?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; q?: string; page?: string }>;
 }) {
-  const { error: message, saved, q } = await searchParams;
+  const { error: message, saved, q, page } = await searchParams;
+  const perPage = 25;
+  const current = Math.max(1, Number.parseInt(page ?? '1', 10) || 1);
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const canAdd = me?.role === 'admin' || me?.role === 'introducer';
   // The company's stage is read from the company record, so it is always current.
   let query = supabase
     .from('leads')
-    .select('id, name, email, company, role_title, data_note, created_at, companies(id, stage)')
+    .select('id, name, email, company, role_title, data_note, created_at, companies(id, stage)', {
+      count: 'exact',
+    })
     .order('created_at', { ascending: false });
   // Commas and parentheses have meaning in PostgREST filters, so they are removed from the search text.
   const term = (q ?? '').replace(/[,()]/g, ' ').trim().slice(0, 100);
@@ -36,9 +40,12 @@ export default async function LeadsPage({
     const pattern = `%${escapeLike(term)}%`;
     query = query.or(`name.ilike.${pattern},company.ilike.${pattern},email.ilike.${pattern}`);
   }
-  const { data, error } = await query;
+  const { data, error, count } = await query.range((current - 1) * perPage, current * perPage - 1);
 
   const leads = (data ?? []) as unknown as Lead[];
+  const total = count ?? 0;
+  const pages = Math.max(1, Math.ceil(total / perPage));
+  const pageHref = (n: number) => `/leads?page=${n}${term ? `&q=${encodeURIComponent(term)}` : ''}`;
 
   return (
     <main className="page">
@@ -122,6 +129,16 @@ export default async function LeadsPage({
           </tbody>
         </table>
       )}
+
+      {pages > 1 ? (
+        <nav className="filters" aria-label="Pages">
+          {current > 1 ? <a href={pageHref(current - 1)}>Previous</a> : <span className="muted">Previous</span>}
+          <span className="muted small">
+            Page {current} of {pages} · {total} leads
+          </span>
+          {current < pages ? <a href={pageHref(current + 1)}>Next</a> : <span className="muted">Next</span>}
+        </nav>
+      ) : null}
     </main>
   );
 }

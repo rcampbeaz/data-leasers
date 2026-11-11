@@ -47,7 +47,12 @@ export async function middleware(request: NextRequest) {
     return path.startsWith('/login') ? response : redirect('/login');
   }
 
-  // Two-factor is off for now. Re-enable step 2 here before launch if needed.
+  // 2. Two-factor, when MFA_REQUIRED is on. It stays off by default so an account
+  // that has not enrolled yet cannot lock itself out of the CRM.
+  if (process.env.MFA_REQUIRED === 'true' && !path.startsWith('/mfa')) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.currentLevel !== 'aal2') return redirect('/mfa');
+  }
 
   // Signed in: keep them off the sign-in screen
   if (path.startsWith('/login')) {
@@ -72,5 +77,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // The public intake endpoint is handled before this matcher runs.
-  matcher: ['/((?!api/leads|api/reminders|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)'],
+  matcher: [
+    '/((?!api/leads|api/reminders|api/inbound|_next/static|_next/image|favicon.ico|logo.*\\.svg|icon\\.svg).*)',
+  ],
 };

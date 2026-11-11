@@ -11,6 +11,8 @@ export type BoardCompany = {
   stage: string;
   next_action: string | null;
   next_action_due: string | null;
+  // When the company entered its current stage, from stage_history.
+  entered_on: string | null;
 };
 
 export default function PipelineBoard({
@@ -104,6 +106,12 @@ export default function PipelineBoard({
                       <span className="small muted">
                         Due {c.next_action_due}
                         {overdue ? ' (overdue)' : ''}
+                      </span>
+                    ) : null}
+                    {c.entered_on && stage !== 'Closed' ? (
+                      <span className="small muted">
+                        {Math.max(0, Math.round((Date.now() - new Date(c.entered_on).getTime()) / 86_400_000))}d in
+                        stage
                       </span>
                     ) : null}
                   </div>

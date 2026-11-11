@@ -6,8 +6,8 @@ export const STAGES = [
   'New lead',
   'Call booked',
   'Data assessed',
-  'Introduced to Mode',
-  'Mode in discussion',
+  'Introduced to buyer',
+  'Buyer in discussion',
   'Owner decision',
   'Closed',
 ] as const;
@@ -29,6 +29,18 @@ export type StageSuggestion = {
   auto: boolean; // true: apply now. false: show as a suggestion for a person to confirm.
   reason: string;
 } | null;
+
+// Rows written before migration 0007 still carry the buyer name the pipeline used
+// to hard-code. Reading normalises them so nothing disappears from the board while
+// the migration is pending.
+const LEGACY_STAGES: Record<string, Stage> = {
+  'Introduced to Mode': 'Introduced to buyer',
+  'Mode in discussion': 'Buyer in discussion',
+};
+
+export function normalizeStage(stage: string): Stage {
+  return (LEGACY_STAGES[stage] ?? stage) as Stage;
+}
 
 const rank = (s: Stage) => STAGES.indexOf(s);
 
@@ -58,7 +70,7 @@ export function suggestStage(c: CompanyState): StageSuggestion {
   // Suggested only: never automatic beyond Data assessed.
   if (c.stage === 'Data assessed' && allCleared && !hasBlocked) {
     return {
-      to: 'Introduced to Mode',
+      to: 'Introduced to buyer',
       auto: false,
       reason: 'Datasets approved. Confirm once the introduction is made.',
     };

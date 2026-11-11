@@ -1,16 +1,33 @@
 import { createStaffClient } from '@/lib/supabase';
-import { STAGES } from '@/lib/pipeline';
+import { STAGES, normalizeStage } from '@/lib/pipeline';
 import { todayIso } from '@/lib/data';
 import PipelineBoard, { type BoardCompany } from './board';
 
 export default async function PipelinePage() {
   const supabase = await createStaffClient();
-  const { data, error } = await supabase
-    .from('companies')
-    .select('id, name, stage, next_action, next_action_due')
-    .order('updated_at', { ascending: false });
+  const [{ data, error }, { data: history }] = await Promise.all([
+    supabase
+      .from('companies')
+      .select('id, name, stage, next_action, next_action_due')
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('stage_history')
+      .select('company_id, changed_at')
+      .order('changed_at', { ascending: false })
+      .limit(2000),
+  ]);
 
-  const companies = (data ?? []) as BoardCompany[];
+  // The newest stage change is when the company entered the stage it is in now.
+  const enteredAt = new Map<string, string>();
+  for (const row of (history ?? []) as { company_id: string; changed_at: string }[]) {
+    if (!enteredAt.has(row.company_id)) enteredAt.set(row.company_id, row.changed_at);
+  }
+
+  const companies = ((data ?? []) as BoardCompany[]).map((c) => ({
+    ...c,
+    stage: normalizeStage(c.stage),
+    entered_on: enteredAt.get(c.id) ?? null,
+  }));
 
   return (
     <main className="page">
