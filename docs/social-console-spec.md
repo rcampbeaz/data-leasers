@@ -172,6 +172,8 @@ Workspace-level, all editable in the console:
 
 - **Brand rules** (see 2.8) and the default hashtag/UTM sets.
 - **Approval required** toggle: when on, nothing publishes without a second person approving.
+  Ships **off** — there is one writer. The `needs_review` state stays in the schema so a second
+  writer can be added by flipping the setting, with no migration.
 - **Quiet hours** and blackout dates (a post should not go out on a day the site is being
   deployed, for instance).
 - **Per-channel posting caps** per day, so a queue cannot flood a channel.
@@ -429,12 +431,14 @@ would put an unsourced claim into a post.
 
 ---
 
-## 7. Open questions
+## 7. Decisions taken (11 November 2026)
 
-1. **Aggregator or direct-only?** The recommendation is aggregator first, direct Meta later.
-   Direct-only means no posting on LinkedIn or TikTok until two approvals land.
-2. **Does posting to your personal LinkedIn profile matter** while the Page application is in
-   review, or is the Page the only channel that counts?
-3. **Approval required?** If you are the only person posting, the approval flow is friction; if
-   anyone else will write, it is the difference between a typo and a public typo.
-4. **Phoenix is the display timezone** — confirm, since all scheduling will read in it.
+1. **Aggregator first.** One provider behind the adapter for all four channels. Direct Meta
+   publishing is deferred to phase 3, once the volume justifies wiring it.
+2. **Personal LinkedIn is in scope**, to be reviewed when the accounts are reviewed. It keeps
+   the channel alive while the Page application is pending, under `w_member_social`.
+3. **Approval flow ships off.** There is one writer, so admin and introducer publish directly.
+   The state and the toggle remain in the schema, so a second writer needs a settings change
+   rather than a migration.
+4. **Display timezone is America/Phoenix.** Storage is UTC; every screen reads and writes in
+   Phoenix, which has no daylight saving to get wrong.
