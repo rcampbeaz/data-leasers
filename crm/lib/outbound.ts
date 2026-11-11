@@ -41,6 +41,20 @@ export function normaliseEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+// A From header arrives as `Name <addr@example.com>`, sometimes with a mailto: prefix and
+// often with trailing punctuation from a forwarded body. Bare addresses pass through, so
+// this is safe to call on anything a person typed as well.
+const ANGLE_ADDRESS = /<([^<>\s]+@[^<>\s]+)>/;
+const BARE_ADDRESS = /[^\s<>,;:"]+@[^\s<>,;:"]+/;
+
+export function extractEmail(value: string): string {
+  const raw = (value ?? '').trim();
+  const angled = ANGLE_ADDRESS.exec(raw);
+  if (angled) return normaliseEmail(angled[1].replace(/^mailto:/i, ''));
+  const bare = BARE_ADDRESS.exec(raw.replace(/^mailto:/i, ''));
+  return normaliseEmail(bare ? bare[0].replace(/[.,;:]+$/, '') : raw);
+}
+
 export type GuardInput = {
   email: string;
   country: string | null;

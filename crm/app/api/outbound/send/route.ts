@@ -53,13 +53,12 @@ export async function POST(request: Request) {
         .eq('id', enrolment.id);
     };
 
-    const [{ data: contact }, { data: suppressed }, { data: steps }] = await Promise.all([
+    const [{ data: contact }, { data: steps }] = await Promise.all([
       admin
         .from('outreach_contacts')
         .select('id, email, country, basis, status, unsubscribe_token')
         .eq('id', enrolment.contact_id)
         .maybeSingle(),
-      admin.from('suppressions').select('email'),
       admin
         .from('sequence_steps')
         .select('id, position, delay_days, subject, body')
@@ -79,10 +78,15 @@ export async function POST(request: Request) {
       continue;
     }
 
+    // One indexed lookup for this address. Reading the whole suppression table on every
+    // batch worked until the list was large, then it became the slowest part of a send.
     const suppressedEmail = normaliseEmail(contact.email);
-    const isSuppressed = (suppressed ?? []).some(
-      (row: { email: string }) => normaliseEmail(row.email) === suppressedEmail,
-    );
+    const { data: suppressed } = await admin
+      .from('suppressions')
+      .select('email')
+      .eq('email', suppressedEmail)
+      .maybeSingle();
+    const isSuppressed = Boolean(suppressed);
     const guard = sendGuard({
       email: contact.email,
       country: contact.country,
@@ -140,7 +144,20 @@ export async function POST(request: Request) {
         status: 'failed',
         error: raw.slice(0, 500),
       });
-      // One retry tomorrow, then leave it for a person.
+      // Retry once a day, but not forever: after three rejections the reason is the address
+      // or the domain, and another attempt only damages the sending reputation.
+      const { count: failures } = await admin
+        .from('outbound_sends')
+        .select('id', { count: 'exact', head: true })
+        .eq('enrolment_id', enrolment.id)
+        .eq('status', 'failed');
+      if ((failures ?? 0) >= 3) {
+        await finish('paused', {
+          stopped_reason: 'Provider rejected three attempts; check the address and the sending domain.',
+        });
+        results.push({ id: enrolment.id, outcome: 'paused', detail: raw.slice(0, 200) });
+        continue;
+      }
       const retry = new Date();
       retry.setDate(retry.getDate() + 1);
       await finish('active', { next_due_on: retry.toISOString().slice(0, 10) });

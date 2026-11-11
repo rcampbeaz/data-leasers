@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createIntakeClient } from '@/lib/supabase';
+import { extractEmail } from '@/lib/outbound';
 
 // Turns a forwarded email into an activity on a company, so a thread can be logged
 // without retyping it. Forward to an address that posts here, and include the
@@ -57,11 +58,14 @@ export async function POST(request: Request) {
   // A reply stops the sequence. Matching on the sender address is enough here: if the
   // address is one we are mailing, nothing further should go out without a person
   // looking at it first.
-  if (from) {
+  // A forwarded From header is `Name <addr>`, so the address has to be pulled out before it
+  // can match. Without this a reply looks like it came from nobody and the sequence keeps going.
+  const replyAddress = extractEmail(from);
+  if (replyAddress.includes('@')) {
     const { data: contact } = await supabase
       .from('outreach_contacts')
       .select('id')
-      .eq('email', from.toLowerCase())
+      .eq('email', replyAddress)
       .maybeSingle();
 
     if (contact) {
