@@ -8,6 +8,7 @@ import {
   unsubscribeHeaders,
   unsubscribeUrl,
 } from '@/lib/outbound';
+import { domainOf } from '@/lib/deliverability';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,6 +108,25 @@ export async function POST(request: Request) {
       });
       results.push({ id: enrolment.id, outcome: 'blocked', detail: guard.reason });
       continue;
+    }
+
+    // A domain hold is not a suppression: the contact stays in the pipeline and resumes when the
+    // domain is released. The step is not consumed, so the message that was due is still due.
+    const heldDomain = domainOf(contact.email);
+    if (heldDomain) {
+      const { data: hold } = await admin
+        .from('domain_holds')
+        .select('domain')
+        .eq('domain', heldDomain)
+        .is('released_at', null)
+        .maybeSingle();
+      if (hold) {
+        const retry = new Date();
+        retry.setDate(retry.getDate() + 1);
+        await finish('active', { next_due_on: retry.toISOString().slice(0, 10) });
+        results.push({ id: enrolment.id, outcome: 'held', detail: heldDomain });
+        continue;
+      }
     }
 
     const next = (steps ?? []).find(

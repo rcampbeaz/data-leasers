@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { BarChart } from '@/components/charts';
+import { releaseDomainHold } from '@/lib/domain-actions';
 import {
   domainReport,
   formatRate,
@@ -33,11 +34,12 @@ function emailOf(contact: unknown): string | null {
 export default async function DeliverabilityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; released?: string; error?: string }>;
 }) {
-  const { month } = await searchParams;
+  const { month, released, error: message } = await searchParams;
   const supabase = await createStaffClient();
-  await currentStaff(supabase);
+  const me = await currentStaff(supabase);
+  const canRelease = me?.role === 'admin' || me?.role === 'introducer';
 
   const months = recentMonths(MONTHS);
   const selected = isMonthKey(month) ? month : months[months.length - 1];
@@ -57,6 +59,22 @@ export default async function DeliverabilityPage({
         .gte('created_at', earliest)
         .limit(5000),
     ]);
+
+  const { data: holdData, error: holdError } = await supabase
+    .from('domain_holds')
+    .select('domain, reason, sent, complained, complaint_rate, created_at')
+    .is('released_at', null)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const holdRows = (holdData ?? []) as unknown as {
+    domain: string;
+    reason: string;
+    sent: number;
+    complained: number;
+    complaint_rate: number | null;
+    created_at: string;
+  }[];
 
   const sendRows: SendLike[] = ((sendData ?? []) as unknown as {
     status: string;
@@ -91,6 +109,13 @@ export default async function DeliverabilityPage({
       {error ? (
         <p className="notice blocked">
           The report could not load. Has migration <code>0011_outbound.sql</code> been run?
+        </p>
+      ) : null}
+      {message ? <p className="notice blocked">{message}</p> : null}
+      {released ? (
+        <p className="notice">
+          Released. The sweep leaves that domain alone for a week, then holds it again if the rate
+          is still over the line.
         </p>
       ) : null}
 
@@ -215,6 +240,46 @@ export default async function DeliverabilityPage({
               : 'Watch the next batch to that domain before adding volume.'}
           </p>
         ) : null}
+      </section>
+
+      <section className="panel">
+        <h2>Held domains</h2>
+        <p className="muted">
+          The hourly sweep holds a domain when its complaint rate is at or above 0.1% over the last
+          30 days and it has sent at least 50 messages in that window — enough volume for the rate
+          to mean something. A hold stops new mail to that domain; contacts stay in the pipeline and
+          resume when it is released. A released domain is left alone by the sweep for a week.
+        </p>
+        {holdError ? (
+          <p className="notice blocked">Holds could not load. Has migration <code>0013</code> been run?</p>
+        ) : holdRows.length === 0 ? (
+          <p className="muted">No domain is held.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr><th>Domain</th><th>Sent</th><th>Complaints</th><th>Rate</th><th>Why</th><th></th></tr>
+            </thead>
+            <tbody>
+              {holdRows.map((h) => (
+                <tr key={h.domain}>
+                  <td>{h.domain}</td>
+                  <td>{h.sent}</td>
+                  <td>{h.complained}</td>
+                  <td>{h.complaint_rate === null ? '—' : `${(h.complaint_rate * 100).toFixed(2)}%`}</td>
+                  <td className="wrap-cell muted small">{h.reason}</td>
+                  <td>
+                    {canRelease ? (
+                      <form action={releaseDomainHold.bind(null, h.domain)} className="inline-form">
+                        <input name="note" placeholder="Why release it" maxLength={400} />
+                        <button className="btn" type="submit">Release</button>
+                      </form>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
 
       <section className="panel">
