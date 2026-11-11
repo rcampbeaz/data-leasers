@@ -84,34 +84,40 @@ jobs:
         run: |
           set -euo pipefail
 
-          # The served copy must contain the title of the index.html we just sent.
-          marker=$(grep -oE '<title>[^<]+' _site/index.html | head -1 | sed 's|<title>||' | sed 's/[[:space:]]*$//')
-          if [ -z "$marker" ]; then
-            echo "::warning::No <title> found in _site/index.html; skipping the content check."
-          fi
-
-          # The CDN in front of the site caches by path and ignores the query
-          # string, so a stale copy can only be waited out, not busted. Thirty
-          # seconds was not enough: a deploy that changed the homepage title
-          # failed this check while the new page was already live.
-          code=""
-          for attempt in $(seq 1 12); do
-            body=$(curl -sS --max-time 15 https://dataleasers.com/ || true)
-            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 https://dataleasers.com/ || true)
-            if [ "$code" = "200" ] && { [ -z "$marker" ] || printf '%s' "$body" | grep -qF "$marker"; }; then
-              echo "dataleasers.com is serving the deployed build (Http-Status $code)."
-              break
-            fi
-            echo "Attempt $attempt: status $code, content not updated yet. Retrying in 10s."
-            sleep 10
-          done
-
-          if [ "$code" != "200" ]; then
-            echo "::error::dataleasers.com returned $code after deploy"
+          # Verify the build by its content-addressed stylesheet. The CDN caches
+          # HTML by path and ignores the query string, so a cached home page can
+          # still be minutes behind an upload that finished. The stamped file has
+          # a path nobody has requested before, so serving it byte for byte proves
+          # this build is live; comparing a cached title only proves the edge is warm.
+          stamped=$(grep -oE 'site\.[a-f0-9]+\.css' _site/index.html | head -1)
+          if [ -z "$stamped" ]; then
+            echo "::error::_site/index.html does not reference a stamped stylesheet"
             exit 1
           fi
-          if [ -n "$marker" ] && ! printf '%s' "$body" | grep -qF "$marker"; then
-            echo "::error::dataleasers.com responded but is not serving the new index.html (expected title: $marker)"
+          want=$(sha256sum "_site/${stamped}" | cut -d' ' -f1)
+
+          served=""
+          for attempt in $(seq 1 12); do
+            code=$(curl -sS -o /tmp/live.css -w '%{http_code}' --max-time 15 "https://dataleasers.com/${stamped}" || true)
+            got=$(sha256sum /tmp/live.css 2>/dev/null | cut -d' ' -f1 || true)
+            if [ "$code" = "200" ] && [ "$got" = "$want" ]; then
+              echo "dataleasers.com is serving ${stamped} from this build (Http-Status $code)."
+              served=1
+              break
+            fi
+            echo "Attempt $attempt: ${stamped} returned $code with a different body. Retrying in 5s."
+            sleep 5
+          done
+          if [ -z "$served" ]; then
+            echo "::error::dataleasers.com is not serving ${stamped} from this build"
+            exit 1
+          fi
+
+          # The home page must answer too. Its body may still be a cached copy,
+          # which is why the content-addressed check above is the authoritative one.
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 https://dataleasers.com/ || true)
+          if [ "$code" != "200" ]; then
+            echo "::error::dataleasers.com returned $code after deploy"
             exit 1
           fi
 
