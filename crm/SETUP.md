@@ -60,13 +60,30 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0007_deals.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0010_company_profile.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
 - **Offers and agreements** are recorded on the company page. An agreement stores the licence end, the exclusivity end, and a deletion date 120 days after delivery.
 - **Partners** are external referrers with a fee rate and floor. Registering a referral sets a six-month deadline, and the fee estimate is the greater of the percentage and the floor.
 - **Documents** hold metadata and a link. To store the files themselves, create a private Storage bucket and add a signed-URL upload; the table is ready for it.
+
+## Marketing console (0009)
+- Open **Marketing** in the sidebar. Drafts and scheduling work with no provider configured; sending does not.
+- An admin connects a channel once. The form stores only the provider's profile id, never an OAuth token.
+- An agent writes channel variants, and every run counts against the daily cap on the Agents page. A person always schedules the post.
+- A post that makes a numeric claim without a source link cannot be scheduled. That is the one rule that blocks.
+
+Environment for sending:
+1. Create an account with a publishing provider that covers LinkedIn, Facebook, Instagram and TikTok and holds their approvals. The free tiers that exist at the time of writing are bundle.social (20 posts/month) and upload-post (10 uploads/month).
+2. Put its endpoint in `SOCIAL_API_URL` and its key in `SOCIAL_API_KEY`. Any provider that accepts `{ platform, text, media, scheduled_at }` and returns an id works, because the console calls one endpoint.
+3. Add a second cron entry, every five minutes, next to the reminder job:
+
+```
+*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://app.dataleasers.com/api/social/publish
+```
+
+Until `SOCIAL_API_URL` is set, the Marketing page says so rather than appearing broken. LinkedIn company-page publishing needs the provider's own approval, and TikTok needs its audit: before that audit a TikTok post can only go out as a private draft.
 
 ## Two-factor, booking and inbound email
 - `MFA_REQUIRED=true` makes the middleware require an authenticator code. Enrol at `/mfa` first, then set the flag, or the account locks itself out.
