@@ -340,7 +340,7 @@ section[id] { scroll-margin-top: 92px; }
 .cta-band { background: var(--dl-gunmetal-deep); color: var(--dl-dark-fg); text-align: center; }
 .cta-band h2 { color: #FFFFFF; margin-top: 0; }
 .cta-band p { margin-left: auto; margin-right: auto; }
-.cta-band .btn { background: var(--dl-electric-deep); border-color: var(--dl-teal-bright); color: var(--dl-text); }
+.cta-band .btn { background: var(--dl-electric-deep); border-color: var(--dl-teal-bright); color: #FFFFFF; }
 .cta-band .btn:hover { background: #232A33; border-color: #3A4551; color: var(--dl-text); }
 /* The band paints every .btn teal, so the ghost variant has to clear that
    background or it becomes white text on bright teal. The kicker needs the
