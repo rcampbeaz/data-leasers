@@ -114,6 +114,9 @@ export default async function CompanyPage({
     <main className="page">
       <header className="page-head">
         <p className="muted small"><Link href="/companies">Companies</Link> / {company.name}</p>
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <a href="/companies">Companies</a> <span aria-hidden="true">›</span>
+        </nav>
         <h1>{company.name}</h1>
         <p>
           <span className="stage">{normalizeStage(company.stage)}</span>

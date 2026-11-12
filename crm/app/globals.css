@@ -546,6 +546,47 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
 .slot.failed { border-left-color: var(--dl-blocked-fg); }
 .slot-empty { margin: 0; font-size: 13px; color: var(--dl-text-muted); }
 
+/* ---------- breadcrumb ---------- */
+.crumbs { font-size: 13px; margin-bottom: 8px; color: var(--dl-text-muted); }
+.crumbs a { color: var(--dl-text-muted); text-decoration: none; }
+.crumbs a:hover { color: var(--dl-text); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- tabs ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; margin: 0 0 20px; border-bottom: 1px solid var(--dl-line); }
+.tabs a {
+  padding: 9px 14px;
+  color: var(--dl-text-2);
+  text-decoration: none;
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tabs a:hover { color: var(--dl-text); }
+.tabs a.active { color: var(--dl-text); border-bottom-color: var(--dl-electric); font-weight: 600; }
+
+/* ---------- button variants ---------- */
+/* Cancel and Remove used the same blue as Save, which made a destructive action look like the
+   recommended one. */
+.btn.ghost { background: transparent; border-color: var(--dl-line-strong); color: var(--dl-text-2); }
+.btn.ghost:hover { background: var(--dl-panel-raised); border-color: var(--dl-electric); color: var(--dl-text); }
+.btn.danger { background: transparent; border-color: rgba(248, 113, 113, 0.5); color: var(--dl-blocked-fg); }
+.btn.danger:hover { background: var(--dl-blocked-bg); border-color: rgba(248, 113, 113, 0.7); color: var(--dl-blocked-fg); }
+
+/* A refused save used to announce itself above the fold, out of sight of the form that refused it. */
+.content > .notice { position: sticky; top: 10px; z-index: 30; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); }
+
+/* ---------- loading ---------- */
+.skeleton {
+  min-height: 86px;
+  background: linear-gradient(90deg, var(--dl-panel), var(--dl-panel-raised), var(--dl-panel));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-md);
+}
+.skeleton-block { min-height: 240px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
 /* ---------- polish pass ---------- */
 /* KPI cards: a quiet accent edge so the row reads as one instrument panel rather than six boxes. */
 .kpi { border-left: 3px solid rgba(47, 107, 255, 0.55); transition: background 0.12s ease; }

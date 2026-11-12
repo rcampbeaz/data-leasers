@@ -21,6 +21,16 @@ const DAY = 24 * 60 * 60 * 1000;
 // Brand colours for the donut, in the same family the dashboard uses.
 const PALETTE = ['var(--dl-teal)', '#F5C063', '#7C9CFF', '#6EE7A8', '#FF9C90', '#B7A6FF'];
 
+// The page held a composer, a week view, three charts, a channel table, six switches and two queues,
+// which is why it read as a wall. Tabs split it by what a person came to do.
+const TABS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'compose', label: 'Compose' },
+  { key: 'schedule', label: 'Schedule' },
+  { key: 'channels', label: 'Channels' },
+  { key: 'settings', label: 'Settings' },
+];
+
 type ContentRow = {
   id: string;
   title: string | null;
@@ -85,9 +95,11 @@ export default async function MarketingPage({
     attached?: string;
     ai?: string;
     aiok?: string;
+    tab?: string;
   }>;
 }) {
-  const { error, drafted, scheduled, channel, saved, wrote, attached, ai, aiok } = await searchParams;
+  const { error, drafted, scheduled, channel, saved, wrote, attached, ai, aiok, tab } = await searchParams;
+  const activeTab = TABS.some((t) => t.key === tab) ? String(tab) : 'overview';
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const isAdmin = me?.role === 'admin';
@@ -240,6 +252,19 @@ export default async function MarketingPage({
         </p>
       </header>
 
+      <nav className="tabs" aria-label="Marketing sections">
+        {TABS.map((t) => (
+          <a
+            key={t.key}
+            href={`/marketing?tab=${t.key}`}
+            className={activeTab === t.key ? 'active' : undefined}
+            aria-current={activeTab === t.key ? 'page' : undefined}
+          >
+            {t.label}
+          </a>
+        ))}
+      </nav>
+
       {error ? <p className="notice blocked">{error}</p> : null}
       {saved ? <p className="notice">Switches saved. They apply to the next run.</p> : null}
       {drafted ? <p className="notice">Draft written. Check it below, then schedule it.</p> : null}
@@ -263,6 +288,8 @@ export default async function MarketingPage({
         </p>
       ) : null}
 
+      {activeTab === 'overview' ? (
+        <>
       <section className="kpis" aria-label="Marketing figures">
         <div className="kpi"><span>Drafts waiting</span><strong>{draftRows.length}</strong></div>
         <div className="kpi"><span>Awaiting approval</span><strong className={awaitingApproval ? 'overdue' : ''}>{awaitingApproval}</strong></div>
@@ -335,7 +362,10 @@ export default async function MarketingPage({
           </p>
         ) : null}
       </section>
+        </>
+      ) : null}
 
+      {activeTab === 'settings' ? (
       <section className="panel">
         <h2>Switches</h2>
         <p className="muted">
@@ -381,7 +411,9 @@ export default async function MarketingPage({
           </ul>
         )}
       </section>
+      ) : null}
 
+      {activeTab === 'channels' ? (
       <section className="panel">
         <h2>Channels</h2>
         {channelRows.length === 0 ? (
@@ -422,8 +454,9 @@ export default async function MarketingPage({
           </form>
         ) : null}
       </section>
+      ) : null}
 
-      {canWrite ? (
+      {activeTab === 'compose' && canWrite ? (
         <section className="panel">
           <h2>Write a post</h2>
           <p className="muted small">
@@ -438,7 +471,7 @@ export default async function MarketingPage({
         </section>
       ) : null}
 
-      {canWrite ? (
+      {activeTab === 'compose' && canWrite ? (
         <section className="panel">
           <h2>Draft with an agent</h2>
           {!aiConfigured ? (
@@ -483,6 +516,8 @@ export default async function MarketingPage({
         </section>
       ) : null}
 
+      {activeTab === 'schedule' ? (
+        <>
       <section>
         <h2>Ready to schedule</h2>
         {draftRows.length === 0 ? <p className="muted">No drafts waiting.</p> : null}
@@ -537,7 +572,7 @@ export default async function MarketingPage({
             ) : null}
             {canWrite && d.media && d.media.length > 0 ? (
               <form action={removeImage.bind(null, d.id)}>
-                <button className="btn" type="submit">Remove image</button>
+                <button className="btn danger" type="submit">Remove image</button>
               </form>
             ) : null}
             {canWrite && controls.require_approval && d.status === 'draft' ? (
@@ -574,7 +609,7 @@ export default async function MarketingPage({
                     <td>
                       {canWrite && (p.status === 'scheduled' || p.status === 'failed') ? (
                         <form action={cancelPost.bind(null, p.id)}>
-                          <button className="btn" type="submit">Cancel</button>
+                          <button className="btn danger" type="submit">Cancel</button>
                         </form>
                       ) : null}
                     </td>
@@ -585,6 +620,8 @@ export default async function MarketingPage({
           </table>
         )}
       </section>
+        </>
+      ) : null}
     </main>
   );
 }

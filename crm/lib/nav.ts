@@ -43,6 +43,7 @@ export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { href: '/audit', label: 'Activity log', hint: 'The 200 most recent recorded changes', roles: ['admin', 'reviewer'] },
       { href: '/privacy-requests', label: 'Privacy requests', hint: 'Erase one person at their request', roles: ['admin'] },
       { href: '/admin/staff', label: 'Staff', hint: 'Who can sign in, and what they can do', roles: ['admin'] },
+      { href: '/account', label: 'Account', hint: 'Your sign-in email and password', roles: ['admin', 'introducer', 'reviewer', 'viewer'] },
     ],
   },
 ];
