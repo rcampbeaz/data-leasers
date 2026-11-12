@@ -8,6 +8,7 @@ import {
   generateDraft,
   removeImage,
   scheduleContent,
+  testAi,
   writePost,
 } from '@/lib/social-actions';
 import { approveContent, setMarketingControls } from '@/lib/marketing-controls';
@@ -81,9 +82,11 @@ export default async function MarketingPage({
     saved?: string;
     wrote?: string;
     attached?: string;
+    ai?: string;
+    aiok?: string;
   }>;
 }) {
-  const { error, drafted, scheduled, channel, saved, wrote, attached } = await searchParams;
+  const { error, drafted, scheduled, channel, saved, wrote, attached, ai, aiok } = await searchParams;
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const isAdmin = me?.role === 'admin';
@@ -216,6 +219,7 @@ export default async function MarketingPage({
       {drafted ? <p className="notice">Draft written. Check it below, then schedule it.</p> : null}
       {wrote ? <p className="notice">Post saved as a draft. Approve or schedule it below.</p> : null}
       {attached === '1' ? <p className="notice">Image attached to the draft.</p> : null}
+      {ai && aiok === '1' ? <p className="notice">{ai}</p> : null}
       {attached === '0' ? <p className="notice">Image removed.</p> : null}
       {scheduled ? <p className="notice">Scheduled. The publisher picks it up within a few minutes.</p> : null}
       {channel ? <p className="notice">Channel connected.</p> : null}
@@ -412,6 +416,14 @@ export default async function MarketingPage({
           <p className="muted">
             The agent writes channel variants from a topic. It is told not to invent figures, not to
             name the buyer, and not to promise an outcome. Runs are capped on the Agents page.
+          </p>
+          <form action={testAi}>
+            <button className="btn" type="submit">Test the AI connection</button>
+          </form>
+          <p className="muted small">
+            Makes one call of a few tokens and reports what came back: the key being rejected, the
+            model not existing and the address being wrong each read differently. It works while
+            agents are switched off, and does not count against the daily cap.
           </p>
           <form action={generateDraft} className="stack">
             <label>What is the post about?

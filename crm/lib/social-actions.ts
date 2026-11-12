@@ -46,6 +46,100 @@ async function requireWriter() {
   return { supabase, me };
 }
 
+// Proves the provider works from inside the app, so nobody needs a terminal on the server to find
+// out why drafting is refused. It ignores the agent switches on purpose: a test you cannot run while
+// the feature is switched off is not a test. It also does not write an agent_runs row, so it never
+// counts against the daily cap.
+export async function testAi() {
+  await requireWriter();
+
+  const key = process.env.OPENAI_API_KEY ?? '';
+  if (!key) {
+    fail('No OPENAI_API_KEY on the server. Add it to .env, redeploy, then test again.');
+  }
+
+  const started = Date.now();
+
+  // The key check and the model list, in one call that costs nothing.
+  let listStatus = 0;
+  let models: string[] = [];
+  let listError: string | null = null;
+  try {
+    const response = await fetch(`${OPENAI_BASE_URL}/models`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    listStatus = response.status;
+    if (response.ok) {
+      const body = (await response.json()) as { data?: { id?: string }[] };
+      models = (body.data ?? []).map((m) => m.id).filter((id): id is string => Boolean(id));
+    }
+  } catch (error) {
+    listError = error instanceof Error ? error.message : 'unknown error';
+  }
+
+  if (listError) fail(`Could not reach ${OPENAI_BASE_URL}: ${listError}`);
+  if (listStatus === 401 || listStatus === 403) {
+    fail(`The provider rejected the key (HTTP ${listStatus}). Revoke it and create a new one.`);
+  }
+  if (listStatus !== 200) {
+    fail(
+      `The provider answered HTTP ${listStatus} for ${OPENAI_BASE_URL}/models. Check OPENAI_BASE_URL; for Groq it is exactly https://api.groq.com/openai/v1`,
+    );
+  }
+
+  // A model can be configured and invisible to the key. Saying which ids are visible beats guessing,
+  // and speech and embedding models are left out because they cannot write a post.
+  if (models.length > 0 && !models.includes(MODEL)) {
+    const chatModels = models
+      .filter((id) => !/(whisper|tts|guard|orpheus|embed)/i.test(id))
+      .slice(0, 6);
+    fail(
+      `The model "${MODEL}" is not available to this key. Set OPENAI_MODEL to one of: ${chatModels.join(', ') || 'see the provider dashboard'}.`,
+    );
+  }
+
+  // One real call, because a listed model can still fail on tier, capacity or context.
+  let chatStatus = 0;
+  let reply = '';
+  let chatError: string | null = null;
+  try {
+    const response = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'user', content: 'Reply with the single word: ready' }],
+        max_tokens: 10,
+        temperature: 0,
+      }),
+    });
+    chatStatus = response.status;
+    const body = (await response.json().catch(() => ({}))) as {
+      choices?: { message?: { content?: string } }[];
+      error?: { message?: string };
+    };
+    reply = (body.choices?.[0]?.message?.content ?? '').trim();
+    if (!response.ok) chatError = body.error?.message ?? '';
+  } catch (error) {
+    fail(`The test call could not be made: ${error instanceof Error ? error.message : 'unknown error'}`);
+  }
+
+  if (chatStatus === 429) {
+    fail('The provider rate-limited the test (429). The free Groq plan allows 30 calls a minute, 1,000 a day.');
+  }
+  if (chatStatus !== 200) {
+    fail(`The test call failed with HTTP ${chatStatus}${chatError ? `: ${chatError.slice(0, 200)}` : '.'}`);
+  }
+
+  const ms = Date.now() - started;
+  revalidatePath(PATH);
+  redirect(
+    `${PATH}?ai=${encodeURIComponent(
+      `AI works. ${MODEL} answered in ${ms} ms${reply ? ` with "${reply.slice(0, 40)}"` : ''}.`,
+    )}&aiok=1`,
+  );
+}
+
 // Writes a set of channel variants from a topic or an existing page. The model is told
 // what it may not do: invent figures, name the buyer, or promise an outcome.
 export async function generateDraft(formData: FormData) {

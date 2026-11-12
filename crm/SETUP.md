@@ -128,9 +128,14 @@ OPENAI_BASE_URL=https://api.groq.com/openai/v1
 OPENAI_MODEL=openai/gpt-oss-120b
 ```
 
-4. Run `npm run check-ai`. It reports whether the key is accepted, whether that model id is visible to
-   it (and lists the ids that are, if not), then makes one real call of a few tokens. Fix the line it
-   names; nothing else needs to change.
+4. Check it from the app, not a terminal: open **Marketing** and press **Test the AI connection**.
+   It reports whether the key is accepted, whether that model id is visible to it (listing the ids
+   that are, if not), then makes one real call of a few tokens. That button works while agents are
+   switched off and does not count against the daily cap.
+
+   With shell access on the server, `npm run check-ai` does the same check and exits non-zero on
+   failure, which is the form to use in a deploy script. Neither one is required in order to draft by
+   hand.
 5. Put the same three values in the server `.env` and redeploy with **Deploy CRM**.
 6. On **Agents**, set a daily cap *before* switching agents on, and leave the drafting switch on in
    Marketing. One draft is one run, counted per day.
