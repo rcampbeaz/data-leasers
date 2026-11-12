@@ -56,7 +56,7 @@ if (!key) {
   fail(
     'OPENAI_API_KEY is empty in crm/.env.',
     'For a free Groq key: sign in at https://console.groq.com/keys, create a key, then set\n' +
-      '  OPENAI_API_KEY=gsk_...\n' +
+      '  OPENAI_API_KEY=<your key, starting gsk>\n' +
       '  OPENAI_BASE_URL=https://api.groq.com/openai/v1\n' +
       '  OPENAI_MODEL=openai/gpt-oss-120b',
   );

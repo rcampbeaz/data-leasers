@@ -119,11 +119,11 @@ produces a model-not-found error.
 
 1. Create an account at `console.groq.com`. The free plan needs no card.
 2. **API Keys > Create API Key**, name it `dataleasers-crm`, and copy the value once: it starts
-   `gsk_` and is not shown again.
+   `gsk` + underscore and is not shown again.
 3. In `crm/.env`, set exactly these three:
 
 ```
-OPENAI_API_KEY=gsk_...
+OPENAI_API_KEY=<your key, starting gsk>
 OPENAI_BASE_URL=https://api.groq.com/openai/v1
 OPENAI_MODEL=openai/gpt-oss-120b
 ```
