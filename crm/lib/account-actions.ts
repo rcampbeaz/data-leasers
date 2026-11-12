@@ -1,3 +1,8 @@
+'use server';
+
+// Every function here is a form action. Without this directive Next treats them as ordinary
+// functions and refuses to pass one to <form action>: "Functions cannot be passed directly to Client
+// Components". That made /account and /reset fail to render at all.
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
