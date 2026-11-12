@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createStaffClient } from '@/lib/supabase';
+import { createIntakeClient, createStaffClient } from '@/lib/supabase';
+import { MEDIA_BUCKET, checkImage, isPostableMediaUrl, mediaObjectPath } from '@/lib/social-media';
 import { currentStaff } from '@/lib/data';
 import {
   CHANNELS,
@@ -188,6 +189,30 @@ export async function generateDraft(formData: FormData) {
   redirect(`${PATH}?drafted=1`);
 }
 
+// Uploads one image and returns its public URL. Service role, because the bucket is written from the
+// server and the file has already been checked here. Returns null when no file was chosen.
+async function uploadImage(file: File | null): Promise<string | null> {
+  if (!file || !file.name) return null;
+
+  const check = checkImage({ type: file.type, size: file.size });
+  if (!check.ok) fail(check.reason);
+
+  const storage = createIntakeClient().storage.from(MEDIA_BUCKET);
+  const path = mediaObjectPath(check.ext);
+
+  const { error } = await storage.upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (error) fail('Could not upload the image. Check the social-media bucket exists (0018).');
+
+  const { data } = storage.getPublicUrl(path);
+  if (!data?.publicUrl || !isPostableMediaUrl(data.publicUrl)) {
+    fail('The image uploaded but its public URL looks wrong. Is the bucket public?');
+  }
+  return data.publicUrl;
+}
+
 // Writing a post by hand. Without this, every post had to come out of a model run, which put a paid
 // API key on the critical path to publishing anything at all - the console could draft but not be
 // used. The agent stays an option rather than a dependency.
@@ -201,6 +226,8 @@ export async function writePost(formData: FormData) {
   const link = text(formData, 'link', 1000);
   if (link && !/^https?:\/\//i.test(link)) fail('A link must start with http:// or https://.');
 
+  const imageUrl = await uploadImage(formData.get('image') as File | null);
+
   // No variants: one body is used for every channel chosen at scheduling time, where the per-channel
   // length and claim rules are applied.
   const { error } = await supabase.from('social_contents').insert({
@@ -208,6 +235,7 @@ export async function writePost(formData: FormData) {
     body,
     variants: {},
     link,
+    media: imageUrl ? [imageUrl] : [],
     status: 'draft',
     created_by: me.user_id,
   });
@@ -215,6 +243,47 @@ export async function writePost(formData: FormData) {
 
   revalidatePath(PATH);
   redirect(`${PATH}?wrote=1`);
+}
+
+// Attaches an image to a draft that already exists. This is what makes an agent draft usable on
+// Instagram at all: the model writes text, it cannot supply a picture.
+export async function attachImage(contentId: string, formData: FormData) {
+  const { supabase } = await requireWriter();
+
+  const { data: content } = await supabase
+    .from('social_contents')
+    .select('id, status')
+    .eq('id', contentId)
+    .maybeSingle();
+  if (!content) fail('That draft could not be found.');
+  if (!['draft', 'approved'].includes(String(content.status))) {
+    fail('That content is already scheduled. Cancel it first to change the image.');
+  }
+
+  const imageUrl = await uploadImage(formData.get('image') as File | null);
+  if (!imageUrl) fail('Choose an image to attach.');
+
+  const { error } = await supabase
+    .from('social_contents')
+    .update({ media: [imageUrl] })
+    .eq('id', contentId);
+  if (error) fail('Could not attach the image.');
+
+  revalidatePath(PATH);
+  redirect(`${PATH}?attached=1`);
+}
+
+// Removes the image from a draft, for the case where the wrong one was chosen.
+export async function removeImage(contentId: string) {
+  const { supabase } = await requireWriter();
+  const { error } = await supabase
+    .from('social_contents')
+    .update({ media: [] })
+    .eq('id', contentId)
+    .in('status', ['draft', 'approved']);
+  if (error) fail('Could not remove the image.');
+  revalidatePath(PATH);
+  redirect(`${PATH}?attached=0`);
 }
 
 // Schedules one content item to the chosen channels. Every channel is validated against

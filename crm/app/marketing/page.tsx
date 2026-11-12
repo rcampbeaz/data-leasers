@@ -1,7 +1,15 @@
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { CHANNELS, channelSpec, providerConfigured } from '@/lib/social';
-import { addChannel, cancelPost, generateDraft, scheduleContent, writePost } from '@/lib/social-actions';
+import {
+  addChannel,
+  attachImage,
+  cancelPost,
+  generateDraft,
+  removeImage,
+  scheduleContent,
+  writePost,
+} from '@/lib/social-actions';
 import { approveContent, setMarketingControls } from '@/lib/marketing-controls';
 import { mergeControls, type MarketingControls } from '@/lib/marketing-settings';
 import { BarChart, DonutChart } from '@/components/charts';
@@ -17,6 +25,7 @@ type ContentRow = {
   body: string;
   variants: Record<string, string> | null;
   link: string | null;
+  media: string[] | null;
   status: string;
   created_at: string;
 };
@@ -71,9 +80,10 @@ export default async function MarketingPage({
     channel?: string;
     saved?: string;
     wrote?: string;
+    attached?: string;
   }>;
 }) {
-  const { error, drafted, scheduled, channel, saved, wrote } = await searchParams;
+  const { error, drafted, scheduled, channel, saved, wrote, attached } = await searchParams;
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const isAdmin = me?.role === 'admin';
@@ -90,7 +100,7 @@ export default async function MarketingPage({
         .order('platform'),
       supabase
         .from('social_contents')
-        .select('id, title, body, variants, link, status, created_at')
+        .select('id, title, body, variants, link, media, status, created_at')
         .in('status', ['draft', 'approved'])
         .order('created_at', { ascending: false })
         .limit(10),
@@ -106,6 +116,23 @@ export default async function MarketingPage({
     ]);
 
   const controls: MarketingControls = mergeControls(setting?.value);
+
+  // What the AI panel can say honestly: whether a provider is configured at all, and whether the
+  // Agents page switch and cap actually allow a run right now.
+  const startOfDayUtc = new Date();
+  startOfDayUtc.setUTCHours(0, 0, 0, 0);
+  const [{ data: agentSetting }, { count: runsToday }] = await Promise.all([
+    supabase.from('app_settings').select('value').eq('key', 'agents').maybeSingle(),
+    supabase
+      .from('agent_runs')
+      .select('id', { count: 'exact', head: true })
+      .gte('started_at', startOfDayUtc.toISOString()),
+  ]);
+  const agents = (agentSetting?.value ?? { enabled: false, daily_cap: 0 }) as {
+    enabled?: boolean;
+    daily_cap?: number;
+  };
+  const aiConfigured = Boolean(process.env.OPENAI_API_KEY);
 
   const channelRows = (channels ?? []) as {
     id: string;
@@ -188,6 +215,8 @@ export default async function MarketingPage({
       {saved ? <p className="notice">Switches saved. They apply to the next run.</p> : null}
       {drafted ? <p className="notice">Draft written. Check it below, then schedule it.</p> : null}
       {wrote ? <p className="notice">Post saved as a draft. Approve or schedule it below.</p> : null}
+      {attached === '1' ? <p className="notice">Image attached to the draft.</p> : null}
+      {attached === '0' ? <p className="notice">Image removed.</p> : null}
       {scheduled ? <p className="notice">Scheduled. The publisher picks it up within a few minutes.</p> : null}
       {channel ? <p className="notice">Channel connected.</p> : null}
 
@@ -353,6 +382,9 @@ export default async function MarketingPage({
             <label>Link (optional)
               <input name="link" maxLength={1000} placeholder="https://dataleasers.com/..." />
             </label>
+            <label>Image (optional: PNG, JPEG or WebP under 5 MB)
+              <input type="file" name="image" accept="image/png,image/jpeg,image/webp" />
+            </label>
             <button className="btn" type="submit">Save draft</button>
           </form>
         </section>
@@ -361,6 +393,22 @@ export default async function MarketingPage({
       {canWrite ? (
         <section className="panel">
           <h2>Draft with an agent</h2>
+          {!aiConfigured ? (
+            <p className="notice blocked">
+              AI writing is not configured on this server: there is no <code>OPENAI_API_KEY</code>. A
+              free OpenAI-compatible provider works instead: set <code>OPENAI_BASE_URL</code> and{' '}
+              <code>OPENAI_MODEL</code> to it. Redeploy after setting either.
+            </p>
+          ) : agents.enabled !== true ? (
+            <p className="notice review">
+              AI writing is switched off. Turn agents on in <a href="/agents">Agents</a>; the drafting
+              switch in this console also has to stay on.
+            </p>
+          ) : (
+            <p className="muted small">
+              AI configured. {runsToday ?? 0} of {agents.daily_cap ?? 0} runs used today.
+            </p>
+          )}
           <p className="muted">
             The agent writes channel variants from a topic. It is told not to invent figures, not to
             name the buyer, and not to promise an outcome. Runs are capped on the Agents page.
@@ -372,7 +420,9 @@ export default async function MarketingPage({
             <label>Link to include (optional)
               <input name="link" maxLength={1000} placeholder="https://dataleasers.com/what-you-can-sell.html" />
             </label>
-            <button className="btn" type="submit">Write the draft</button>
+            <button className="btn" type="submit" disabled={!aiConfigured || agents.enabled !== true}>
+              Write the draft
+            </button>
           </form>
         </section>
       ) : null}
@@ -388,6 +438,17 @@ export default async function MarketingPage({
               <span className="muted">{new Date(d.created_at).toLocaleString('en-US')}</span>
             </header>
             <pre className="wrap-cell">{d.body}</pre>
+            {d.media && d.media.length > 0 ? (
+              <p>
+                <img
+                  src={d.media[0]}
+                  alt="Image attached to this post"
+                  style={{ maxWidth: 200, borderRadius: 8 }}
+                />
+              </p>
+            ) : (
+              <p className="muted small">No image attached. Instagram and TikTok cannot post without one.</p>
+            )}
             {d.variants && Object.keys(d.variants).length > 0 ? (
               <p className="muted small">
                 Variants: {Object.entries(d.variants).map(([key, value]) => `${channelSpec(key)?.label ?? key} (${value.length} chars)`).join(' · ')}
@@ -410,6 +471,17 @@ export default async function MarketingPage({
                   <input type="datetime-local" name="scheduledFor" defaultValue={due} required />
                 </label>
                 <button className="btn" type="submit">Schedule</button>
+              </form>
+            ) : null}
+            {canWrite ? (
+              <form action={attachImage.bind(null, d.id)} className="inline-form">
+                <input type="file" name="image" accept="image/png,image/jpeg,image/webp" required />
+                <button className="btn" type="submit">Attach image</button>
+              </form>
+            ) : null}
+            {canWrite && d.media && d.media.length > 0 ? (
+              <form action={removeImage.bind(null, d.id)}>
+                <button className="btn" type="submit">Remove image</button>
               </form>
             ) : null}
             {canWrite && controls.require_approval && d.status === 'draft' ? (
