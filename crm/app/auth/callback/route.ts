@@ -38,5 +38,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL('/dashboard', origin));
+  // A reset link asks to continue to /reset; anything that is not a plain path is ignored, so this
+  // cannot be turned into an open redirect.
+  const next = request.nextUrl.searchParams.get('next');
+  const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+  return NextResponse.redirect(new URL(destination, origin));
 }

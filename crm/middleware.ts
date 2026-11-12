@@ -59,9 +59,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 1. Signed out
+  // 1. Signed out. /reset is reachable because its first job is to ask for an address and send a
+  // recovery link - an account that cannot sign in still needs that page.
   if (!user) {
-    return path.startsWith('/login') ? response : redirect('/login');
+    return path.startsWith('/login') || path.startsWith('/reset') ? response : redirect('/login');
   }
 
   // 2. Two-factor, when MFA_REQUIRED is on. It stays off by default so an account

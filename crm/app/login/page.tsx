@@ -142,7 +142,7 @@ export default async function LoginPage({
       </form>
       <p className="small muted helper">
         Invited staff often have no password yet, in which case every password is refused. The email
-        link below works either way.
+        link below works either way, or <a href="/reset">set a password first</a>.
       </p>
       <h2>Or use an email link</h2>
       {sent ? (
