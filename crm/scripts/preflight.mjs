@@ -56,6 +56,7 @@ const TABLES = [
   ['suppressions', '0011_outbound.sql'],
   ['import_candidates', '0012_prospect_import.sql'],
   ['domain_holds', '0013_domain_holds.sql'],
+  ['email_templates', '0016_email_templates.sql'],
 ];
 
 const COLUMNS = [

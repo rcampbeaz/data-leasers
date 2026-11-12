@@ -10,6 +10,7 @@ import {
 import {
   addContact,
   addStep,
+  addStepFromTemplate,
   approveEnrolment,
   createSequence,
   enrolContact,
@@ -43,7 +44,7 @@ export default async function OutboundPage({
   const isAdmin = me?.role === 'admin';
   const canWrite = isAdmin || me?.role === 'introducer';
 
-  const [{ data: contacts }, { data: sequences }, { data: enrollments }, { data: sends }, { data: suppressions }, { data: companies }] =
+  const [{ data: contacts }, { data: sequences }, { data: enrollments }, { data: sends }, { data: suppressions }, { data: companies }, { data: templates }] =
     await Promise.all([
       supabase
         .from('outreach_contacts')
@@ -66,6 +67,7 @@ export default async function OutboundPage({
         .limit(20),
       supabase.from('suppressions').select('email', { count: 'exact', head: true }),
       supabase.from('companies').select('id, name').order('name').limit(200),
+      supabase.from('email_templates').select('id, name, purpose').order('name'),
     ]);
 
   const contactRows = (contacts ?? []) as unknown as {
@@ -102,6 +104,7 @@ export default async function OutboundPage({
     contact: Named;
   }[];
   const companyRows = (companies ?? []) as { id: string; name: string }[];
+  const templateRows = (templates ?? []) as { id: string; name: string; purpose: string }[];
   const suppressedCount = (suppressions as unknown as { count: number | null })?.count ?? 0;
 
   return (
@@ -225,6 +228,28 @@ export default async function OutboundPage({
                 </li>
               ))}
             </ol>
+            {isAdmin && templateRows.length > 0 ? (
+              <form action={addStepFromTemplate.bind(null, s.id)} className="inline-form">
+                <select name="templateId" required defaultValue="">
+                  <option value="">Add from a template…</option>
+                  {templateRows.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <label className="small muted">
+                  Delay (days)
+                  <input
+                    type="number"
+                    name="delayDays"
+                    min={0}
+                    max={60}
+                    defaultValue={(s.steps?.length ?? 0) === 0 ? 0 : 3}
+                  />
+                </label>
+                <button className="btn" type="submit">Add step from template</button>
+              </form>
+            ) : null}
+
             {isAdmin ? (
               <form action={addStep.bind(null, s.id)} className="stack">
                 <label>Delay in days

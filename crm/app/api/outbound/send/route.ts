@@ -9,6 +9,7 @@ import {
   unsubscribeUrl,
 } from '@/lib/outbound';
 import { domainOf } from '@/lib/deliverability';
+import { firstNameOf, renderMessage } from '@/lib/template-render';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
     const [{ data: contact }, { data: steps }] = await Promise.all([
       admin
         .from('outreach_contacts')
-        .select('id, email, country, basis, status, unsubscribe_token')
+        .select('id, email, country, basis, status, unsubscribe_token, full_name, role_title, company:companies(name)')
         .eq('id', enrolment.contact_id)
         .maybeSingle(),
       admin
@@ -139,11 +140,27 @@ export async function POST(request: Request) {
       continue;
     }
 
+    // Merge fields are filled here and only here, so the approved text, the sent text and the copy
+    // kept in outbound_sends are the same string.
+    const companyRow = (Array.isArray(contact.company) ? contact.company[0] : contact.company) as
+      | { name?: string | null }
+      | null;
+    const rendered = renderMessage(
+      { subject: next.subject, body: next.body },
+      {
+        first_name: firstNameOf(contact.full_name as string | null),
+        full_name: (contact.full_name as string | null) ?? '',
+        role_title: (contact.role_title as string | null) ?? '',
+        email: contact.email as string,
+        company: companyRow?.name ?? '',
+      },
+    );
+
     const footer = complianceFooter({
       postalAddress,
       unsubscribe: unsubscribeUrl(contact.unsubscribe_token as string),
     });
-    const body = renderEmail({ body: next.body, footer });
+    const body = renderEmail({ body: rendered.body, footer });
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -154,7 +171,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         from,
         to: [contact.email],
-        subject: next.subject,
+        subject: rendered.subject,
         text: body,
         // Created per message, because the token belongs to this contact.
         headers: unsubscribeHeaders(contact.unsubscribe_token as string),
@@ -167,7 +184,7 @@ export async function POST(request: Request) {
         enrolment_id: enrolment.id,
         contact_id: contact.id,
         step_id: next.id,
-        subject: next.subject,
+        subject: rendered.subject,
         body,
         status: 'failed',
         error: raw.slice(0, 500),

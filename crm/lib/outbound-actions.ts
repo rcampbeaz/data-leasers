@@ -89,6 +89,52 @@ export async function addStep(sequenceId: string, formData: FormData) {
   const body = text(formData, 'body', 8000);
   if (!subject || !body) fail('A step needs a subject and a body.');
 
+  await insertStep(supabase, sequenceId, {
+    subject,
+    body,
+    delayDays: Number(formData.get('delayDays') ?? 0),
+  });
+
+  revalidatePath(PATH);
+  redirect(`${PATH}?step=1`);
+}
+
+// Adds a step by copying a template. The copy is deliberate: editing or deleting the template later
+// must not rewrite a message that has already been approved or sent.
+export async function addStepFromTemplate(sequenceId: string, formData: FormData) {
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || me.role !== 'admin') fail('Only an admin can add a step.');
+
+  const templateId = text(formData, 'templateId', 64);
+  if (!templateId) fail('Choose a template, or write the step by hand.');
+
+  const { data: template } = await supabase
+    .from('email_templates')
+    .select('subject, body')
+    .eq('id', templateId)
+    .maybeSingle();
+  if (!template) fail('That template could not be found. It may have been deleted.');
+
+  await insertStep(supabase, sequenceId, {
+    subject: String(template.subject ?? ''),
+    body: String(template.body ?? ''),
+    delayDays: Number(formData.get('delayDays') ?? 0),
+  });
+
+  revalidatePath(PATH);
+  redirect(`${PATH}?step=1`);
+}
+
+// Position and delay rules live in one place so both entry points obey them.
+async function insertStep(
+  supabase: Awaited<ReturnType<typeof createStaffClient>>,
+  sequenceId: string,
+  step: { subject: string; body: string; delayDays: number },
+) {
+  const { subject, body, delayDays } = step;
+  if (!subject || !body) fail('A step needs a subject and a body.');
+
   const { data: existing } = await supabase
     .from('sequence_steps')
     .select('position')
@@ -98,22 +144,18 @@ export async function addStep(sequenceId: string, formData: FormData) {
   const nextPosition = ((existing?.[0]?.position as number | undefined) ?? 0) + 1;
   if (nextPosition > 20) fail('A sequence can hold twenty steps.');
 
-  const delay = Number(formData.get('delayDays') ?? 0);
-  if (!Number.isInteger(delay) || delay < 0 || delay > 60) {
+  if (!Number.isInteger(delayDays) || delayDays < 0 || delayDays > 60) {
     fail('The delay must be 0 to 60 days.');
   }
 
   const { error } = await supabase.from('sequence_steps').insert({
     sequence_id: sequenceId,
     position: nextPosition,
-    delay_days: delay,
+    delay_days: delayDays,
     subject,
     body,
   });
   if (error) fail('Could not save the step.');
-
-  revalidatePath(PATH);
-  redirect(`${PATH}?step=1`);
 }
 
 // Enrolling puts the contact in the queue but sends nothing: approved_at is null, and the
