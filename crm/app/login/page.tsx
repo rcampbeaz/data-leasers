@@ -99,7 +99,7 @@ export default async function LoginPage({
   const { sent, error, failed, limited, unconfirmed, code } = await searchParams;
   return (
     <main className="narrow">
-      <img className="auth-logo" src="/logo-reversed.svg" alt="dataleasers" />
+      <img className="auth-logo" src="/logo-reversed.svg?v=2" alt="dataleasers" />
       <h1>Sign in</h1>
       {error ? <p role="alert">Email or password is incorrect.</p> : null}
       {error && code === 'invalid_credentials' ? (

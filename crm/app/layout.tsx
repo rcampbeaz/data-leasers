@@ -30,7 +30,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <div className="shell">
           <nav className="sidebar" aria-label="CRM">
-            <img className="logo" src="/logo-reversed.svg" alt="dataleasers" />
+            {/* Versioned: static files are served with a four-hour cache, so a browser that saw the previous
+                mark would keep it long after the new one was deployed. */}
+            <img className="logo" src="/logo-reversed.svg?v=2" alt="dataleasers" />
             {items.map((group) => (
               <div key={group.title} className="sidebar-group">
                 <span className="sidebar-group-title">{group.title}</span>
