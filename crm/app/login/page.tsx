@@ -140,7 +140,7 @@ export default async function LoginPage({
         </label>
         <button className="btn" type="submit">Sign in</button>
       </form>
-      <p className="small muted">
+      <p className="small muted helper">
         Invited staff often have no password yet, in which case every password is refused. The email
         link below works either way.
       </p>

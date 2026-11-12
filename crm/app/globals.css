@@ -260,6 +260,7 @@ p { margin: 0 0 12px; }
   border-radius: var(--radius-md);
 }
 .narrow h1 { margin-bottom: 18px; }
+.narrow .helper { margin: 12px 0 0; }
 .narrow h2 { font-size: 15px; color: var(--dl-text-2); margin: 24px 0 10px; }
 .narrow form { display: grid; gap: 14px; }
 .narrow label { display: grid; gap: 6px; font-weight: 600; font-size: 13.5px; color: var(--dl-text-2); }
