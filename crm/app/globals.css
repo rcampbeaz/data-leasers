@@ -272,6 +272,9 @@ p { margin: 0 0 12px; }
   border-radius: var(--radius-sm);
 }
 .narrow img { border-radius: var(--radius-sm); background: #FFFFFF; padding: 6px; }
+/* The brand mark, which the signed-out pages had none of. Overrides the white card treatment above
+   that exists for the two-factor QR code. */
+.narrow img.auth-logo { width: 150px; height: auto; margin: 0 0 20px; padding: 0; background: none; border-radius: 0; }
 
 /* ---------- panels, layout ---------- */
 .panel {

@@ -99,6 +99,7 @@ export default async function LoginPage({
   const { sent, error, failed, limited, unconfirmed, code } = await searchParams;
   return (
     <main className="narrow">
+      <img className="auth-logo" src="/logo-reversed.svg" alt="dataleasers" />
       <h1>Sign in</h1>
       {error ? <p role="alert">Email or password is incorrect.</p> : null}
       {error && code === 'invalid_credentials' ? (
@@ -139,6 +140,10 @@ export default async function LoginPage({
         </label>
         <button className="btn" type="submit">Sign in</button>
       </form>
+      <p className="small muted">
+        Invited staff often have no password yet, in which case every password is refused. The email
+        link below works either way.
+      </p>
       <h2>Or use an email link</h2>
       {sent ? (
         <p>If your email is on the staff list, a sign-in link is on its way.</p>
