@@ -76,7 +76,12 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0016_email_templates.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0018_social_media_storage.sql`. Each file is written to be safe on a database that already has it.
+
+`0018` creates the public `social-media` Storage bucket that post images are written to. If your
+project refuses bucket creation from SQL, create it by hand: **Storage > New bucket**, name it
+exactly `social-media`, and mark it public. A private bucket would store the file and then fail at the
+provider, because the provider fetches the image itself.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
@@ -100,6 +105,38 @@ Environment for sending:
 ```
 
 Until `SOCIAL_API_URL` is set, the Marketing page says so rather than appearing broken. LinkedIn company-page publishing needs the provider's own approval, and TikTok needs its audit: before that audit a TikTok post can only go out as a private draft.
+
+## AI drafting (optional)
+
+Nothing here needs a provider: posts can be written by hand, and cadence steps are text. A provider
+only makes the agent buttons work.
+
+Groq's free plan is enough for drafting, and needs no payment method. As of November 2026 its free
+chat models are `openai/gpt-oss-120b`, `openai/gpt-oss-20b` and `qwen/qwen3.8-27b`, each limited to
+30 requests a minute and 1,000 a day, shared by every key in the organisation. Groq's own examples
+still show `llama-3.3-70b-versatile`, which was retired for free tiers on 16 August 2026; copying it
+produces a model-not-found error.
+
+1. Create an account at `console.groq.com`. The free plan needs no card.
+2. **API Keys > Create API Key**, name it `dataleasers-crm`, and copy the value once: it starts
+   `gsk_` and is not shown again.
+3. In `crm/.env`, set exactly these three:
+
+```
+OPENAI_API_KEY=gsk_...
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+OPENAI_MODEL=openai/gpt-oss-120b
+```
+
+4. Run `npm run check-ai`. It reports whether the key is accepted, whether that model id is visible to
+   it (and lists the ids that are, if not), then makes one real call of a few tokens. Fix the line it
+   names; nothing else needs to change.
+5. Put the same three values in the server `.env` and redeploy with **Deploy CRM**.
+6. On **Agents**, set a daily cap *before* switching agents on, and leave the drafting switch on in
+   Marketing. One draft is one run, counted per day.
+
+A wrong key fails with the provider's own message in the agent panel; the panel also says when no key
+is configured and when agents are switched off, so a disabled button is never unexplained.
 
 ## Email templates (0016)
 - **Templates** holds the copy the cadence draws from, grouped by the job each message does:

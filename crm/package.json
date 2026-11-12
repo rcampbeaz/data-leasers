@@ -8,6 +8,7 @@
     "start": "next start",
     "audit:routes": "node scripts/audit-routes.mjs",
     "preflight": "node scripts/preflight.mjs",
+    "check-ai": "node scripts/check-ai.mjs",
     "set-password": "node scripts/set-password.mjs"
   },
   "dependencies": {
