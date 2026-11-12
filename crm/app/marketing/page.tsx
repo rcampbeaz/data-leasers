@@ -278,8 +278,10 @@ export default async function MarketingPage({
 
       {!providerConfigured() ? (
         <p className="notice review">
-          No publishing provider is configured. Drafts and schedules work, but nothing can be sent
-          until <code>SOCIAL_API_URL</code> and <code>SOCIAL_API_KEY</code> are set on the server.
+          Nothing can be sent yet. Drafts and schedules keep working. Set{' '}
+          <code>FACEBOOK_PAGE_ID</code> and <code>FACEBOOK_PAGE_TOKEN</code> on the server to post to
+          Facebook directly, or <code>SOCIAL_API_URL</code> and <code>SOCIAL_API_KEY</code> for the
+          other networks.
         </p>
       ) : null}
       {!controls.publishing_enabled ? (

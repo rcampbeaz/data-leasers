@@ -102,6 +102,43 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
             crm/ "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
+      # Facebook Page posting needs a token that must never be written into the repository, and the
+      # owner has no shell on the server, so the value travels as a repository secret and is upserted
+      # into the server's .env here. Values go over base64 because a token can contain shell
+      # metacharacters. Unset secrets are a no-op, so this cannot break a deploy before setup.
+      - name: Write Facebook credentials into the server environment
+        if: steps.freshness.outputs.superseded != 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          FB_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FB_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
+          FB_API_VERSION: ${{ vars.FACEBOOK_API_VERSION }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FB_PAGE_ID:-}" ] || [ -z "${FB_PAGE_TOKEN:-}" ]; then
+            echo "FACEBOOK_PAGE_ID / FACEBOOK_PAGE_TOKEN are not set as repository secrets. Leaving .env alone."
+            exit 0
+          fi
+          id_b64=$(printf '%s' "$FB_PAGE_ID" | base64 | tr -d '\n')
+          token_b64=$(printf '%s' "$FB_PAGE_TOKEN" | base64 | tr -d '\n')
+          version_b64=$(printf '%s' "${FB_API_VERSION:-v26.0}" | base64 | tr -d '\n')
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "REMOTE_DIR='${REMOTE_DIR}' ID_B64='${id_b64}' TOKEN_B64='${token_b64}' VERSION_B64='${version_b64}' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$REMOTE_DIR"
+          id=$(printf '%s' "$ID_B64" | base64 -d)
+          token=$(printf '%s' "$TOKEN_B64" | base64 -d)
+          version=$(printf '%s' "$VERSION_B64" | base64 -d)
+          tmp=$(mktemp)
+          grep -v -E '^FACEBOOK_(PAGE_ID|PAGE_TOKEN|API_VERSION)=' .env > "$tmp" || true
+          printf 'FACEBOOK_PAGE_ID=%s\nFACEBOOK_PAGE_TOKEN=%s\nFACEBOOK_API_VERSION=%s\n' \
+            "$id" "$token" "$version" >> "$tmp"
+          chmod 600 "$tmp"
+          mv "$tmp" .env
+          echo "Facebook credentials written into .env on the server (values not printed)."
+          REMOTE
+
       - name: Install, build, and (re)start on server
         if: steps.freshness.outputs.superseded != 'true'
         env:

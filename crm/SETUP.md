@@ -107,6 +107,43 @@ provider, because the provider fetches the image itself.
 - An agent writes channel variants, and every run counts against the daily cap on the Agents page. A person always schedules the post.
 - A post that makes a numeric claim without a source link cannot be scheduled. That is the one rule that blocks.
 
+### Posting to Facebook without a provider
+
+A Page you own does not need an aggregator. Meta's own API is free, has no per-post cap, and a
+long-lived Page token never expires. App review is only required when an app posts to pages it does
+not manage; as the app's own admin posting to your own Page, Standard Access is enough.
+
+1. Create the Page at https://www.facebook.com/pages/create with the Data Leasers name, the brand
+   logo as the profile picture, and the same About text as the site.
+2. Create an app at https://developers.facebook.com/apps (type **Business**). You are its admin.
+3. Open the Graph API Explorer, choose that app, and add the permissions `pages_show_list`,
+   `pages_read_engagement` and `pages_manage_posts`. Generate a **User** token and accept the prompt.
+4. Find the Page id and a Page token: `GET /me/accounts` in the Explorer. Copy `id` and
+   `access_token` from the entry for the new Page.
+5. Make the token permanent. A Page token taken from a short-lived User token expires with it, but a
+   Page token taken from a **long-lived** User token does not expire. Exchange first:
+
+```
+GET https://graph.facebook.com/v26.0/oauth/access_token
+  ?grant_type=fb_exchange_token&client_id=APP_ID&client_secret=APP_SECRET
+  &fb_exchange_token=SHORT_LIVED_USER_TOKEN
+```
+
+   then call `GET /me/accounts` again with the long-lived User token and keep the Page
+   `access_token`. The Explorer also shows an expiry next to the token; a Page token with no expiry
+   date is the one you want.
+6. Add `FACEBOOK_PAGE_ID` and `FACEBOOK_PAGE_TOKEN` as **repository secrets** (Settings → Secrets and
+   variables → Actions). The deploy writes them into the server's `.env`; you never need a shell.
+   Optionally set the variable `FACEBOOK_API_VERSION` to pin a Graph version.
+7. In **Marketing → Channels**, add the Facebook Page (its name, and the Page id as the external id).
+   Posts whose channel is `facebook` now go straight to `POST /{page-id}/feed`, or to `/photos` when
+   the post has an image.
+
+A post with images uploads the first public image URL as a photo with the text as its caption; text
+posts go to the feed, where Meta attaches a link preview for any URL in the message.
+
+### Other networks
+
 Environment for sending:
 1. Create an account with a publishing provider that covers LinkedIn, Facebook, Instagram and TikTok and holds their approvals. The free tiers that exist at the time of writing are bundle.social (20 posts/month) and upload-post (10 uploads/month).
 2. Put its endpoint in `SOCIAL_API_URL` and its key in `SOCIAL_API_KEY`. Any provider that accepts `{ platform, text, media, scheduled_at }` and returns an id works, because the console calls one endpoint.

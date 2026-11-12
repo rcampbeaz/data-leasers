@@ -147,14 +147,112 @@ export type PublishResult =
   | { ok: true; providerPostId: string; permalink?: string }
   | { ok: false; code: string; message: string; retryable: boolean };
 
-// One provider behind one interface. Today that is the aggregator, which holds the
-// LinkedIn and TikTok approvals; a direct Meta provider can be added later without
-// touching the console, because everything calls this function.
+// One provider behind one interface. Facebook posts go straight to Meta, because a page we own needs
+// no aggregator and no app review: Standard Access covers an app whose own admin posts to a page they
+// manage, a long-lived Page token never expires, and there is no per-post cap. Other networks use the
+// aggregator, which holds the LinkedIn and TikTok approvals.
+export function facebookConfigured(): boolean {
+  return Boolean(process.env.FACEBOOK_PAGE_ID && process.env.FACEBOOK_PAGE_TOKEN);
+}
+
 export function providerConfigured(): boolean {
-  return Boolean(process.env.SOCIAL_API_URL && process.env.SOCIAL_API_KEY);
+  return Boolean(process.env.SOCIAL_API_URL && process.env.SOCIAL_API_KEY) || facebookConfigured();
+}
+
+// Graph API errors worth distinguishing: 190/102/463/467 are a dead or malformed token and will never
+// fix themselves, while 4/17/32/613 are rate limits that will.
+function facebookFailure(status: number, json: Record<string, unknown> | null): PublishResult {
+  const error = (json?.error ?? null) as Record<string, unknown> | null;
+  const code = Number(error?.code ?? 0);
+  const message =
+    typeof error?.message === 'string'
+      ? error.message
+      : `Facebook returned ${status} with no explanation`;
+  const kind = [190, 102, 463, 467].includes(code)
+    ? 'auth'
+    : [4, 17, 32, 613].includes(code)
+      ? 'rate_limit'
+      : code
+        ? `graph_${code}`
+        : `http_${status}`;
+  return {
+    ok: false,
+    code: kind,
+    message: message.slice(0, 300),
+    retryable: [4, 17, 32, 613, 2].includes(code) || (!code && status >= 500),
+  };
+}
+
+// Posts as the Page. A public image URL goes to /photos with the text as its caption; text alone goes
+// to /feed, where Meta attaches a link preview for any URL in the message.
+async function publishToFacebook(input: PublishInput): Promise<PublishResult> {
+  const pageId = process.env.FACEBOOK_PAGE_ID!;
+  const token = process.env.FACEBOOK_PAGE_TOKEN!;
+  const version = process.env.FACEBOOK_API_VERSION ?? 'v26.0';
+  const root = `https://graph.facebook.com/${version}/${pageId}`;
+  const media = input.mediaUrls[0];
+
+  const form = new URLSearchParams({ access_token: token });
+  if (media) {
+    form.set('url', media);
+    form.set('caption', input.body);
+  } else {
+    form.set('message', input.body);
+  }
+
+  try {
+    const response = await fetch(media ? `${root}/photos` : `${root}/feed`, {
+      method: 'POST',
+      body: form,
+    });
+    const raw = await response.text();
+    let json: Record<string, unknown> | null = null;
+    try {
+      json = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+    } catch {
+      json = null;
+    }
+
+    if (!response.ok) return facebookFailure(response.status, json);
+
+    const id = typeof json?.id === 'string' ? json.id : '';
+    if (!id) {
+      return {
+        ok: false,
+        code: 'no_id',
+        message: 'Facebook accepted the post but returned no id, so it cannot be confirmed.',
+        retryable: false,
+      };
+    }
+
+    // A first comment is posted separately; failing to attach it must not fail the post itself.
+    if (input.firstComment && !media) {
+      try {
+        await fetch(`https://graph.facebook.com/${version}/${id}/comments`, {
+          method: 'POST',
+          body: new URLSearchParams({ access_token: token, message: input.firstComment }),
+        });
+      } catch {
+        // Left as a note for a person to add by hand.
+      }
+    }
+
+    return { ok: true, providerPostId: id, permalink: `https://www.facebook.com/${id}` };
+  } catch (error) {
+    return {
+      ok: false,
+      code: 'network',
+      message: error instanceof Error ? error.message.slice(0, 300) : 'Network error',
+      retryable: true,
+    };
+  }
 }
 
 export async function publishPost(input: PublishInput): Promise<PublishResult> {
+  if (input.channel === 'facebook' && facebookConfigured()) {
+    return publishToFacebook(input);
+  }
+
   const url = process.env.SOCIAL_API_URL;
   const key = process.env.SOCIAL_API_KEY;
   if (!url || !key) {
