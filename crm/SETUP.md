@@ -76,7 +76,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0012_prospect_import.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0016_email_templates.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
@@ -100,6 +100,22 @@ Environment for sending:
 ```
 
 Until `SOCIAL_API_URL` is set, the Marketing page says so rather than appearing broken. LinkedIn company-page publishing needs the provider's own approval, and TikTok needs its audit: before that audit a TikTok post can only go out as a private draft.
+
+## Email templates (0016)
+- **Templates** holds the copy the cadence draws from, grouped by the job each message does:
+  opener, follow-up, value add, break-up, after a reply, and partner ask. Migration 0016 seeds one
+  of each, written without figures.
+- Merge fields are `{{first_name}}`, `{{full_name}}`, `{{role_title}}`, `{{email}}` and
+  `{{company}}`. They are filled at send time rather than stored expanded, so correcting a template
+  fixes every future message. An unknown token such as `{{firstname}}` is refused when saving, not
+  sent literally.
+- On **Outbound**, *Add step from template* copies the text into the sequence at the delay you set.
+  Steps keep their own copy, so editing or deleting a template never rewrites a message that has
+  already been approved or sent.
+- A cadence that matches the current evidence: opener at day 0, follow-up at +3, value add at +8,
+  break-up at +16. Two follow-ups roughly double the replies a single email earns, most replies
+  arrive within a day of the message, and the break-up is usually the highest-replying email in the
+  sequence. Stop on reply, unsubscribe or bounce; the sender already does all three.
 
 ## Outbound email (0011)
 - Open **Outbound**. A contact cannot be added without a country and a lawful basis, and the guard refuses a basis that is not lawful for that country: the US allows an opt-out basis, Canada and Australia need consent, and the UK allows corporate subscribers.
