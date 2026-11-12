@@ -147,6 +147,14 @@ export default async function DashboardPage() {
 
       {error ? <p className="notice blocked">Some figures could not load. Check your staff access.</p> : null}
 
+      <nav className="quick-links" aria-label="Common jobs">
+        <Link href="/pipeline">Move a company</Link>
+        <Link href="/marketing">Write a post</Link>
+        <Link href="/outbound">Approve outreach</Link>
+        <Link href="/import">Find prospects</Link>
+        <Link href="/tasks">Clear tasks</Link>
+      </nav>
+
       <section className="kpis" aria-label="Key figures">
         <div className="kpi"><span>New leads, last 30 days</span><strong>{newLeads30}</strong></div>
         <div className="kpi"><span>Open companies</span><strong>{openCompanies}</strong></div>
@@ -159,21 +167,21 @@ export default async function DashboardPage() {
       <section className="panel">
         <h2>Needs attention</h2>
         {attention === 0 ? (
-          <p className="muted">Nothing overdue.</p>
+          <p className="empty">Nothing overdue. The figures above are current as of this page load.</p>
         ) : (
           <ul className="list">
             {staleCompanies.length > 0 ? (
               <li>
                 <strong>{staleCompanies.length}</strong>{' '}
                 {staleCompanies.length === 1 ? 'open company has' : 'open companies have'} had no
-                change in 14 days.
+                change in 14 days. <Link href="/companies">Open companies</Link>
               </li>
             ) : null}
             {staleOffers.length > 0 ? (
               <li>
                 <strong>{staleOffers.length}</strong>{' '}
                 {staleOffers.length === 1 ? 'offer has' : 'offers have'} been open for more than 14
-                days without a decision.
+                days without a decision. <Link href="/companies">Open companies</Link>
               </li>
             ) : null}
             {dueReferrals.length > 0 ? (
@@ -187,7 +195,7 @@ export default async function DashboardPage() {
               <li>
                 <strong>{dueDeletions.length}</strong>{' '}
                 {dueDeletions.length === 1 ? 'agreement has' : 'agreements have'} a deletion date
-                inside 30 days.
+                inside 30 days. <Link href="/privacy-requests">Privacy requests</Link>
               </li>
             ) : null}
           </ul>

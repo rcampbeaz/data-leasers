@@ -32,7 +32,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div className="shell">
           <nav className="sidebar" aria-label="CRM">
             <img className="logo" src="/logo-reversed.svg" alt="dataleasers" />
-            <SidebarLinks items={items} />
+            {items.map((group) => (
+              <div key={group.title} className="sidebar-group">
+                <span className="sidebar-group-title">{group.title}</span>
+                <SidebarLinks items={group.items} />
+              </div>
+            ))}
             <div className="sidebar-foot">
               <div className="who">
                 {staff.full_name}

@@ -84,7 +84,7 @@ p { margin: 0 0 12px; }
   flex-direction: column;
   gap: 2px;
 }
-.sidebar .logo { width: 152px; margin: 0 0 18px 8px; }
+.sidebar .logo { width: 152px; margin: 0 0 12px 8px; }
 .sidebar a {
   color: var(--dl-text-2);
   text-decoration: none;
@@ -100,8 +100,23 @@ p { margin: 0 0 12px; }
   font-weight: 600;
 }
 
+.sidebar-group { display: grid; gap: 2px; margin-bottom: 6px; }
+.sidebar-group-title {
+  padding: 9px 10px 3px;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dl-text-muted);
+  font-weight: 600;
+}
+.sidebar-group:first-of-type .sidebar-group-title { padding-top: 2px; }
+
 .content { padding: 32px 36px 64px; max-width: 1180px; }
-.page-head { margin-bottom: 22px; }
+
+/* The page head is a band, not a paragraph: a rule under it separates "where am I" from the work. */
+.page-head { margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--dl-line); }
+.page-head h1 { margin-bottom: 6px; }
+.page-head p { margin: 0; max-width: 760px; }
 
 /* ---------- tables ---------- */
 .table {
@@ -530,6 +545,58 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
 .slot.published { border-left-color: var(--dl-approved-fg); }
 .slot.failed { border-left-color: var(--dl-blocked-fg); }
 .slot-empty { margin: 0; font-size: 13px; color: var(--dl-text-muted); }
+
+/* ---------- polish pass ---------- */
+/* KPI cards: a quiet accent edge so the row reads as one instrument panel rather than six boxes. */
+.kpi { border-left: 3px solid rgba(47, 107, 255, 0.55); transition: background 0.12s ease; }
+.kpi:hover { background: var(--dl-panel-raised); }
+
+/* Zebra rows: a long table was hard to track across on a wide screen. */
+.table tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.015); }
+
+/* Fieldsets had no styling, so the channel list in the schedule form read as loose text. */
+.panel fieldset {
+  border: 1px solid var(--dl-line);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px 10px;
+  margin: 0 0 10px;
+}
+.panel legend {
+  padding: 0 6px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dl-text-muted);
+  font-weight: 600;
+}
+.panel label.check { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13.5px; padding: 3px 0; }
+input[type="checkbox"] { accent-color: var(--dl-electric); width: 15px; height: 15px; }
+
+/* Empty states: a dashed box says "nothing here yet" without pretending to be content. */
+.empty {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px dashed var(--dl-line-strong);
+  border-radius: var(--radius-md);
+  color: var(--dl-text-2);
+  font-size: 14px;
+}
+
+/* The dashboard opened with six numbers; these say what a person might actually do next. */
+.quick-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.quick-links a {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--dl-line);
+  background: var(--dl-panel);
+  color: var(--dl-text-2);
+  text-decoration: none;
+  font-size: 13.5px;
+}
+.quick-links a:hover { border-color: var(--dl-electric); color: var(--dl-text); background: var(--dl-panel-raised); }
+
+/* Section headings inside panels carried no spacing or rule of their own. */
+.panel > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--dl-line); margin-bottom: 14px; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
