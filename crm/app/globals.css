@@ -2,6 +2,23 @@
    Colour and type come from the same tokens as the website (brand-tokens.css):
    gunmetal surfaces, one electric-blue accent, meaning-only state colours.
    Elevation is lightness, not shadow, because shadows disappear on dark. */
+/* The same two faces the public site loads. The CRM named "InterVar" without shipping it, so every
+   page rendered in the operating system's fallback sans: identical colours, different product. */
+@font-face {
+  font-family: "InterVar";
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  src: url("/fonts/source-serif-4-latin.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
 
@@ -43,8 +60,20 @@
   --dl-dark-accent: var(--dl-electric-ink);
 
   --font-sans: "InterVar", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  --radius-sm: 8px;
+  /* Headlines are serif on the site; the CRM had no serif at all. */
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --radius-sm: 6px;
   --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-sm: 0 1px 2px rgba(15, 42, 71, 0.06), 0 1px 3px rgba(15, 42, 71, 0.08);
+  --shadow-md: 0 12px 32px rgba(15, 42, 71, 0.10);
+
+  /* Names brand-tokens.css defines that the CRM had not: kept identical so a rule copied from the
+     site behaves the same here. */
+  --dl-navy-deep: #0D1116;
+  --dl-glow: rgba(47, 107, 255, 0.35);
+  --dl-teal-ink: var(--dl-electric-lift);
+  --dl-teal-bright: var(--dl-electric-ink);
 }
 
 * { box-sizing: border-box; }
@@ -61,7 +90,14 @@ body {
 
 a { color: var(--dl-electric-lift); }
 a:hover { color: var(--dl-text); }
-h1 { font-size: 26px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 8px; }
+h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
 h2 { letter-spacing: -0.005em; }
 .muted { color: var(--dl-text-2); }
 p { margin: 0 0 12px; }
@@ -173,12 +209,12 @@ p { margin: 0 0 12px; }
 .btn {
   display: inline-block;
   padding: 9px 16px;
-  border: 1px solid transparent;
+  border: 1px solid var(--dl-teal-ink);
   border-radius: var(--radius-sm);
   background: var(--dl-electric-deep);
   color: #FFFFFF;
   font: inherit;
-  font-weight: 600;
+  font-weight: 650;
   text-decoration: none;
   cursor: pointer;
 }
