@@ -16,6 +16,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // Static files pass straight through. Gating them meant a signed-out sign-in page had no logo and
+  // no fonts, and the browser got a 307 instead of a .woff2. The list is explicit rather than a
+  // catch-all extension check, so nothing new becomes public without being named here.
+  if (
+    path.startsWith('/fonts/') ||
+    path === '/logo.svg' ||
+    path === '/logo-reversed.svg' ||
+    path === '/icon.svg' ||
+    path === '/favicon.ico'
+  ) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
