@@ -62,6 +62,7 @@ const TABLES = [
 const COLUMNS = [
   ['companies', 'legal_name', '0010_company_profile.sql'],
   ['companies', 'staff_countries', '0010_company_profile.sql'],
+  ['sequence_steps', 'kind', '0017_step_kinds.sql'],
   ['referrals', 'chase_task_id', '0014_referral_chase.sql'],
   ['referrals', 'escalation_task_id', '0015_referral_escalation.sql'],
 ];

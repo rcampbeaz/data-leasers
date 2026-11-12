@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { normaliseEmail, sendGuard, type Basis } from '@/lib/outbound';
+import { renumberPlan } from '@/lib/step-order';
 
 // Adding contacts, writing sequences and approving a first send. Sending itself lives in
 // the cron route; nothing here can put mail on the wire.
@@ -85,13 +86,10 @@ export async function addStep(sequenceId: string, formData: FormData) {
   const me = await currentStaff(supabase);
   if (!me || me.role !== 'admin') fail('Only an admin can add a step.');
 
-  const subject = text(formData, 'subject', 300);
-  const body = text(formData, 'body', 8000);
-  if (!subject || !body) fail('A step needs a subject and a body.');
-
   await insertStep(supabase, sequenceId, {
-    subject,
-    body,
+    kind: stepKind(formData),
+    subject: text(formData, 'subject', 300),
+    body: text(formData, 'body', 8000),
     delayDays: Number(formData.get('delayDays') ?? 0),
   });
 
@@ -116,7 +114,9 @@ export async function addStepFromTemplate(sequenceId: string, formData: FormData
     .maybeSingle();
   if (!template) fail('That template could not be found. It may have been deleted.');
 
+  // A template is email copy, so a step made from one is always an email step.
   await insertStep(supabase, sequenceId, {
+    kind: 'email',
     subject: String(template.subject ?? ''),
     body: String(template.body ?? ''),
     delayDays: Number(formData.get('delayDays') ?? 0),
@@ -126,14 +126,31 @@ export async function addStepFromTemplate(sequenceId: string, formData: FormData
   redirect(`${PATH}?step=1`);
 }
 
-// Position and delay rules live in one place so both entry points obey them.
+// Only two kinds are meaningful: a message the server sends, or a task a person works.
+const STEP_KINDS = ['email', 'linkedin_task'] as const;
+type StepKind = (typeof STEP_KINDS)[number];
+
+function stepKind(formData: FormData): StepKind {
+  const raw = String(formData.get('kind') ?? 'email');
+  if (!(STEP_KINDS as readonly string[]).includes(raw)) fail('Choose a valid step type.');
+  return raw as StepKind;
+}
+
+// An email without a body is a bug; a LinkedIn task is a title a person works from, so the body is
+// optional there. The database enforces the same rule (0017).
+function checkStep(kind: StepKind, subject: string | null, body: string | null) {
+  if (!subject) fail('A step needs a subject. For a LinkedIn task, that is the task title.');
+  if (kind === 'email' && !body) fail('An email step needs a body.');
+}
+
+// Position and delay rules live in one place so every entry point obeys them.
 async function insertStep(
   supabase: Awaited<ReturnType<typeof createStaffClient>>,
   sequenceId: string,
-  step: { subject: string; body: string; delayDays: number },
+  step: { kind: StepKind; subject: string | null; body: string | null; delayDays: number },
 ) {
-  const { subject, body, delayDays } = step;
-  if (!subject || !body) fail('A step needs a subject and a body.');
+  const { kind, subject, body, delayDays } = step;
+  checkStep(kind, subject, body);
 
   const { data: existing } = await supabase
     .from('sequence_steps')
@@ -152,10 +169,81 @@ async function insertStep(
     sequence_id: sequenceId,
     position: nextPosition,
     delay_days: delayDays,
+    kind,
     subject,
     body,
   });
   if (error) fail('Could not save the step.');
+}
+
+// Editing a step in place. Until now steps were append-only, so a typo in a subject meant adding a
+// second step and leaving the first one to be skipped by hand.
+export async function updateStep(stepId: string, formData: FormData) {
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || me.role !== 'admin') fail('Only an admin can edit a step.');
+
+  const kind = stepKind(formData);
+  const subject = text(formData, 'subject', 300);
+  const body = text(formData, 'body', 8000);
+  checkStep(kind, subject, body);
+
+  const delayDays = Number(formData.get('delayDays') ?? 0);
+  if (!Number.isInteger(delayDays) || delayDays < 0 || delayDays > 60) {
+    fail('The delay must be 0 to 60 days.');
+  }
+
+  const { error } = await supabase
+    .from('sequence_steps')
+    .update({ kind, subject, body, delay_days: delayDays })
+    .eq('id', stepId);
+  if (error) fail('Could not save the step.');
+
+  revalidatePath(PATH);
+  redirect(`${PATH}?updated=1`);
+}
+
+// Deleting closes the gap in positions. The sender looks for position == current + 1, so a hole
+// would end a sequence early rather than skip a step.
+export async function deleteStep(stepId: string) {
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || me.role !== 'admin') fail('Only an admin can delete a step.');
+
+  const { data: step } = await supabase
+    .from('sequence_steps')
+    .select('sequence_id')
+    .eq('id', stepId)
+    .maybeSingle();
+  if (!step) fail('That step could not be found.');
+
+  const sequenceId = String(step.sequence_id);
+  const { error } = await supabase.from('sequence_steps').delete().eq('id', stepId);
+  if (error) fail('Could not delete the step.');
+
+  await closeGaps(supabase, sequenceId);
+
+  revalidatePath(PATH);
+  redirect(`${PATH}?deleted=1`);
+}
+
+// After a delete, positions are strictly increasing with at least one gap. Renumbering upwards is
+// safe without temporary values: at step k the target is lower than the current position and not
+// yet taken, so the unique (sequence_id, position) constraint is never violated mid-way.
+async function closeGaps(
+  supabase: Awaited<ReturnType<typeof createStaffClient>>,
+  sequenceId: string,
+) {
+  const { data } = await supabase
+    .from('sequence_steps')
+    .select('id, position')
+    .eq('sequence_id', sequenceId)
+    .order('position');
+
+  const steps = (data ?? []) as { id: string; position: number }[];
+  for (const move of renumberPlan(steps)) {
+    await supabase.from('sequence_steps').update({ position: move.to }).eq('id', move.id);
+  }
 }
 
 // Enrolling puts the contact in the queue but sends nothing: approved_at is null, and the

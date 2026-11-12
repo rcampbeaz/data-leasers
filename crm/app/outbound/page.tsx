@@ -13,9 +13,11 @@ import {
   addStepFromTemplate,
   approveEnrolment,
   createSequence,
+  deleteStep,
   enrolContact,
   stopEnrolment,
   suppressAddress,
+  updateStep,
 } from '@/lib/outbound-actions';
 
 type Named = { name?: string | null; email?: string | null } | null;
@@ -36,6 +38,8 @@ export default async function OutboundPage({
     step?: string;
     enrolled?: string;
     suppressed?: string;
+    updated?: string;
+    deleted?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -53,7 +57,7 @@ export default async function OutboundPage({
         .limit(100),
       supabase
         .from('sequences')
-        .select('id, name, active, steps:sequence_steps(position, delay_days, subject)')
+        .select('id, name, active, steps:sequence_steps(id, position, delay_days, kind, subject, body)')
         .order('created_at', { ascending: false }),
       supabase
         .from('sequence_enrolments')
@@ -83,7 +87,14 @@ export default async function OutboundPage({
     id: string;
     name: string;
     active: boolean;
-    steps: { position: number; delay_days: number; subject: string }[] | null;
+    steps: {
+      id: string;
+      position: number;
+      delay_days: number;
+      kind: string;
+      subject: string;
+      body: string | null;
+    }[] | null;
   }[];
   const enrollmentRows = (enrollments ?? []) as unknown as {
     id: string;
@@ -121,6 +132,8 @@ export default async function OutboundPage({
       {sp.added ? <p className="notice">Contact added.</p> : null}
       {sp.sequence ? <p className="notice">Sequence created. Add a first step below.</p> : null}
       {sp.step ? <p className="notice">Step added.</p> : null}
+      {sp.updated ? <p className="notice">Step updated.</p> : null}
+      {sp.deleted ? <p className="notice">Step deleted and the remaining positions renumbered.</p> : null}
       {sp.enrolled ? <p className="notice">Enrolled. Approve it in the queue before anything sends.</p> : null}
       {sp.suppressed ? <p className="notice">Address suppressed. It will not be contacted again.</p> : null}
 
@@ -223,8 +236,42 @@ export default async function OutboundPage({
             <header><strong>{s.name}</strong> <span className="muted">{s.active ? 'active' : 'off'}</span></header>
             <ol className="muted small">
               {(s.steps ?? []).sort((a, b) => a.position - b.position).map((step) => (
-                <li key={step.position}>
+                <li key={step.id}>
+                  {step.kind === 'linkedin_task' ? (
+                    <span className="status review">LinkedIn task</span>
+                  ) : null}{' '}
                   day +{step.delay_days} · {step.subject}
+                  {isAdmin ? (
+                    <details>
+                      <summary className="small">Edit or delete</summary>
+                      <form action={updateStep.bind(null, step.id)} className="stack">
+                        <label>Type
+                          <select name="kind" defaultValue={step.kind}>
+                            <option value="email">Email</option>
+                            <option value="linkedin_task">LinkedIn task</option>
+                          </select>
+                        </label>
+                        <label>Delay in days
+                          <input type="number" name="delayDays" min={0} max={60} defaultValue={step.delay_days} />
+                        </label>
+                        <label>Subject
+                          <input name="subject" defaultValue={step.subject} required maxLength={300} />
+                        </label>
+                        <label>Body (ignored by a LinkedIn task)
+                          <textarea name="body" defaultValue={step.body ?? ''} rows={6} maxLength={8000} />
+                        </label>
+                        <button className="btn" type="submit">Save step</button>
+                      </form>
+                      <form action={deleteStep.bind(null, step.id)}>
+                        <button className="btn" type="submit">Delete step</button>
+                      </form>
+                      <p className="muted small">
+                        Deleting closes the gap in positions, because the sender treats a missing
+                        position as the end of the sequence. Enrolments already past this step are
+                        unaffected.
+                      </p>
+                    </details>
+                  ) : null}
                 </li>
               ))}
             </ol>
@@ -252,14 +299,20 @@ export default async function OutboundPage({
 
             {isAdmin ? (
               <form action={addStep.bind(null, s.id)} className="stack">
+                <label>Type
+                  <select name="kind" defaultValue="email">
+                    <option value="email">Email</option>
+                    <option value="linkedin_task">LinkedIn task (creates a task, sends nothing)</option>
+                  </select>
+                </label>
                 <label>Delay in days
                   <input type="number" name="delayDays" min={0} max={60} defaultValue={0} />
                 </label>
                 <label>Subject
                   <input name="subject" required maxLength={300} />
                 </label>
-                <label>Body
-                  <textarea name="body" required rows={5} maxLength={8000} />
+                <label>Body (required for email, optional for a task)
+                  <textarea name="body" rows={5} maxLength={8000} />
                 </label>
                 <button className="btn" type="submit">Add step</button>
               </form>

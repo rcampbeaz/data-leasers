@@ -117,6 +117,16 @@ Until `SOCIAL_API_URL` is set, the Marketing page says so rather than appearing 
   arrive within a day of the message, and the break-up is usually the highest-replying email in the
   sequence. Stop on reply, unsubscribe or bounce; the sender already does all three.
 
+## Steps and their kinds (0017)
+- A sequence step is either an **email** or a **LinkedIn task**. A task step creates a task on the
+  linked company's page, assigned to whoever approved the enrolment, and sends nothing. It is
+  recorded in the send history with status `task`, so the two are never confused.
+- A task step needs the outreach contact linked to a company, because a task belongs to a company.
+  Without that link the sender pauses the enrolment with the reason instead of advancing, which
+  would claim a touch that never happened.
+- Steps can be edited in place, and deleting one renumbers the rest. That matters: the sender looks
+  for `position + 1`, so a gap would end a sequence early rather than skip a step.
+
 ## Outbound email (0011)
 - Open **Outbound**. A contact cannot be added without a country and a lawful basis, and the guard refuses a basis that is not lawful for that country: the US allows an opt-out basis, Canada and Australia need consent, and the UK allows corporate subscribers.
 - Nothing sends until a person clicks **Approve first send** on the enrolment. A reply, an unsubscribe or a suppression stops the sequence permanently.

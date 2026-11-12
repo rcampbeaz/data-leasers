@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     sequence_id: string;
     contact_id: string;
     current_position: number;
+    approved_by: string | null;
   }[];
 
   const results: { id: string; outcome: string; detail?: string }[] = [];
@@ -59,12 +60,12 @@ export async function POST(request: Request) {
     const [{ data: contact }, { data: steps }] = await Promise.all([
       admin
         .from('outreach_contacts')
-        .select('id, email, country, basis, status, unsubscribe_token, full_name, role_title, company:companies(name)')
+        .select('id, email, country, basis, status, unsubscribe_token, full_name, role_title, company_id, company:companies(name)')
         .eq('id', enrolment.contact_id)
         .maybeSingle(),
       admin
         .from('sequence_steps')
-        .select('id, position, delay_days, subject, body')
+        .select('id, position, delay_days, kind, subject, body')
         .eq('sequence_id', enrolment.sequence_id)
         .order('position'),
     ]);
@@ -132,7 +133,9 @@ export async function POST(request: Request) {
 
     const next = (steps ?? []).find(
       (step: { position: number }) => step.position === enrolment.current_position + 1,
-    ) as { id: string; position: number; delay_days: number; subject: string; body: string } | undefined;
+    ) as
+      | { id: string; position: number; delay_days: number; kind: string; subject: string; body: string | null }
+      | undefined;
 
     if (!next) {
       await finish('completed');
@@ -146,7 +149,9 @@ export async function POST(request: Request) {
       | { name?: string | null }
       | null;
     const rendered = renderMessage(
-      { subject: next.subject, body: next.body },
+      // A task step may have no body (0017 only requires one for email), and rendering happens
+      // before the kind is checked, so a null body must not reach the renderer.
+      { subject: next.subject, body: next.body ?? '' },
       {
         first_name: firstNameOf(contact.full_name as string | null),
         full_name: (contact.full_name as string | null) ?? '',
@@ -155,6 +160,83 @@ export async function POST(request: Request) {
         company: companyRow?.name ?? '',
       },
     );
+
+    // A LinkedIn step is a person's job, not a message. The task title is the same rendered subject
+    // a person approved, so the wording cannot drift from what is in the sequence.
+    if (next.kind !== 'email') {
+      const companyId = (contact.company_id as string | null) ?? null;
+      if (!companyId) {
+        // tasks.company_id is required, so there is nowhere to put this task. Pausing is honest:
+        // advancing would claim a touch happened that never did.
+        await finish('paused', {
+          stopped_reason:
+            'LinkedIn step needs the contact linked to a company before a task can be created.',
+        });
+        await admin.from('outbound_sends').insert({
+          enrolment_id: enrolment.id,
+          contact_id: contact.id,
+          step_id: next.id,
+          subject: rendered.subject,
+          body: '',
+          status: 'skipped',
+          step_kind: 'linkedin_task',
+          error: 'Contact has no linked company',
+        });
+        results.push({ id: enrolment.id, outcome: 'paused', detail: 'no company for task' });
+        continue;
+      }
+
+      const { error: taskError } = await admin.from('tasks').insert({
+        company_id: companyId,
+        title: rendered.subject,
+        due_on: new Date().toISOString().slice(0, 10),
+        // Goes to whoever approved the enrolment, or to admins when that is unknown, which is what
+        // the reminder job already does for an unassigned task.
+        assigned_to: (enrolment.approved_by as string | null) ?? null,
+      });
+
+      if (taskError) {
+        await admin.from('outbound_sends').insert({
+          enrolment_id: enrolment.id,
+          contact_id: contact.id,
+          step_id: next.id,
+          subject: rendered.subject,
+          body: '',
+          status: 'failed',
+          step_kind: 'linkedin_task',
+          error: taskError.message.slice(0, 500),
+        });
+        const retry = new Date();
+        retry.setDate(retry.getDate() + 1);
+        await finish('active', { next_due_on: retry.toISOString().slice(0, 10) });
+        results.push({ id: enrolment.id, outcome: 'failed', detail: taskError.message.slice(0, 200) });
+        continue;
+      }
+
+      const after = (steps ?? []).find(
+        (step: { position: number }) => step.position === next.position + 1,
+      ) as { delay_days: number } | undefined;
+      const followingDue = new Date();
+      if (after) followingDue.setDate(followingDue.getDate() + Number(after.delay_days ?? 0));
+
+      await admin.from('outbound_sends').insert({
+        enrolment_id: enrolment.id,
+        contact_id: contact.id,
+        step_id: next.id,
+        subject: rendered.subject,
+        body: '',
+        status: 'task',
+        step_kind: 'linkedin_task',
+      });
+
+      await finish(after ? 'active' : 'completed', {
+        current_position: next.position,
+        next_due_on: after ? followingDue.toISOString().slice(0, 10) : null,
+      });
+
+      results.push({ id: enrolment.id, outcome: 'task', detail: `step ${next.position}` });
+      continue;
+    }
 
     const footer = complianceFooter({
       postalAddress,
@@ -233,6 +315,7 @@ export async function POST(request: Request) {
       subject: next.subject,
       body,
       status: 'sent',
+      step_kind: 'email',
       resend_id: resendId,
     });
 
