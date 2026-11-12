@@ -14,6 +14,7 @@ import {
 import { approveContent, setMarketingControls } from '@/lib/marketing-controls';
 import { mergeControls, type MarketingControls } from '@/lib/marketing-settings';
 import { BarChart, DonutChart } from '@/components/charts';
+import { SocialComposer } from '@/components/social-composer';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -197,6 +198,31 @@ export default async function MarketingPage({
       color: platformColor(platform),
     }));
 
+  // Next seven days as columns, so a gap is visible at a glance instead of being a number in a table.
+  // Grouped on the Phoenix date, which is the same clock the schedule form asks for.
+  const phoenix = (iso: string, length: number) =>
+    new Date(new Date(iso).getTime() - 7 * 60 * 60 * 1000).toISOString().slice(0, length);
+  const upcoming = Array.from({ length: 7 }, (_, i) => {
+    const key = phoenix(new Date(now + i * DAY).toISOString(), 10);
+    const label =
+      i === 0
+        ? 'Today'
+        : new Date(now + i * DAY).toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'UTC',
+          });
+    return {
+      key,
+      label,
+      today: i === 0,
+      items: postRows
+        .filter((p) => p.status !== 'cancelled' && phoenix(p.scheduled_for, 10) === key)
+        .sort((a, b) => a.scheduled_for.localeCompare(b.scheduled_for)),
+    };
+  });
+
   const statusSeries = [
     { label: 'Scheduled', value: postRows.filter((p) => p.status === 'scheduled').length },
     { label: 'Published', value: postRows.filter((p) => p.status === 'published').length },
@@ -244,6 +270,34 @@ export default async function MarketingPage({
         <div className="kpi"><span>Published, 30 days</span><strong>{published30}</strong></div>
         <div className="kpi"><span>Failed or manual</span><strong className={needsAttention ? 'overdue' : ''}>{needsAttention}</strong></div>
         <div className="kpi"><span>Channels live</span><strong>{liveChannels}</strong></div>
+      </section>
+
+      <section className="panel">
+        <h2>Next seven days</h2>
+        <div className="timeline">
+          {upcoming.map((day) => (
+            <div key={day.key} className={`timeline-day${day.today ? ' today' : ''}`}>
+              <h3>{day.label}</h3>
+              {day.items.length === 0 ? (
+                <p className="slot-empty">Open</p>
+              ) : (
+                day.items.map((p) => (
+                  <div key={p.id} className={`slot ${p.status}`}>
+                    <time>
+                      {phoenix(p.scheduled_for, 16).slice(11)} ·{' '}
+                      {channelRow(p.channel)?.display_name ?? channelLabel(p.channel)}
+                    </time>
+                    <p>{p.body}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="muted small">
+          Phoenix time. An empty column is a gap worth filling, not a fault; anything scheduled here is
+          picked up by the publisher within a few minutes of its time.
+        </p>
       </section>
 
       <div className="two-col">
@@ -371,26 +425,16 @@ export default async function MarketingPage({
 
       {canWrite ? (
         <section className="panel">
-          <h2>Write a post yourself</h2>
+          <h2>Write a post</h2>
           <p className="muted small">
-            No model needed. One version is used for every channel you choose when scheduling, and the
-            length and claim rules are checked there, per channel.
+            No model needed. Pick the channels to see how the post lands and how much room is left in
+            each, and attach an image here if you want one; the length and claim rules are enforced
+            again when you schedule.
           </p>
-          <form action={writePost} className="stack">
-            <label>Post
-              <textarea name="body" required rows={8} maxLength={20000} />
-            </label>
-            <label>Title (for the queue only)
-              <input name="title" maxLength={200} placeholder="Optional" />
-            </label>
-            <label>Link (optional)
-              <input name="link" maxLength={1000} placeholder="https://dataleasers.com/..." />
-            </label>
-            <label>Image (optional: PNG, JPEG or WebP under 5 MB)
-              <input type="file" name="image" accept="image/png,image/jpeg,image/webp" />
-            </label>
-            <button className="btn" type="submit">Save draft</button>
-          </form>
+          <SocialComposer
+            action={writePost}
+            connected={channelRows.filter((c) => c.status === 'active').map((c) => c.platform)}
+          />
         </section>
       ) : null}
 

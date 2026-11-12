@@ -4,6 +4,7 @@ import './globals.css';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { navFor, ROLE_LABELS, type Role } from '@/lib/nav';
+import { SidebarLinks } from '@/components/sidebar-links';
 import { signOut } from '@/lib/staff-actions';
 
 export const metadata: Metadata = {
@@ -31,9 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div className="shell">
           <nav className="sidebar" aria-label="CRM">
             <img className="logo" src="/logo-reversed.svg" alt="dataleasers" />
-            {items.map((item) => (
-              <Link key={item.href} href={item.href}>{item.label}</Link>
-            ))}
+            <SidebarLinks items={items} />
             <div className="sidebar-foot">
               <div className="who">
                 {staff.full_name}
