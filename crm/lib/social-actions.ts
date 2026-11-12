@@ -322,12 +322,19 @@ export async function writePost(formData: FormData) {
 
   const imageUrl = await uploadImage(formData.get('image') as File | null);
 
-  // No variants: one body is used for every channel chosen at scheduling time, where the per-channel
-  // length and claim rules are applied.
+  // Optional text per channel. An empty box means "use the main post", which is exactly what the
+  // scheduler already falls back to, so a variant is stored only when it genuinely differs - otherwise
+  // a copy would freeze at the moment of writing and stop tracking later edits.
+  const variants: Record<string, string> = {};
+  for (const spec of CHANNELS) {
+    const own = text(formData, `variant_${spec.key}`, 20000);
+    if (own && own !== body) variants[spec.key] = own;
+  }
+
   const { error } = await supabase.from('social_contents').insert({
     title: text(formData, 'title', 200) ?? body.slice(0, 80),
     body,
-    variants: {},
+    variants,
     link,
     media: imageUrl ? [imageUrl] : [],
     status: 'draft',

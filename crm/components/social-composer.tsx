@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { CHANNELS, type Channel } from '@/lib/social';
 
-// The composer the scheduling tools have: pick channels, write once, see how the post will look on
-// each network, and watch the limits as you type instead of finding out when scheduling is refused.
+// The composer the scheduling tools have: pick channels, write, see how the post will look on each
+// network, and watch the limits as you type instead of finding out when scheduling is refused.
 //
-// One body is still sent, because that is what is stored and what the per-channel rules are applied
-// to at scheduling time. The previews are honest about that: they show the same text at each
-// network's width, and count characters against each network's limit.
+// One base post is sent, plus optional text per channel. A channel with no text of its own uses the
+// base, which is what the scheduler falls back to (variants[channel] ?? body), so leaving a box empty
+// is the normal case rather than an omission. This is what lets LinkedIn stay long while X stays
+// under 280 without writing the whole post twice.
 
 type Props = {
   action: (formData: FormData) => void | Promise<void>;
@@ -21,6 +22,7 @@ const initials = (key: Channel) =>
 export function SocialComposer({ action, connected }: Props) {
   const [body, setBody] = useState('');
   const [link, setLink] = useState('');
+  const [variants, setVariants] = useState<Partial<Record<Channel, string>>>({});
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
   const [picked, setPicked] = useState<Channel[]>(() => {
@@ -45,7 +47,14 @@ export function SocialComposer({ action, connected }: Props) {
     setImageName(file.name);
   };
 
+  // What a given network will actually receive.
+  const textFor = (key: Channel) => {
+    const own = variants[key];
+    return own && own.trim() ? own : body;
+  };
+
   const previews = CHANNELS.filter((c) => picked.includes(c.key));
+  const customised = previews.filter((c) => (variants[c.key] ?? '').trim().length > 0);
 
   return (
     <form action={action} className="composer">
@@ -86,9 +95,12 @@ export function SocialComposer({ action, connected }: Props) {
         </label>
 
         <div className="counter-row" aria-live="polite">
-          {previews.length === 0 ? <span className="muted small">Pick a channel to see its limit.</span> : null}
+          {previews.length === 0 ? (
+            <span className="muted small">Pick a channel to see its limit.</span>
+          ) : null}
           {previews.map((c) => {
-            const left = c.limit - body.length;
+            const text = textFor(c.key);
+            const left = c.limit - text.length;
             return (
               <span
                 key={c.key}
@@ -101,6 +113,44 @@ export function SocialComposer({ action, connected }: Props) {
             );
           })}
         </div>
+
+        <details className="variants" open={customised.length > 0}>
+          <summary>
+            Different text per channel
+            <span className="small muted">
+              {customised.length > 0
+                ? ` · ${customised.map((c) => c.key).join(', ')} differ`
+                : ' · optional'}
+            </span>
+          </summary>
+          {previews.length === 0 ? (
+            <p className="small muted">Pick a channel first.</p>
+          ) : (
+            previews.map((c) => {
+              const value = variants[c.key] ?? '';
+              const length = textFor(c.key).length;
+              return (
+                <label key={c.key} className="variant-field">
+                  <span className="small muted">
+                    {c.label}
+                    <span className={length > c.limit ? 'over-count' : ''}>
+                      {' '}
+                      {length}/{c.limit}
+                    </span>
+                  </span>
+                  <textarea
+                    name={`variant_${c.key}`}
+                    rows={4}
+                    maxLength={20000}
+                    value={value}
+                    onChange={(e) => setVariants((v) => ({ ...v, [c.key]: e.target.value }))}
+                    placeholder="Leave empty to use the main post."
+                  />
+                </label>
+              );
+            })
+          )}
+        </details>
 
         <div className="composer-fields">
           <label>
@@ -137,7 +187,9 @@ export function SocialComposer({ action, connected }: Props) {
           </div>
         ) : null}
         {previews.map((c) => {
-          const over = body.length > c.limit;
+          const text = textFor(c.key);
+          const over = text.length > c.limit;
+          const own = (variants[c.key] ?? '').trim().length > 0;
           return (
             <div key={c.key} className="preview">
               <div className="preview-head">
@@ -147,13 +199,18 @@ export function SocialComposer({ action, connected }: Props) {
                 <span>
                   <span className="preview-name">DataLeasers</span>
                   <span className="preview-meta">
-                    {c.label} · {body.length}/{c.limit}
+                    {c.label} · {text.length}/{c.limit}
                     {over ? ' · too long' : ''}
+                    {own ? ' · own text' : ''}
                   </span>
                 </span>
               </div>
               <p className="preview-body">
-                {body.trim() ? body.slice(0, 900) : <span className="preview-empty">Your post appears here.</span>}
+                {text.trim() ? (
+                  text.slice(0, 900)
+                ) : (
+                  <span className="preview-empty">Your post appears here.</span>
+                )}
               </p>
               {imageUrl ? <img className="preview-media" src={imageUrl} alt="" /> : null}
               {link ? (

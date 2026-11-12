@@ -263,7 +263,7 @@ export default async function OutboundPage({
                         <button className="btn" type="submit">Save step</button>
                       </form>
                       <form action={deleteStep.bind(null, step.id)}>
-                        <button className="btn" type="submit">Delete step</button>
+                        <button className="btn danger" type="submit">Delete step</button>
                       </form>
                       <p className="muted small">
                         Deleting closes the gap in positions, because the sender treats a missing

@@ -99,7 +99,8 @@ export default async function MarketingPage({
   }>;
 }) {
   const { error, drafted, scheduled, channel, saved, wrote, attached, ai, aiok, tab } = await searchParams;
-  const activeTab = TABS.some((t) => t.key === tab) ? String(tab) : 'overview';
+  // Compose first: it is the page people come back to, and the overview is one click away.
+  const activeTab = TABS.some((t) => t.key === tab) ? String(tab) : 'compose';
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const isAdmin = me?.role === 'admin';

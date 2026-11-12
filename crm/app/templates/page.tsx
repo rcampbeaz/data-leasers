@@ -164,7 +164,7 @@ export default async function TemplatesPage({
                     <button className="btn" type="submit">Save changes</button>
                   </form>
                   <form action={deleteTemplate.bind(null, t.id)}>
-                    <button className="btn" type="submit">Delete this template</button>
+                    <button className="btn danger" type="submit">Delete this template</button>
                   </form>
                   <p className="muted small">
                     Deleting removes it from the library only. Any sequence step created from it keeps
