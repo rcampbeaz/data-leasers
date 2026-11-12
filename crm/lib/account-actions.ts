@@ -101,10 +101,20 @@ export async function requestReset(formData: FormData) {
   );
 
   // The callback is already an allowed redirect in Supabase, so the link comes back through the same
-  // code exchange as a sign-in link and then continues to /reset.
+  // code exchange as a sign-in link. This cookie is how the callback knows to continue to /reset and
+  // not the dashboard: Supabase appends its own code to the redirect address, so a query parameter
+  // has to survive that rewriting and is easier to lose than a cookie.
+  cookieStore.set('dl-recovery', '1', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 900,
+  });
+
   const origin = originFromHeaders(await headers());
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/reset`,
+    redirectTo: `${origin}/auth/callback`,
   });
 
   redirect('/reset?sent=1');
