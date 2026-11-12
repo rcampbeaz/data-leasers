@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { originFromHeaders } from '@/lib/origin';
 
 // Rules, in order:
 // 1. Signed out: only /login and /auth/* are reachable.
@@ -36,7 +37,10 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const redirect = (to: string) => NextResponse.redirect(new URL(to, request.url));
+  // Resolved from the forwarded headers: request.url is the internal localhost address behind the
+  // proxy, and redirecting a browser there breaks sign-in at the last step.
+  const redirect = (to: string) =>
+    NextResponse.redirect(new URL(to, originFromHeaders(request.headers, request.url)));
 
   const {
     data: { user },

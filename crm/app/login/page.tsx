@@ -1,12 +1,15 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { originFromHeaders } from '@/lib/origin';
 
 async function sendMagicLink(formData: FormData) {
   'use server';
   const email = String(formData.get('email') ?? '').trim();
   const cookieStore = await cookies();
-  const origin = (await headers()).get('origin') ?? process.env.CRM_ORIGIN ?? '';
+  // The public origin, not the internal one: the link in the email has to come back to a host the
+  // person's browser can reach.
+  const origin = originFromHeaders(await headers());
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,7 +33,7 @@ async function sendMagicLink(formData: FormData) {
   await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.CRM_ORIGIN ?? origin}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback`,
       shouldCreateUser: false,
     },
   });
