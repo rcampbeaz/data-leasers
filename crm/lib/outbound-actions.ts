@@ -212,12 +212,30 @@ export async function deleteStep(stepId: string) {
 
   const { data: step } = await supabase
     .from('sequence_steps')
-    .select('sequence_id')
+    .select('sequence_id, position')
     .eq('id', stepId)
     .maybeSingle();
   if (!step) fail('That step could not be found.');
 
   const sequenceId = String(step.sequence_id);
+
+  // Renumbering moves every later step down one, which changes what "the next step" means for
+  // anybody still behind this one: they would silently skip the message that moved into their slot.
+  // Refusing is better than a quiet gap in somebody's cadence.
+  const { count } = await supabase
+    .from('sequence_enrolments')
+    .select('id', { count: 'exact', head: true })
+    .eq('sequence_id', sequenceId)
+    .in('status', ['pending_approval', 'active', 'sending', 'paused'])
+    .lt('current_position', Number(step.position));
+
+  if ((count ?? 0) > 0) {
+    fail(
+      `${count} enrolment${count === 1 ? ' is' : 's are'} still before this step. Deleting would ` +
+        'move the step they are due to receive, so pause or stop those first, or edit the step instead.',
+    );
+  }
+
   const { error } = await supabase.from('sequence_steps').delete().eq('id', stepId);
   if (error) fail('Could not delete the step.');
 

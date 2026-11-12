@@ -267,8 +267,9 @@ export default async function OutboundPage({
                       </form>
                       <p className="muted small">
                         Deleting closes the gap in positions, because the sender treats a missing
-                        position as the end of the sequence. Enrolments already past this step are
-                        unaffected.
+                        position as the end of the sequence. It is refused while any live enrolment
+                        is still before this step, since renumbering would move the step they are
+                        due to receive.
                       </p>
                     </details>
                   ) : null}
