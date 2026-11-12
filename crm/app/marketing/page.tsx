@@ -1,7 +1,7 @@
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { CHANNELS, channelSpec, providerConfigured } from '@/lib/social';
-import { addChannel, cancelPost, generateDraft, scheduleContent } from '@/lib/social-actions';
+import { addChannel, cancelPost, generateDraft, scheduleContent, writePost } from '@/lib/social-actions';
 import { approveContent, setMarketingControls } from '@/lib/marketing-controls';
 import { mergeControls, type MarketingControls } from '@/lib/marketing-settings';
 import { BarChart, DonutChart } from '@/components/charts';
@@ -70,9 +70,10 @@ export default async function MarketingPage({
     scheduled?: string;
     channel?: string;
     saved?: string;
+    wrote?: string;
   }>;
 }) {
-  const { error, drafted, scheduled, channel, saved } = await searchParams;
+  const { error, drafted, scheduled, channel, saved, wrote } = await searchParams;
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const isAdmin = me?.role === 'admin';
@@ -186,6 +187,7 @@ export default async function MarketingPage({
       {error ? <p className="notice blocked">{error}</p> : null}
       {saved ? <p className="notice">Switches saved. They apply to the next run.</p> : null}
       {drafted ? <p className="notice">Draft written. Check it below, then schedule it.</p> : null}
+      {wrote ? <p className="notice">Post saved as a draft. Approve or schedule it below.</p> : null}
       {scheduled ? <p className="notice">Scheduled. The publisher picks it up within a few minutes.</p> : null}
       {channel ? <p className="notice">Channel connected.</p> : null}
 
@@ -333,6 +335,28 @@ export default async function MarketingPage({
           </form>
         ) : null}
       </section>
+
+      {canWrite ? (
+        <section className="panel">
+          <h2>Write a post yourself</h2>
+          <p className="muted small">
+            No model needed. One version is used for every channel you choose when scheduling, and the
+            length and claim rules are checked there, per channel.
+          </p>
+          <form action={writePost} className="stack">
+            <label>Post
+              <textarea name="body" required rows={8} maxLength={20000} />
+            </label>
+            <label>Title (for the queue only)
+              <input name="title" maxLength={200} placeholder="Optional" />
+            </label>
+            <label>Link (optional)
+              <input name="link" maxLength={1000} placeholder="https://dataleasers.com/..." />
+            </label>
+            <button className="btn" type="submit">Save draft</button>
+          </form>
+        </section>
+      ) : null}
 
       {canWrite ? (
         <section className="panel">

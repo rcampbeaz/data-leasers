@@ -188,6 +188,35 @@ export async function generateDraft(formData: FormData) {
   redirect(`${PATH}?drafted=1`);
 }
 
+// Writing a post by hand. Without this, every post had to come out of a model run, which put a paid
+// API key on the critical path to publishing anything at all - the console could draft but not be
+// used. The agent stays an option rather than a dependency.
+export async function writePost(formData: FormData) {
+  const { supabase, me } = await requireWriter();
+
+  const body = text(formData, 'body', 20000);
+  if (!body) fail('Write the post first.');
+  if (body.length < 20) fail('That is too short to be worth posting.');
+
+  const link = text(formData, 'link', 1000);
+  if (link && !/^https?:\/\//i.test(link)) fail('A link must start with http:// or https://.');
+
+  // No variants: one body is used for every channel chosen at scheduling time, where the per-channel
+  // length and claim rules are applied.
+  const { error } = await supabase.from('social_contents').insert({
+    title: text(formData, 'title', 200) ?? body.slice(0, 80),
+    body,
+    variants: {},
+    link,
+    status: 'draft',
+    created_by: me.user_id,
+  });
+  if (error) fail('Could not save the post.');
+
+  revalidatePath(PATH);
+  redirect(`${PATH}?wrote=1`);
+}
+
 // Schedules one content item to the chosen channels. Every channel is validated against
 // its own limit and the brand rules before a single row is written, so a post is either
 // scheduled everywhere it was asked for, or nowhere.
