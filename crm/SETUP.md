@@ -59,8 +59,20 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 ## Recovery
 - **Lost phone or authenticator app:** in **Authentication > Users**, open your user and remove the MFA factor. Sign in again to re-enrol. Keep a second device enrolled if you can.
 - **"Email or password is incorrect" on first sign-in:** an account added without a password has no
-  credential to match, so every password fails with `invalid_credentials`. On the VPS, in the
-  directory holding `.env`:
+  credential to match, so every password fails with `invalid_credentials`. The reference on the page
+  confirms this, and it is not a wrong password, so retrying will never work. Fix it in a browser:
+
+  1. On the sign-in page, use **Send sign-in link** with the same address and open the link from the
+     email. That works because the account exists and is confirmed; only the password is missing.
+  2. Open **Account** in the sidebar and set a password (12 characters or more). The page changes
+     only the signed-in account and stores a hash, never the password.
+  3. Sign in with the new password to confirm. Both routes keep working afterwards.
+
+  If the email link does not arrive, the problem is email delivery rather than the account: on the
+  free plan Supabase's own mailer is limited to a couple of messages an hour and is often filtered.
+  Add a custom SMTP provider under **Authentication > Emails**, or use the script below on the server.
+
+  On the VPS, in the directory holding `.env`, the script does the same job without a browser:
 
   ```
   npm run set-password -- you@example.com 'a password of 12+ characters'

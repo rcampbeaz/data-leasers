@@ -39,6 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 {staff.full_name}
                 <span>{ROLE_LABELS[staff.role as Role] ?? staff.role}</span>
               </div>
+              <Link href="/account">Account</Link>
               <form action={signOut}>
                 <button type="submit" className="sidebar-signout">Sign out</button>
               </form>

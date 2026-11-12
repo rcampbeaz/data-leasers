@@ -98,6 +98,14 @@ export default async function LoginPage({
     <main className="narrow">
       <h1>Sign in</h1>
       {error ? <p role="alert">Email or password is incorrect.</p> : null}
+      {error && code === 'invalid_credentials' ? (
+        <p className="small muted">
+          An account created by invitation or by hand has no password until one is set, and every
+          password is refused until then. Use <strong>Send sign-in link</strong> below to get in, then
+          set a password on the <a href="/account">Account</a> page. That page is the only place a
+          password can be set without access to the server.
+        </p>
+      ) : null}
       {error && code ? <p className="small muted">Reference: {code}</p> : null}
       {limited ? (
         <p role="alert">
