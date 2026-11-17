@@ -149,6 +149,34 @@ export function issuesForChannel(
   return [...issues, ...brandIssues(text)];
 }
 
+// The checks that decide whether a post can go out at all, as opposed to whether it
+// reads well. Every path that can put a post on the calendar runs this: the composer
+// when it saves, and the queue when it moves a draft to a time. Two callers of the
+// same list is the point — a draft scheduled from the queue must not be able to reach
+// a platform that will reject it.
+export function postErrors(input: {
+  body: string;
+  linkUrl: string | null;
+  mediaUrl: string | null;
+  channels: { platform: Platform; body: string | null }[];
+}): string[] {
+  const mediaKind = mediaKindFor(input.mediaUrl?.trim() || null);
+  const hasLink = Boolean(input.linkUrl?.trim()) || /https?:\/\//i.test(input.body);
+  const found: string[] = [];
+
+  for (const channel of input.channels) {
+    const text = channel.body?.trim() || input.body;
+    for (const issue of issuesForChannel(channel.platform, text, { mediaKind, hasLink })) {
+      if (issue.level === 'error') {
+        found.push(`${PLATFORM_LABELS[channel.platform]}: ${issue.message}`);
+      }
+    }
+  }
+
+  // The same brand problem on four channels is one problem to fix.
+  return [...new Set(found)];
+}
+
 // ---------- time ----------
 //
 // Arizona does not observe daylight saving, so Phoenix is UTC-7 all year. That is

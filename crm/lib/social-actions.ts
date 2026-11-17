@@ -6,11 +6,9 @@ import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import {
   PLATFORMS,
-  PLATFORM_LABELS,
   charCount,
-  issuesForChannel,
-  mediaKindFor,
   phoenixToUtc,
+  postErrors,
   type Platform,
   type PostDraft,
 } from '@/lib/social';
@@ -86,22 +84,22 @@ export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
     platformById.set(row.id, row.platform as Platform);
   }
 
-  const mediaKind = mediaKindFor(draft.mediaUrl?.trim() || null);
-  const hasLink = Boolean(draft.linkUrl?.trim()) || /https?:\/\//i.test(body);
-
-  // The server repeats every check the composer made. A browser can be told to skip
-  // them; this cannot.
+  const forChecks: { platform: Platform; body: string | null }[] = [];
   for (const channel of wanted) {
     const platform = platformById.get(channel.channelId);
     if (!platform) return { error: 'One of the chosen channels is not active. Reload and try again.' };
-    const channelText = channel.body?.trim() || body;
-    const errors = issuesForChannel(platform, channelText, { mediaKind, hasLink }).filter(
-      (issue) => issue.level === 'error',
-    );
-    if (errors.length > 0) {
-      return { error: `${PLATFORM_LABELS[platform]}: ${errors[0].message}` };
-    }
+    forChecks.push({ platform, body: channel.body });
   }
+
+  // The server repeats every check the composer made. A browser can be told to skip
+  // them; this cannot.
+  const errors = postErrors({
+    body,
+    linkUrl: draft.linkUrl,
+    mediaUrl: draft.mediaUrl,
+    channels: forChecks,
+  });
+  if (errors.length > 0) return { error: errors[0] };
 
   let scheduledFor: string | null = null;
   if (draft.scheduledFor) {
@@ -165,6 +163,58 @@ export async function reschedulePost(postId: string, formData: FormData) {
   if (!scheduledFor) redirect(`${path}?error=${encodeURIComponent('Choose a date and time.')}`);
   if (Date.parse(scheduledFor) < Date.now() - 60_000) {
     redirect(`${path}?error=${encodeURIComponent('That time has already passed.')}`);
+  }
+
+  // A time is not the only thing scheduling needs. This path used to write the time
+  // alone, so a draft the composer would have refused — an Instagram post with no
+  // image, say — could be given a publish slot and fail there instead. The post and
+  // its channels are read back and put through the same checks the composer uses.
+  const { data: post, error: readError } = await supabase
+    .from('social_posts')
+    .select('id, body, link_url, media_url, social_post_channels(body, social_channels(platform, active))')
+    .eq('id', postId)
+    .in('state', ['draft', 'scheduled'])
+    .maybeSingle();
+  if (readError) redirect(`${path}?error=${encodeURIComponent('Could not read the post.')}`);
+  if (!post) {
+    redirect(`${path}?error=${encodeURIComponent('That post is no longer waiting to go out.')}`);
+  }
+
+  const stored = post as unknown as {
+    body: string;
+    link_url: string | null;
+    media_url: string | null;
+    social_post_channels:
+      | { body: string | null; social_channels: { platform: string; active: boolean } | null }[]
+      | null;
+  };
+
+  const links = stored.social_post_channels ?? [];
+  if (links.length === 0) {
+    redirect(
+      `${path}?error=${encodeURIComponent('That post has no channels, so there is nothing to publish.')}`,
+    );
+  }
+
+  const channels: { platform: Platform; body: string | null }[] = [];
+  for (const link of links) {
+    const platform = link.social_channels?.platform as Platform | undefined;
+    if (!platform || !link.social_channels?.active) {
+      redirect(
+        `${path}?error=${encodeURIComponent('That post targets a channel that is no longer active.')}`,
+      );
+    }
+    channels.push({ platform, body: link.body });
+  }
+
+  const problems = postErrors({
+    body: stored.body,
+    linkUrl: stored.link_url,
+    mediaUrl: stored.media_url,
+    channels,
+  });
+  if (problems.length > 0) {
+    redirect(`${path}?error=${encodeURIComponent(`Cannot schedule. ${problems[0]}`)}`);
   }
 
   const { error } = await supabase
