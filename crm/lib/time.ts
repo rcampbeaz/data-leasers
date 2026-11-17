@@ -99,10 +99,12 @@ export function phoenixYear(when: Time): string {
 
 // The year a stored calendar date already belongs to. Read off the value rather than through a zone:
 // 1 January has to be its own year, which a Phoenix conversion of a UTC midnight would move back.
-// A day, not an instant: an instant's year is phoenixYear, and a number is neither, so the type keeps
-// `calendarYear(Date.now())` from compiling — it used to reach .getTime() and throw at runtime.
+// A day, not an instant: an instant's year is phoenixYear. The type says so, which stops
+// `calendarYear(Date.now())` compiling — and because a row from Supabase arrives untyped, anything else
+// that reaches here, a number included, comes back blank instead of failing on .getTime().
 export function calendarYear(day: string | Date | null | undefined): string {
   if (day === null || day === undefined) return '';
+  if (typeof day !== 'string' && !(day instanceof Date)) return '';
   // A Date is read the same way calendarDate reads one: as the UTC day it names, which is the day the
   // database stored, not the day it happens to be on this server.
   const trimmed =
