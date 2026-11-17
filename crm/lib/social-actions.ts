@@ -95,7 +95,11 @@ async function checkDraft(
   const forChecks: { platform: Platform; body: string | null }[] = [];
   for (const channel of wanted) {
     const platform = platformById.get(channel.channelId);
-    if (!platform) return { error: 'One of the chosen channels is not active. Reload and try again.' };
+    if (!platform) {
+      return {
+        error: 'One of the chosen channels is no longer active. Reload the page and it will be unticked.',
+      };
+    }
     forChecks.push({ platform, body: channel.body });
   }
 
