@@ -260,7 +260,7 @@ export default async function ImportPage({
                                 <button className="btn" type="submit">Accept</button>
                               </form>
                               <form action={rejectCandidate.bind(null, c.id)} className="inline-form">
-                                <input name="note" placeholder="Reason" maxLength={1000} />
+                                <input name="note" placeholder="Reason" aria-label="Reason for rejecting" maxLength={1000} />
                                 <button className="btn" type="submit">Reject</button>
                               </form>
                             </div>

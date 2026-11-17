@@ -408,14 +408,14 @@ export default async function PartnersPage({
                       {canEdit ? (
                         <form action={updateReferral} className="inline-form">
                           <input type="hidden" name="id" value={referral.id} />
-                          <select name="status" defaultValue={referral.status}>
+                          <select name="status" aria-label="Referral status" defaultValue={referral.status}>
                             {REFERRAL_STATUSES.map((s) => (
                               <option key={s} value={s}>
                                 {s}
                               </option>
                             ))}
                           </select>
-                          <input name="feeAmount" placeholder="Fee" inputMode="decimal" maxLength={12} />
+                          <input name="feeAmount" placeholder="Fee" aria-label="Fee amount" inputMode="decimal" maxLength={12} />
                           <button className="btn" type="submit">
                             Update
                           </button>

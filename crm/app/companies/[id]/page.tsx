@@ -69,12 +69,12 @@ export default async function CompanyPage({
       .order('introduced_on', { ascending: false }),
     supabase
       .from('offers')
-      .select('id, buyer_id, amount, currency, term_months, exclusivity_months, status, offered_on')
+      .select('id, buyer_id, amount, currency, term_months, exclusivity_months, status, offered_on, decided_on, notes')
       .eq('company_id', id)
       .order('offered_on', { ascending: false }),
     supabase
       .from('agreements')
-      .select('id, buyer_id, licence_start, licence_end, exclusivity_end, delivered_on, deletion_due, audit_right, status, signed_on')
+      .select('id, buyer_id, offer_id, licence_start, licence_end, exclusivity_end, delivered_on, deletion_due, audit_right, status, signed_on, notes')
       .eq('company_id', id)
       .order('licence_start', { ascending: false }),
     supabase
@@ -100,6 +100,11 @@ export default async function CompanyPage({
   });
   const suggestionOnly = suggestion && !suggestion.auto ? suggestion : null;
 
+  const offerById = (offerId: string | null) => {
+    const offer = (offers.data ?? []).find((o) => o.id === offerId);
+    return offer ? `${money(offer.amount, offer.currency)} on ${calendarDate(offer.offered_on)}` : '-';
+  };
+
   const updateCompanyWithId = updateCompany.bind(null, id);
   const addActivityWithId = addActivity.bind(null, id);
   const moveStageWithId = moveStage.bind(null, id);
@@ -114,7 +119,6 @@ export default async function CompanyPage({
   return (
     <main className="page">
       <header className="page-head">
-        <p className="muted small"><Link href="/companies">Companies</Link> / {company.name}</p>
         <nav className="crumbs" aria-label="Breadcrumb">
           <a href="/companies">Companies</a> <span aria-hidden="true">›</span>
         </nav>
@@ -125,6 +129,11 @@ export default async function CompanyPage({
           {process.env.BOOKING_URL ? (
             <> · <a href={process.env.BOOKING_URL} target="_blank" rel="noreferrer">Book a call</a></>
           ) : null}
+        </p>
+        <p className="muted small">
+          {company.source ? `From ${company.source} · ` : ''}
+          Added {phoenix(company.created_at, { dateStyle: 'medium' })}
+          {company.lead_id ? <> · <Link href="/leads">enquiry</Link></> : null}
         </p>
       </header>
 
@@ -146,8 +155,11 @@ export default async function CompanyPage({
             </select>
             <button className="btn" type="submit">Move</button>
           </form>
+          <p className="muted small-note">Every move is kept in the stage history at the foot of the page.</p>
+        </section>
 
-          <h2>Owner and introducer</h2>
+        <section className="panel">
+          <h2>Owner and next action</h2>
           <form action={updateCompanyWithId} className="stack">
             <label>Owner
               <select name="ownerId" defaultValue={company.owner_id ?? ''}>
@@ -167,31 +179,31 @@ export default async function CompanyPage({
             <label>Next action due
               <input type="date" name="nextActionDue" defaultValue={company.next_action_due ?? ''} />
             </label>
-            <button className="btn" type="submit">Save</button>
-          </form>
-        </section>
-
-        <section className="panel">
-          <h2>Log a note, call or decision</h2>
-          <form action={addActivityWithId} className="stack">
-            <label>Type
-              <select name="kind" defaultValue="note">
-                <option value="note">Note</option>
-                <option value="call">Call</option>
-                <option value="email">Email</option>
-                <option value="decision">Decision</option>
-              </select>
-            </label>
-            <label>Date and time of call (for calls)
-              <input type="datetime-local" name="callAt" />
-            </label>
-            <label>Details
-              <textarea name="body" rows={4} maxLength={4000} />
-            </label>
-            <button className="btn" type="submit">Save entry</button>
+            <button className="btn" type="submit">Save owner and next action</button>
           </form>
         </section>
       </div>
+
+      <section className="panel">
+        <h2>Log a note, call or decision</h2>
+        <form action={addActivityWithId} className="form-grid">
+          <label>Type
+            <select name="kind" defaultValue="note">
+              <option value="note">Note</option>
+              <option value="call">Call</option>
+              <option value="email">Email</option>
+              <option value="decision">Decision</option>
+            </select>
+          </label>
+          <label>Date and time of call (for calls)
+            <input type="datetime-local" name="callAt" />
+          </label>
+          <label className="span-2">Details
+            <textarea name="body" rows={4} maxLength={4000} />
+          </label>
+          <button className="btn" type="submit">Save entry</button>
+        </form>
+      </section>
 
       <section className="panel">
         <h2>Company profile</h2>
@@ -199,9 +211,12 @@ export default async function CompanyPage({
           What a buyer asks for before it will look at records: the registered entity, where it is,
           how many people work there and which countries they work in.
         </p>
-        <form action={updateCompanyWithId} className="stack">
+        <form action={updateCompanyWithId} className="form-grid">
           <label>Registered legal name
             <input name="legalName" defaultValue={company.legal_name ?? ''} maxLength={200} />
+          </label>
+          <label>Registration number
+            <input name="registrationNumber" defaultValue={company.registration_number ?? ''} maxLength={100} placeholder="From the company register" />
           </label>
           <label>Website
             <input name="website" defaultValue={company.website ?? ''} maxLength={300} placeholder="https://" />
@@ -209,22 +224,17 @@ export default async function CompanyPage({
           <label>Industry
             <input name="industry" defaultValue={company.industry ?? ''} maxLength={100} placeholder="Accounting, law, medical, software" />
           </label>
-          <label>Employees
-            <input type="number" name="employeeCount" defaultValue={company.employee_count ?? ''} min={0} max={1000000} />
-          </label>
           <label>Founded
             <input type="number" name="foundedYear" defaultValue={company.founded_year ?? ''} min={1800} max={2200} />
           </label>
-          <label>Registration number
-            <input name="registrationNumber" defaultValue={company.registration_number ?? ''} maxLength={100} />
+          <label>Employees
+            <input type="number" name="employeeCount" defaultValue={company.employee_count ?? ''} min={0} max={1000000} />
           </label>
-          <label>Phone
-            <input name="phone" defaultValue={company.phone ?? ''} maxLength={60} />
-          </label>
-          <label>Address line 1
+
+          <label className="span-2">Address line 1
             <input name="addressLine1" defaultValue={company.address_line1 ?? ''} maxLength={200} />
           </label>
-          <label>Address line 2
+          <label className="span-2">Address line 2
             <input name="addressLine2" defaultValue={company.address_line2 ?? ''} maxLength={200} />
           </label>
           <label>City
@@ -236,14 +246,19 @@ export default async function CompanyPage({
           <label>Postal code
             <input name="postalCode" defaultValue={company.postal_code ?? ''} maxLength={30} />
           </label>
-          <label>Country (two letters)
+          <label>Country
             <input name="country" defaultValue={company.country ?? ''} maxLength={2} placeholder="US" />
           </label>
-          <label>Countries the staff work in
+          <label>Phone
+            <input name="phone" defaultValue={company.phone ?? ''} maxLength={60} />
+          </label>
+
+          <label className="span-2">Countries the staff work in
             <input name="staffCountries" defaultValue={(company.staff_countries ?? []).join(', ')} placeholder="US, CA" />
           </label>
-          <p className="muted small">
-            Staff countries, not the head office: the published rule is about where the people are.
+          <p className="muted small span-2">
+            Country takes the two-letter code. Staff countries, not the head office: the published rule
+            is about where the people are.
           </p>
           <button className="btn" type="submit">Save profile</button>
         </form>
@@ -264,7 +279,7 @@ export default async function CompanyPage({
                       <select name="status" defaultValue={d.status}>
                         <option>Approved</option><option>Review</option><option>Blocked</option>
                       </select>
-                      <input name="reason" placeholder="Reason" maxLength={1000} />
+                      <input name="reason" placeholder="Reason" aria-label="Reason for the status" maxLength={1000} />
                       <button className="btn" type="submit">Update</button>
                     </form>
                   </td>
@@ -274,11 +289,11 @@ export default async function CompanyPage({
           </table>
         )}
         <form action={addDatasetWithId} className="inline-form">
-          <input name="name" placeholder="Dataset name" required maxLength={200} />
+          <input name="name" placeholder="Dataset name" aria-label="Dataset name" required maxLength={200} />
           <select name="status" defaultValue="Review">
             <option>Approved</option><option>Review</option><option>Blocked</option>
           </select>
-          <input name="reason" placeholder="Reason" maxLength={1000} />
+          <input name="reason" placeholder="Reason" aria-label="Reason for the status" maxLength={1000} />
           <button className="btn" type="submit">Add dataset</button>
         </form>
       </section>
@@ -311,8 +326,8 @@ export default async function CompanyPage({
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
-          <input type="date" name="introducedOn" defaultValue={todayIso()} />
-          <input name="notes" placeholder="Notes" maxLength={2000} />
+          <input type="date" name="introducedOn" aria-label="Date introduced" defaultValue={todayIso()} />
+          <input name="notes" placeholder="Notes" aria-label="Introduction notes" maxLength={2000} />
           <button className="btn" type="submit">Record introduction</button>
         </form>
       </section>
@@ -331,12 +346,18 @@ export default async function CompanyPage({
             <tbody>
               {(offers.data ?? []).map((offer) => (
                 <tr key={offer.id}>
-                  <td>{buyerName(offer.buyer_id)}</td>
+                  <td>
+                    {buyerName(offer.buyer_id)}
+                    {offer.notes ? <div className="muted small">{offer.notes}</div> : null}
+                  </td>
                   <td>{money(offer.amount, offer.currency)}</td>
                   <td>{offer.term_months ? `${offer.term_months} months` : '-'}</td>
                   <td>{offer.exclusivity_months ? `${offer.exclusivity_months} months` : '-'}</td>
                   <td>{calendarDate(offer.offered_on)}</td>
-                  <td><span className="stage">{offer.status}</span></td>
+                  <td>
+                    <span className="stage">{offer.status}</span>
+                    {offer.decided_on ? <div className="muted small">{calendarDate(offer.decided_on)}</div> : null}
+                  </td>
                   <td>
                     <form action={setOfferStatus.bind(null, id, offer.id)} className="inline-form">
                       <select name="status" defaultValue={offer.status}>
@@ -387,13 +408,14 @@ export default async function CompanyPage({
           <table className="table">
             <thead>
               <tr>
-                <th>Buyer</th><th>Start</th><th>Ends</th><th>Exclusivity to</th><th>Deletion due</th><th>Audit</th><th>Status</th>
+                <th>Buyer</th><th>Offer</th><th>Start</th><th>Ends</th><th>Exclusivity to</th><th>Deletion due</th><th>Audit</th><th>Status</th>
               </tr>
             </thead>
             <tbody>
               {(agreements.data ?? []).map((agreement) => (
                 <tr key={agreement.id}>
                   <td>{buyerName(agreement.buyer_id)}</td>
+                  <td>{offerById(agreement.offer_id)}</td>
                   <td>{calendarDate(agreement.licence_start)}</td>
                   <td>{calendarDate(agreement.licence_end) || '-'}</td>
                   <td>{calendarDate(agreement.exclusivity_end) || '-'}</td>
@@ -411,6 +433,19 @@ export default async function CompanyPage({
               <option value="">Choose a buyer</option>
               {buyerList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
+          </label>
+          <label>Offer it accepts (optional)
+            <select name="offerId" defaultValue="">
+              <option value="">No offer recorded</option>
+              {(offers.data ?? []).map((o) => (
+                <option key={o.id} value={o.id}>
+                  {buyerName(o.buyer_id)} · {money(o.amount, o.currency)} · {o.status}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>Notes
+            <input name="notes" maxLength={2000} />
           </label>
           <label>Licence start
             <input type="date" name="licenceStart" required defaultValue={todayIso()} />
@@ -491,9 +526,9 @@ export default async function CompanyPage({
             </ul>
           )}
           <form action={addContactWithId} className="stack">
-            <input name="name" placeholder="Name" required maxLength={200} />
-            <input name="roleTitle" placeholder="Role" maxLength={200} />
-            <input name="email" type="email" placeholder="Email" maxLength={320} />
+            <label>Name<input name="name" required maxLength={200} /></label>
+            <label>Role<input name="roleTitle" maxLength={200} placeholder="Finance director" /></label>
+            <label>Email<input name="email" type="email" maxLength={320} /></label>
             <button className="btn" type="submit">Add contact</button>
           </form>
         </section>
@@ -516,12 +551,14 @@ export default async function CompanyPage({
             </ul>
           )}
           <form action={addTaskWithId} className="stack">
-            <input name="title" placeholder="What needs doing" required maxLength={300} />
-            <input type="date" name="dueOn" required />
-            <select name="assignedTo" defaultValue="">
-              <option value="">Unassigned</option>
-              {staff.map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name}</option>)}
-            </select>
+            <label>Task<input name="title" required maxLength={300} placeholder="What needs doing" /></label>
+            <label>Due<input type="date" name="dueOn" required defaultValue={todayIso()} /></label>
+            <label>Assigned to
+              <select name="assignedTo" defaultValue="">
+                <option value="">Unassigned</option>
+                {staff.map((s) => <option key={s.user_id} value={s.user_id}>{s.full_name}</option>)}
+              </select>
+            </label>
             <button className="btn" type="submit">Add task</button>
           </form>
         </section>

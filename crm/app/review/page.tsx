@@ -81,7 +81,7 @@ export default async function ReviewPage({
                         <option>Review</option>
                         <option>Blocked</option>
                       </select>
-                      <input name="reason" placeholder="Reason" maxLength={1000} />
+                      <input name="reason" placeholder="Reason" aria-label="Reason" maxLength={1000} />
                       <button className="btn" type="submit">Save</button>
                     </form>
                   </td>

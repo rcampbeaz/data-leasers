@@ -324,8 +324,8 @@ export default async function OutboundPage({
 
         {isAdmin ? (
           <form action={createSequence} className="inline-form">
-            <input name="name" placeholder="Sequence name" required maxLength={200} />
-            <input name="description" placeholder="What it is for" maxLength={1000} />
+            <input name="name" placeholder="Sequence name" aria-label="Sequence name" required maxLength={200} />
+            <input name="description" placeholder="What it is for" aria-label="What the sequence is for" maxLength={1000} />
             <button className="btn" type="submit">Create sequence</button>
           </form>
         ) : null}
@@ -393,15 +393,15 @@ export default async function OutboundPage({
         <h2>Suppression and history</h2>
         {canWrite ? (
           <form action={suppressAddress} className="inline-form">
-            <input type="email" name="email" placeholder="Email to suppress" required maxLength={320} />
-            <select name="reason" defaultValue="manual">
+            <input type="email" name="email" placeholder="Email to suppress" aria-label="Email to suppress" required maxLength={320} />
+            <select name="reason" aria-label="Suppression reason" defaultValue="manual">
               <option value="manual">Manual</option>
               <option value="unsubscribed">Unsubscribed</option>
               <option value="bounced">Bounced</option>
               <option value="complaint">Complaint</option>
               <option value="not_a_fit">Not a fit</option>
             </select>
-            <input name="note" placeholder="Note" maxLength={1000} />
+            <input name="note" placeholder="Note" aria-label="Suppression note" maxLength={1000} />
             <button className="btn" type="submit">Suppress</button>
           </form>
         ) : null}

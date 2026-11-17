@@ -64,8 +64,8 @@ export default async function StaffPage({
         <section className="panel">
           <h2>Add a staff member</h2>
           <form action={addStaff} className="inline-form">
-            <input name="fullName" placeholder="Full name" required />
-            <input name="email" type="email" placeholder="Work email" required />
+            <input name="fullName" placeholder="Full name" aria-label="Full name" required />
+            <input name="email" type="email" placeholder="Work email" aria-label="Work email" required />
             <select name="role" defaultValue="introducer">
               {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
                 <option key={r} value={r}>{ROLE_LABELS[r]}</option>

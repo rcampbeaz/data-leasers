@@ -267,7 +267,7 @@ export default async function DeliverabilityPage({
                   <td>
                     {canRelease ? (
                       <form action={releaseDomainHold.bind(null, h.domain)} className="inline-form">
-                        <input name="note" placeholder="Why release it" maxLength={400} />
+                        <input name="note" placeholder="Why release it" aria-label="Why release it" maxLength={400} />
                         <button className="btn" type="submit">Release</button>
                       </form>
                     ) : null}

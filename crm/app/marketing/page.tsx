@@ -592,12 +592,12 @@ export default async function MarketingPage({
 
         {isAdmin ? (
           <form action={addChannel} className="inline-form">
-            <select name="platform" defaultValue="linkedin">
+            <select name="platform" aria-label="Platform" defaultValue="linkedin">
               {CHANNELS.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
-            <input name="displayName" placeholder="Account name" required maxLength={200} />
-            <input name="externalId" placeholder="Provider profile id" required maxLength={200} />
-            <input type="date" name="tokenExpiresAt" />
+            <input name="displayName" placeholder="Account name" aria-label="Account name" required maxLength={200} />
+            <input name="externalId" placeholder="Provider profile id" aria-label="Provider profile id" required maxLength={200} />
+            <input type="date" name="tokenExpiresAt" aria-label="Token expires on" />
             <button className="btn" type="submit">Connect</button>
           </form>
         ) : null}

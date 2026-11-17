@@ -306,6 +306,21 @@ export async function addAgreement(companyId: string, formData: FormData) {
   const licenceStart = day(formData, 'licenceStart');
   if (!licenceStart) fail(path, 'Enter the date the licence starts.');
 
+  // The agreement may settle one of this company's offers. Look it up through the
+  // company so an id from another record cannot be attached.
+  const offerId = text(formData, 'offerId', 64);
+  let linkedOffer: string | null = null;
+  if (offerId) {
+    const { data: offer } = await supabase
+      .from('offers')
+      .select('id')
+      .eq('id', offerId)
+      .eq('company_id', companyId)
+      .maybeSingle();
+    if (!offer) fail(path, 'That offer is not recorded against this company.');
+    linkedOffer = offer.id;
+  }
+
   const licenceMonths = int(formData, 'licenceMonths', 0, 120);
   const exclusivityMonths = int(formData, 'exclusivityMonths', 0, 120);
   const deliveredOn = day(formData, 'deliveredOn');
@@ -315,6 +330,7 @@ export async function addAgreement(companyId: string, formData: FormData) {
     .from('agreements')
     .insert({
       company_id: companyId,
+      offer_id: linkedOffer,
       buyer_id: text(formData, 'buyerId', 64),
       licence_start: licenceStart,
       licence_end: licenceMonths ? addMonths(licenceStart, licenceMonths) : null,
@@ -330,7 +346,11 @@ export async function addAgreement(companyId: string, formData: FormData) {
     .single();
   if (error || !data) fail(path, 'Could not record the agreement.');
 
-  await audit(me.user_id, 'agreement', data.id, 'created', { company_id: companyId, deletion_due: deletionDue });
+  await audit(me.user_id, 'agreement', data.id, 'created', {
+    company_id: companyId,
+    offer_id: linkedOffer,
+    deletion_due: deletionDue,
+  });
   refreshDeal(companyId);
   redirect(path);
 }

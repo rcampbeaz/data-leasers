@@ -59,7 +59,7 @@ export default async function LeadsPage({
       {saved ? <p className="notice">Lead added.</p> : null}
 
       <form method="get" className="form-row">
-        <input type="search" name="q" defaultValue={q ?? ''} placeholder="Search name, company or email" />
+        <input type="search" name="q" aria-label="Search leads" defaultValue={q ?? ''} placeholder="Search name, company or email" />
         <button className="btn" type="submit">Search</button>
         {canAdd ? <a className="btn" href="/api/export/leads">Export CSV</a> : null}
       </form>
