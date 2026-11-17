@@ -60,7 +60,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0012_social_media_link.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0013_social_reconcile.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
