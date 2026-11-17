@@ -109,8 +109,7 @@ function sweepNotice(failure: { error: string; at: string | null; degraded: bool
   since: string;
 } {
   const since = failure.at
-    ? ` ${failure.degraded ? 'Seen since' : 'Failing since'} ${new Date(failure.at).toLocaleString('en-US', {
-        timeZone: 'America/Phoenix',
+    ? ` ${failure.degraded ? 'Seen since' : 'Failing since'} ${phoenix(failure.at, {
         dateStyle: 'medium',
         timeStyle: 'short',
       })} (Phoenix)`
@@ -159,10 +158,54 @@ function platformColor(platform: string): string {
   return PALETTE[(i < 0 ? 0 : i) % PALETTE.length];
 }
 
-// The next hour in Phoenix, as the value a datetime-local input expects. Phoenix is
-// UTC-7 all year, which is why the offset is a constant.
+// Every time on this page is on the console's clock, resolved from the zone rather than by subtracting
+// seven hours. Phoenix is UTC−7 all year — Arizona does not observe daylight saving — so the old
+// arithmetic gave the right answer by coincidence, and would stop giving it the moment the brand's clock
+// changed, or on a server whose own zone differed.
+const PHOENIX_TIME_ZONE = 'America/Phoenix';
+
+function phoenix(when: string | number | Date, options: Intl.DateTimeFormatOptions): string {
+  return new Date(when).toLocaleString('en-US', { timeZone: PHOENIX_TIME_ZONE, ...options });
+}
+
+// The machine-readable shapes — a sortable day, a clock time, a stamp and the value a datetime-local
+// input expects — built from parts, so none of them depends on how a formatted string happens to look.
+const PHOENIX_PARTS = new Intl.DateTimeFormat('en-US', {
+  timeZone: PHOENIX_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+function phoenixKey(when: string | number | Date): { date: string; clock: string } {
+  const parts = PHOENIX_PARTS.formatToParts(new Date(when));
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  return {
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+    clock: `${get('hour')}:${get('minute')}`,
+  };
+}
+
+function phoenixDay(when: string | number | Date): string {
+  return phoenixKey(when).date;
+}
+
+function phoenixClock(when: string | number | Date): string {
+  return phoenixKey(when).clock;
+}
+
+function phoenixStamp(when: string | number | Date): string {
+  const { date, clock } = phoenixKey(when);
+  return `${date} ${clock}`;
+}
+
+// The next hour in Phoenix, as the value a datetime-local input expects.
 function defaultSlot(): string {
-  return new Date(Date.now() + 60 * 60 * 1000 - 7 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  const { date, clock } = phoenixKey(Date.now() + 60 * 60 * 1000);
+  return `${date}T${clock}`;
 }
 
 export default async function MarketingPage({
@@ -319,14 +362,14 @@ export default async function MarketingPage({
   for (let i = 13; i >= 0; i--) {
     const d = new Date(now - i * DAY);
     days.push({
-      key: d.toISOString().slice(0, 10),
-      label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+      key: phoenixDay(d),
+      label: phoenix(d, { month: 'short', day: 'numeric' }),
     });
   }
   const perDay = new Map(days.map((d) => [d.key, 0]));
   for (const p of postRows) {
     if (p.status === 'cancelled') continue;
-    const key = String(p.scheduled_for).slice(0, 10);
+    const key = phoenixDay(p.scheduled_for);
     if (perDay.has(key)) perDay.set(key, (perDay.get(key) ?? 0) + 1);
   }
   const perDaySeries = days.map((d) => ({ label: d.label, value: perDay.get(d.key) ?? 0 }));
@@ -349,25 +392,16 @@ export default async function MarketingPage({
 
   // Next seven days as columns, so a gap is visible at a glance instead of being a number in a table.
   // Grouped on the Phoenix date, which is the same clock the schedule form asks for.
-  const phoenix = (iso: string, length: number) =>
-    new Date(new Date(iso).getTime() - 7 * 60 * 60 * 1000).toISOString().slice(0, length);
   const upcoming = Array.from({ length: 7 }, (_, i) => {
-    const key = phoenix(new Date(now + i * DAY).toISOString(), 10);
-    const label =
-      i === 0
-        ? 'Today'
-        : new Date(now + i * DAY).toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            timeZone: 'UTC',
-          });
+    const day = new Date(now + i * DAY);
+    const key = phoenixDay(day);
+    const label = i === 0 ? 'Today' : phoenix(day, { weekday: 'short', month: 'short', day: 'numeric' });
     return {
       key,
       label,
       today: i === 0,
       items: postRows
-        .filter((p) => p.status !== 'cancelled' && phoenix(p.scheduled_for, 10) === key)
+        .filter((p) => p.status !== 'cancelled' && phoenixDay(p.scheduled_for) === key)
         .sort((a, b) => a.scheduled_for.localeCompare(b.scheduled_for)),
     };
   });
@@ -457,7 +491,7 @@ export default async function MarketingPage({
                 day.items.map((p) => (
                   <div key={p.id} className={`slot ${p.status}`}>
                     <time>
-                      {phoenix(p.scheduled_for, 16).slice(11)} ·{' '}
+                      {phoenixClock(p.scheduled_for)} ·{' '}
                       {channelRow(p.channel)?.display_name ?? channelLabel(p.channel)}
                     </time>
                     <p>{p.body}</p>
@@ -580,8 +614,8 @@ export default async function MarketingPage({
                   <td>
                     <span className={`status ${c.status === 'active' ? 'approved' : 'blocked'}`}>{c.status}</span>
                   </td>
-                  <td>{c.token_expires_at ? new Date(c.token_expires_at).toLocaleDateString('en-US') : '-'}</td>
-                  <td>{c.last_ok_at ? new Date(c.last_ok_at).toLocaleString('en-US') : 'never'}</td>
+                  <td>{c.token_expires_at ? phoenix(c.token_expires_at, { dateStyle: 'medium' }) : '-'}</td>
+                  <td>{c.last_ok_at ? phoenix(c.last_ok_at, { dateStyle: 'medium', timeStyle: 'short' }) : 'never'}</td>
                   <td>
                     {isAdmin && c.status !== 'active' ? (
                       <form action={reactivateChannel.bind(null, c.id)}>
@@ -684,7 +718,9 @@ export default async function MarketingPage({
             <header>
               <strong>{d.title ?? 'Untitled draft'}</strong>{' '}
               <span className={`status ${d.status === 'approved' ? 'approved' : 'review'}`}>{d.status}</span>{' '}
-              <span className="muted">{new Date(d.created_at).toLocaleString('en-US')}</span>
+              <span className="muted">
+                {phoenix(d.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
+              </span>
             </header>
             <pre className="wrap-cell">{d.body}</pre>
             {d.media && d.media.length > 0 ? (
@@ -753,7 +789,7 @@ export default async function MarketingPage({
             <tbody>
               {/* Stopped posts are at the front of postRows, so this cap never drops one. */}
               {postRows.slice(0, 40).map((p) => {
-                const when = new Date(new Date(p.scheduled_for).getTime() - 7 * 60 * 60 * 1000);
+                const stamp = phoenixStamp(p.scheduled_for);
                 const channel = channelRow(p.channel);
                 const retryAllowed = retryRoute(channel?.status ?? null) === 'retry';
                 // Why Retry is not on offer, in the row itself: a tooltip is not reachable by
@@ -765,7 +801,7 @@ export default async function MarketingPage({
                     : null;
                 return (
                   <tr key={p.id}>
-                    <td>{when.toISOString().slice(0, 16).replace('T', ' ')}</td>
+                    <td>{stamp}</td>
                     <td>{channelLabel(p.channel)}</td>
                     <td><span className={`status ${p.status === 'published' ? 'approved' : p.status === 'failed' || p.status === 'needs_manual' ? 'blocked' : 'review'}`}>{p.status}</span></td>
                     <td className="wrap-cell">{p.body.slice(0, 140)}{p.body.length > 140 ? '…' : ''}</td>
