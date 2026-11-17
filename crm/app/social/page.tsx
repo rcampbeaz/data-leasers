@@ -1,16 +1,19 @@
 import Link from 'next/link';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
-import { cancelPost, deletePost, reschedulePost } from '@/lib/social-actions';
 import {
-  PLATFORM_LABELS,
-  phoenixLabel,
-  utcToPhoenixInput,
-  type Platform,
-} from '@/lib/social';
+  cancelPost,
+  deletePost,
+  publishDueNow,
+  reschedulePost,
+  retryPost,
+} from '@/lib/social-actions';
+import { PLATFORM_LABELS, phoenixLabel, utcToPhoenixInput, type Platform } from '@/lib/social';
 
 type ChannelLink = {
   status: string;
+  error: string | null;
+  remote_id: string | null;
   social_channels: { platform: string; handle: string } | null;
 };
 
@@ -19,6 +22,7 @@ type QueueRow = {
   body: string;
   state: string;
   scheduled_for: string | null;
+  published_at: string | null;
   social_post_channels: ChannelLink[] | null;
 };
 
@@ -29,10 +33,12 @@ const SAVED: Record<string, string> = {
   updated: 'Changes saved.',
   cancelled: 'Post cancelled.',
   deleted: 'Draft deleted.',
+  retried: 'Queued for another attempt.',
+  ran: 'Publishing run finished. Results are below.',
 };
 
 const FIELDS =
-  'id, body, state, scheduled_for, social_post_channels(status, social_channels(platform, handle))';
+  'id, body, state, scheduled_for, published_at, social_post_channels(status, error, remote_id, social_channels(platform, handle))';
 
 function Channels({ row }: { row: QueueRow }) {
   const channels = row.social_post_channels ?? [];
@@ -67,6 +73,43 @@ function Move({ row }: { row: QueueRow }) {
   );
 }
 
+// What each channel did, which is the only place a part-failure is visible: the post's own
+// state says "partial", and this says which platform is the reason.
+function Delivery({ row }: { row: QueueRow }) {
+  const links = row.social_post_channels ?? [];
+  if (links.length === 0) return <span className="muted">None</span>;
+  return (
+    <>
+      {links.map((link, index) => {
+        const platform = link.social_channels?.platform;
+        const simulated = link.remote_id?.startsWith('stub:') ?? false;
+        const pill =
+          link.status === 'published'
+            ? 'status approved'
+            : link.status === 'failed'
+              ? 'status blocked'
+              : 'status review';
+        return (
+          <div key={`${row.id}-${index}`} className="delivery">
+            <span className="badge">
+              {platform ? (PLATFORM_LABELS[platform as Platform] ?? platform) : 'Unknown'}
+            </span>
+            <span className={pill}>{link.status}</span>
+            {simulated ? <span className="muted small"> simulated</span> : null}
+            {link.error ? <div className="issue error">{link.error}</div> : null}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+function stateClass(state: string): string {
+  if (state === 'published') return 'status approved';
+  if (state === 'partial') return 'status review';
+  return 'status blocked';
+}
+
 export default async function SocialPage({
   searchParams,
 }: {
@@ -76,32 +119,40 @@ export default async function SocialPage({
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);
   const canWrite = me?.role === 'admin' || me?.role === 'introducer';
+  const isAdmin = me?.role === 'admin';
 
-  const [{ data: scheduled, error: scheduledError }, { data: drafts }] = await Promise.all([
-    supabase
-      .from('social_posts')
-      .select(FIELDS)
-      .eq('state', 'scheduled')
-      .order('scheduled_for', { ascending: true })
-      .limit(100),
-    supabase
-      .from('social_posts')
-      .select(FIELDS)
-      .eq('state', 'draft')
-      .order('created_at', { ascending: false })
-      .limit(50),
-  ]);
+  const [{ data: scheduled, error: scheduledError }, { data: drafts }, { data: recent }] =
+    await Promise.all([
+      supabase
+        .from('social_posts')
+        .select(FIELDS)
+        .eq('state', 'scheduled')
+        .order('scheduled_for', { ascending: true })
+        .limit(100),
+      supabase
+        .from('social_posts')
+        .select(FIELDS)
+        .eq('state', 'draft')
+        .order('created_at', { ascending: false })
+        .limit(50),
+      supabase
+        .from('social_posts')
+        .select(FIELDS)
+        .in('state', ['published', 'partial', 'failed'])
+        .order('updated_at', { ascending: false })
+        .limit(20),
+    ]);
 
   const upcoming = (scheduled ?? []) as unknown as QueueRow[];
   const draftList = (drafts ?? []) as unknown as QueueRow[];
+  const delivered = (recent ?? []) as unknown as QueueRow[];
 
   return (
     <main className="page">
       <header className="page-head">
         <h1>Social</h1>
         <p className="muted">
-          Everything waiting to go out, in Phoenix time. Writing a post takes one idea and adapts it
-          per channel.
+          Everything waiting to go out, and what happened to what already has, in Phoenix time.
         </p>
       </header>
 
@@ -118,14 +169,21 @@ export default async function SocialPage({
       {saved ? <p className="notice">{SAVED[saved] ?? 'Saved.'}</p> : null}
       {scheduledError ? (
         <p className="notice blocked">
-          Could not load the queue. Run <code>0009_social.sql</code> in Supabase, then reload.
+          Could not load the queue. Run <code>0009_social.sql</code> and{' '}
+          <code>0010_social_publish.sql</code> in Supabase, then reload.
         </p>
       ) : null}
 
-      <p className="notice review">
-        Publishing is not wired yet. Scheduling records the decision now; the publishing engine
-        sends it in the next phase.
-      </p>
+      {isAdmin ? (
+        <form action={publishDueNow} className="form-row">
+          <button className="btn" type="submit">
+            Publish due posts now
+          </button>
+          <span className="muted small">
+            Runs the same sweep as the cron job. Simulated deliveries are marked below.
+          </span>
+        </form>
+      ) : null}
 
       <section className="panel">
         <h2>Upcoming</h2>
@@ -196,6 +254,52 @@ export default async function SocialPage({
                       <form action={deletePost.bind(null, post.id)}>
                         <button className="link-button" type="submit">
                           Delete
+                        </button>
+                      </form>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className="panel">
+        <h2>Recent</h2>
+        {delivered.length === 0 ? (
+          <p className="muted">Nothing has been sent yet.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>State</th>
+                <th>Post</th>
+                <th>Channels</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {delivered.map((post) => (
+                <tr key={post.id}>
+                  <td>
+                    <span className={stateClass(post.state)}>{post.state}</span>
+                    {post.published_at ? (
+                      <span className="muted small">
+                        <br />
+                        {phoenixLabel(post.published_at)}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="wrap-cell">{post.body.slice(0, 160)}</td>
+                  <td>
+                    <Delivery row={post} />
+                  </td>
+                  <td>
+                    {canWrite && (post.state === 'failed' || post.state === 'partial') ? (
+                      <form action={retryPost.bind(null, post.id)}>
+                        <button className="link-button" type="submit">
+                          Retry
                         </button>
                       </form>
                     ) : null}

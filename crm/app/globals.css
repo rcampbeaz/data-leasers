@@ -433,6 +433,8 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
   color: var(--dl-text-2);
 }
 
+.delivery { margin: 0 0 8px; }
+
 .preview-wrap { margin-bottom: 18px; }
 .preview {
   max-width: 520px;

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
+import { publishDue } from '@/lib/social-publish';
 import {
   PLATFORMS,
   charCount,
@@ -420,4 +421,69 @@ export async function updatePost(postId: string, draft: PostDraft): Promise<Crea
 
   refresh();
   redirect('/social?saved=updated');
+}
+
+// Runs the same sweep the cron does, so a post can be tested without waiting for the
+// schedule or hand-running curl on the server.
+export async function publishDueNow() {
+  const path = '/social';
+  const { me } = await requireWriter(path);
+  if (me.role !== 'admin') {
+    redirect(`${path}?error=${encodeURIComponent('Only an admin can run the publisher.')}`);
+  }
+
+  try {
+    await publishDue();
+  } catch (error) {
+    redirect(
+      `${path}?error=${encodeURIComponent(error instanceof Error ? error.message : 'The run failed.')}`,
+    );
+  }
+
+  refresh();
+  redirect(`${path}?saved=ran`);
+}
+
+// A post that ended up failed or partial is not a dead end: the channels that failed go
+// back in the queue with a clean attempt count, and the next sweep sends them again.
+// Channels that already published are left alone, so nothing is posted twice.
+export async function retryPost(postId: string) {
+  const path = '/social';
+  const { supabase, me } = await requireWriter(path);
+
+  const { data: post, error: readError } = await supabase
+    .from('social_posts')
+    .select('id, state')
+    .eq('id', postId)
+    .maybeSingle();
+  if (readError) redirect(`${path}?error=${encodeURIComponent('Could not read the post.')}`);
+  if (!post) redirect(`${path}?error=${encodeURIComponent('That post no longer exists.')}`);
+
+  const state = (post as { state: string }).state;
+  if (state !== 'failed' && state !== 'partial') {
+    redirect(`${path}?error=${encodeURIComponent('Only a post that failed or went out partly can be retried.')}`);
+  }
+
+  const nowIso = new Date().toISOString();
+  const { error: linkError } = await supabase
+    .from('social_post_channels')
+    .update({ status: 'scheduled', error: null, attempts: 0, next_attempt_at: nowIso })
+    .eq('post_id', postId)
+    .eq('status', 'failed');
+  if (linkError) redirect(`${path}?error=${encodeURIComponent('Could not queue the retry.')}`);
+
+  const { error: postError } = await supabase
+    .from('social_posts')
+    .update({
+      state: 'scheduled',
+      scheduled_for: nowIso,
+      failure_notified_at: null,
+      updated_at: nowIso,
+    })
+    .eq('id', postId);
+  if (postError) redirect(`${path}?error=${encodeURIComponent('Could not queue the retry.')}`);
+
+  await audit(me.user_id, 'social_post', postId, 'retried', {});
+  refresh();
+  redirect(`${path}?saved=retried`);
 }

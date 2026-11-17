@@ -60,7 +60,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0007_deals.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0010_social_publish.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
@@ -72,3 +72,16 @@ Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new
 - `MFA_REQUIRED=true` makes the middleware require an authenticator code. Enrol at `/mfa` first, then set the flag, or the account locks itself out.
 - `BOOKING_URL` adds a booking link to a company header.
 - `INBOUND_EMAIL_SECRET` enables `POST /api/inbound/email`, which logs a forwarded email as an activity: send the header `x-inbound-secret` with `{"company_id": "...", "from": "...", "subject": "...", "text": "..."}`.
+
+## Social publishing (0009, 0010)
+- Run `0009_social.sql` and `0010_social_publish.sql`. Add the four accounts on the Channels page before writing anything; the composer needs at least one.
+- `SOCIAL_PROVIDER=stub` sends nothing and records simulated deliveries. The stub reads two markers in the post text, which is how the unhappy paths are tested: `#fail` fails in a way worth retrying, `#fail-hard` fails permanently. Nothing reaches a real platform until the bundle.social adapter is written and `SOCIAL_PROVIDER=bundle` is set.
+- `SOCIAL_ALERT_EMAIL` receives one email per post that ends up failed or partial, using the same `RESEND_API_KEY` and `REMINDER_FROM_EMAIL` as reminders. One message per post, not one per sweep.
+- Schedule the sweep on the VPS. A post publishes within a minute of its time:
+
+```
+* * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" https://app.dataleasers.com/api/social/publish
+```
+
+- The queue has an admin-only **Publish due posts now** button that runs the same sweep, so a test does not need to wait for cron.
+- A channel gets three attempts, two then ten minutes apart. A failure that no retry can fix — a refusal, an inactive channel, a post that now fails the checks — stops at the first attempt and appears in the failure email.
