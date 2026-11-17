@@ -81,7 +81,7 @@ export default async function TemplatesPage({
       {isAdmin ? (
         <section className="panel">
           <h2>Write a template</h2>
-          <form action={saveTemplate} className="stack">
+          <form action={saveTemplate} className="form-grid">
             <label>Name
               <input name="name" required maxLength={200} placeholder="Follow-up — the buyer side" />
             </label>
@@ -92,13 +92,13 @@ export default async function TemplatesPage({
                 ))}
               </select>
             </label>
-            <label>Subject
+            <label className="span-2">Subject
               <input name="subject" required maxLength={300} />
             </label>
-            <label>Body
+            <label className="span-2">Body
               <textarea name="body" required rows={10} maxLength={8000} />
             </label>
-            <label>Notes
+            <label className="span-2">Notes
               <input name="notes" maxLength={1000} placeholder="When to use it, and what to personalise" />
             </label>
             <button className="btn" type="submit">Save template</button>
@@ -141,7 +141,7 @@ export default async function TemplatesPage({
               {isAdmin ? (
                 <details>
                   <summary className="muted small">Edit or delete</summary>
-                  <form action={updateTemplate.bind(null, t.id)} className="stack">
+                  <form action={updateTemplate.bind(null, t.id)} className="form-grid">
                     <label>Name
                       <input name="name" defaultValue={t.name} required maxLength={200} />
                     </label>
@@ -152,13 +152,13 @@ export default async function TemplatesPage({
                         ))}
                       </select>
                     </label>
-                    <label>Subject
+                    <label className="span-2">Subject
                       <input name="subject" defaultValue={t.subject} required maxLength={300} />
                     </label>
-                    <label>Body
+                    <label className="span-2">Body
                       <textarea name="body" defaultValue={t.body} rows={12} required maxLength={8000} />
                     </label>
-                    <label>Notes
+                    <label className="span-2">Notes
                       <input name="notes" defaultValue={t.notes ?? ''} maxLength={1000} />
                     </label>
                     <button className="btn" type="submit">Save changes</button>

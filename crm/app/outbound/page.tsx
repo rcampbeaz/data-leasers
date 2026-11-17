@@ -53,12 +53,12 @@ export default async function OutboundPage({
     await Promise.all([
       supabase
         .from('outreach_contacts')
-        .select('id, email, full_name, country, basis, status, company:companies(name)')
+        .select('id, email, full_name, country, basis, basis_note, source, source_url, status, company:companies(name)')
         .order('created_at', { ascending: false })
         .limit(100),
       supabase
         .from('sequences')
-        .select('id, name, active, steps:sequence_steps(id, position, delay_days, kind, subject, body)')
+        .select('id, name, description, active, steps:sequence_steps(id, position, delay_days, kind, subject, body)')
         .order('created_at', { ascending: false }),
       supabase
         .from('sequence_enrolments')
@@ -81,12 +81,16 @@ export default async function OutboundPage({
     full_name: string | null;
     country: string | null;
     basis: string;
+    basis_note: string | null;
+    source: string | null;
+    source_url: string | null;
     status: string;
     company: Named;
   }[];
   const sequenceRows = (sequences ?? []) as unknown as {
     id: string;
     name: string;
+    description: string | null;
     active: boolean;
     steps: {
       id: string;
@@ -165,7 +169,7 @@ export default async function OutboundPage({
             and the UK allows corporate subscribers. The guard refuses a basis that is not lawful for
             the country on the record.
           </p>
-          <form action={addContact} className="stack">
+          <form action={addContact} className="form-grid">
             <label>Email
               <input type="email" name="email" required maxLength={320} />
             </label>
@@ -180,6 +184,12 @@ export default async function OutboundPage({
                 {SUPPORTED_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </label>
+            <label>Linked company (optional)
+              <select name="companyId" defaultValue="">
+                <option value="">None</option>
+                {companyRows.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
             <label>Lawful basis
               <select name="basis" required defaultValue="opt_out_only">
                 {(Object.keys(BASIS_LABELS) as Basis[]).map((b) => (
@@ -187,17 +197,14 @@ export default async function OutboundPage({
                 ))}
               </select>
             </label>
-            <label>Basis note
+            <label className="span-2">Basis note
               <input name="basisNote" maxLength={1000} placeholder="Where the address was published, or how consent was given" />
+            </label>
+            <label>Source
+              <input name="source" maxLength={200} placeholder="Firm website team page" />
             </label>
             <label>Source URL
               <input name="sourceUrl" maxLength={1000} placeholder="https://firm.example/team" />
-            </label>
-            <label>Linked company (optional)
-              <select name="companyId" defaultValue="">
-                <option value="">None</option>
-                {companyRows.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
             </label>
             <button className="btn" type="submit">Add contact</button>
           </form>
@@ -217,7 +224,18 @@ export default async function OutboundPage({
             <tbody>
               {contactRows.map((c) => (
                 <tr key={c.id}>
-                  <td>{c.email}</td>
+                  <td>
+                    {c.email}
+                    {c.source || c.source_url ? (
+                      <div className="muted small">
+                        {c.source ?? 'Source'}
+                        {c.source_url ? (
+                          <> · <a href={c.source_url} target="_blank" rel="noreferrer">Open</a></>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {c.basis_note ? <div className="muted small">{c.basis_note}</div> : null}
+                  </td>
                   <td>{c.company ? label(c.company) : '—'}</td>
                   <td>{c.country ?? '—'}</td>
                   <td>{BASIS_LABELS[c.basis as Basis]?.split('(')[0] ?? c.basis}</td>
@@ -231,10 +249,20 @@ export default async function OutboundPage({
 
       <section className="panel">
         <h2>Sequences</h2>
+        {isAdmin ? (
+          <form action={createSequence} className="inline-form">
+            <input name="name" placeholder="Sequence name" aria-label="Sequence name" required maxLength={200} />
+            <input name="description" placeholder="What it is for" aria-label="What the sequence is for" maxLength={1000} />
+            <button className="btn" type="submit">Create sequence</button>
+          </form>
+        ) : null}
         {sequenceRows.length === 0 ? <p className="muted">No sequences yet.</p> : null}
         {sequenceRows.map((s) => (
           <article key={s.id} className="panel">
-            <header><strong>{s.name}</strong> <span className="muted">{s.active ? 'active' : 'off'}</span></header>
+            <header>
+              <strong>{s.name}</strong> <span className="muted">{s.active ? 'active' : 'off'}</span>
+              {s.description ? <div className="muted small">{s.description}</div> : null}
+            </header>
             <ol className="muted small">
               {(s.steps ?? []).sort((a, b) => a.position - b.position).map((step) => (
                 <li key={step.id}>
@@ -245,7 +273,7 @@ export default async function OutboundPage({
                   {isAdmin ? (
                     <details>
                       <summary className="small">Edit or delete</summary>
-                      <form action={updateStep.bind(null, step.id)} className="stack">
+                      <form action={updateStep.bind(null, step.id)} className="form-grid">
                         <label>Type
                           <select name="kind" defaultValue={step.kind}>
                             <option value="email">Email</option>
@@ -255,10 +283,10 @@ export default async function OutboundPage({
                         <label>Delay in days
                           <input type="number" name="delayDays" min={0} max={60} defaultValue={step.delay_days} />
                         </label>
-                        <label>Subject
+                        <label className="span-2">Subject
                           <input name="subject" defaultValue={step.subject} required maxLength={300} />
                         </label>
-                        <label>Body (ignored by a LinkedIn task)
+                        <label className="span-2">Body (ignored by a LinkedIn task)
                           <textarea name="body" defaultValue={step.body ?? ''} rows={6} maxLength={8000} />
                         </label>
                         <button className="btn" type="submit">Save step</button>
@@ -277,9 +305,30 @@ export default async function OutboundPage({
                 </li>
               ))}
             </ol>
+            {isAdmin ? (
+              <form action={addStep.bind(null, s.id)} className="form-grid">
+                <label>Type
+                  <select name="kind" defaultValue="email">
+                    <option value="email">Email</option>
+                    <option value="linkedin_task">LinkedIn task (creates a task, sends nothing)</option>
+                  </select>
+                </label>
+                <label>Delay in days
+                  <input type="number" name="delayDays" min={0} max={60} defaultValue={0} />
+                </label>
+                <label className="span-2">Subject
+                  <input name="subject" required maxLength={300} />
+                </label>
+                <label className="span-2">Body (required for email, optional for a task)
+                  <textarea name="body" rows={5} maxLength={8000} />
+                </label>
+                <button className="btn" type="submit">Add step</button>
+              </form>
+            ) : null}
+
             {isAdmin && templateRows.length > 0 ? (
               <form action={addStepFromTemplate.bind(null, s.id)} className="inline-form">
-                <select name="templateId" required defaultValue="">
+                <select name="templateId" aria-label="Template" required defaultValue="">
                   <option value="">Add from a template…</option>
                   {templateRows.map((t) => (
                     <option key={t.id} value={t.id}>{t.name}</option>
@@ -298,50 +347,22 @@ export default async function OutboundPage({
                 <button className="btn" type="submit">Add step from template</button>
               </form>
             ) : null}
-
-            {isAdmin ? (
-              <form action={addStep.bind(null, s.id)} className="stack">
-                <label>Type
-                  <select name="kind" defaultValue="email">
-                    <option value="email">Email</option>
-                    <option value="linkedin_task">LinkedIn task (creates a task, sends nothing)</option>
-                  </select>
-                </label>
-                <label>Delay in days
-                  <input type="number" name="delayDays" min={0} max={60} defaultValue={0} />
-                </label>
-                <label>Subject
-                  <input name="subject" required maxLength={300} />
-                </label>
-                <label>Body (required for email, optional for a task)
-                  <textarea name="body" rows={5} maxLength={8000} />
-                </label>
-                <button className="btn" type="submit">Add step</button>
-              </form>
-            ) : null}
           </article>
         ))}
 
-        {isAdmin ? (
-          <form action={createSequence} className="inline-form">
-            <input name="name" placeholder="Sequence name" aria-label="Sequence name" required maxLength={200} />
-            <input name="description" placeholder="What it is for" aria-label="What the sequence is for" maxLength={1000} />
-            <button className="btn" type="submit">Create sequence</button>
-          </form>
-        ) : null}
       </section>
 
       {canWrite ? (
         <section className="panel">
           <h2>Enrol a contact</h2>
           <form action={enrolContact} className="inline-form">
-            <select name="contactId" required defaultValue="">
+            <select name="contactId" aria-label="Contact" required defaultValue="">
               <option value="">Choose a contact</option>
               {contactRows.filter((c) => c.status === 'active').map((c) => (
                 <option key={c.id} value={c.id}>{c.email}</option>
               ))}
             </select>
-            <select name="sequenceId" required defaultValue="">
+            <select name="sequenceId" aria-label="Sequence" required defaultValue="">
               <option value="">Choose a sequence</option>
               {sequenceRows.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>

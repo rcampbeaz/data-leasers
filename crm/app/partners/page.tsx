@@ -14,6 +14,7 @@ type Partner = {
   organisation: string | null;
   fee_rate: number;
   fee_floor: number;
+  notes: string | null;
   erased_at?: string | null;
 };
 
@@ -27,6 +28,7 @@ type Referral = {
   status: string;
   fee_amount: number | null;
   paid_on: string | null;
+  notes: string | null;
   // Optional because 0014 and 0015 may not have been run yet; the ledger still renders.
   chase_task_id?: string | null;
   escalation_task_id?: string | null;
@@ -206,6 +208,7 @@ export default async function PartnersPage({
                       {partner.name}
                       {partner.organisation ? <span className="muted"> · {partner.organisation}</span> : null}
                       {partner.erased_at ? <span className="muted"> · details erased on request</span> : null}
+                      {partner.notes ? <div className="muted small">{partner.notes}</div> : null}
                     </td>
                     <td>{partner.email ?? '-'}</td>
                     <td>
@@ -251,6 +254,10 @@ export default async function PartnersPage({
               </select>
             </label>
             <label>
+              Company name
+              <input name="companyName" required maxLength={200} />
+            </label>
+            <label>
               Company on file (optional)
               <select name="companyId" defaultValue="">
                 <option value="">Not in the CRM yet</option>
@@ -260,10 +267,6 @@ export default async function PartnersPage({
                   </option>
                 ))}
               </select>
-            </label>
-            <label>
-              Company name
-              <input name="companyName" required maxLength={200} />
             </label>
             <label>
               Registered on
@@ -381,6 +384,7 @@ export default async function PartnersPage({
                       ) : (
                         referral.company_name
                       )}
+                      {referral.notes ? <div className="muted small">{referral.notes}</div> : null}
                     </td>
                     <td>{partnerName.get(referral.partner_id) ?? 'Unknown'}</td>
                     <td>{calendarDate(referral.registered_on)}</td>
@@ -397,7 +401,12 @@ export default async function PartnersPage({
                     </td>
                     <td>
                       {referral.fee_amount ? (
-                        money(referral.fee_amount)
+                        <>
+                          {money(referral.fee_amount)}
+                          {referral.paid_on ? (
+                            <div className="muted small">paid {calendarDate(referral.paid_on)}</div>
+                          ) : null}
+                        </>
                       ) : estimate ? (
                         <span className="muted">est. {money(estimate)}</span>
                       ) : (
@@ -416,6 +425,7 @@ export default async function PartnersPage({
                             ))}
                           </select>
                           <input name="feeAmount" placeholder="Fee" aria-label="Fee amount" inputMode="decimal" maxLength={12} />
+                          <input type="date" name="paidOn" aria-label="Paid on" defaultValue={referral.paid_on ?? ''} />
                           <button className="btn" type="submit">
                             Update
                           </button>

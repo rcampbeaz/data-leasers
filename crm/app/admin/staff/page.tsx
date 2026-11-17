@@ -66,7 +66,7 @@ export default async function StaffPage({
           <form action={addStaff} className="inline-form">
             <input name="fullName" placeholder="Full name" aria-label="Full name" required />
             <input name="email" type="email" placeholder="Work email" aria-label="Work email" required />
-            <select name="role" defaultValue="introducer">
+            <select name="role" aria-label="Role" defaultValue="introducer">
               {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
                 <option key={r} value={r}>{ROLE_LABELS[r]}</option>
               ))}
@@ -122,12 +122,6 @@ export default async function StaffPage({
                   <label>Job title<input name="jobTitle" defaultValue={p.job_title ?? ''} maxLength={200} /></label>
                   <label>Email<input name="email" type="email" defaultValue={p.email ?? ''} maxLength={320} /></label>
                   <label>Phone<input name="phone" defaultValue={p.phone ?? ''} maxLength={40} /></label>
-                  <label>Address line 1<input name="addressLine1" defaultValue={p.address_line1 ?? ''} maxLength={200} /></label>
-                  <label>Address line 2<input name="addressLine2" defaultValue={p.address_line2 ?? ''} maxLength={200} /></label>
-                  <label>City<input name="city" defaultValue={p.city ?? ''} maxLength={100} /></label>
-                  <label>Region / state<input name="region" defaultValue={p.region ?? ''} maxLength={100} /></label>
-                  <label>Postcode / ZIP<input name="postcode" defaultValue={p.postcode ?? ''} maxLength={20} /></label>
-                  <label>Country<input name="country" defaultValue={p.country ?? ''} maxLength={100} /></label>
                   <label>Role
                     <select name="role" defaultValue={r.role} disabled={isMe}>
                       {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
@@ -136,6 +130,12 @@ export default async function StaffPage({
                     </select>
                     {isMe ? <input type="hidden" name="role" value={r.role} /> : null}
                   </label>
+                  <label>Address line 1<input name="addressLine1" defaultValue={p.address_line1 ?? ''} maxLength={200} /></label>
+                  <label>Address line 2<input name="addressLine2" defaultValue={p.address_line2 ?? ''} maxLength={200} /></label>
+                  <label>City<input name="city" defaultValue={p.city ?? ''} maxLength={100} /></label>
+                  <label>Region / state<input name="region" defaultValue={p.region ?? ''} maxLength={100} /></label>
+                  <label>Postcode / ZIP<input name="postcode" defaultValue={p.postcode ?? ''} maxLength={20} /></label>
+                  <label>Country<input name="country" defaultValue={p.country ?? ''} maxLength={100} /></label>
                   <label className="span-2">Notes<textarea name="notes" rows={3} defaultValue={p.notes ?? ''} maxLength={2000} /></label>
                   <button className="btn" type="submit">Save details</button>
                 </form>
