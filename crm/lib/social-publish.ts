@@ -1,3 +1,4 @@
+import { embeddedRows } from './embed';
 import { createIntakeClient } from './supabase';
 import { PLATFORM_LABELS, postErrors, type Platform } from './social';
 import { getProvider, type PublishResult, type SocialProvider } from './social-provider';
@@ -39,7 +40,9 @@ type PostRow = {
   media_url: string | null;
   media_alt: string | null;
   failure_notified_at: string | null;
-  social_post_channels: LinkRow[] | null;
+  // Typed for both shapes: reads go through embeddedRows(). A single unwrapped row would
+  // otherwise throw inside the loop rather than merely misreport.
+  social_post_channels: LinkRow[] | LinkRow | null;
 };
 
 export type RunReport = {
@@ -83,11 +86,14 @@ export async function publishDue(now: Date = new Date()): Promise<RunReport> {
   const ids = (
     (candidates ?? []) as unknown as {
       id: string;
-      social_post_channels: { next_attempt_at: string | null }[] | null;
+      social_post_channels:
+        | { next_attempt_at: string | null }[]
+        | { next_attempt_at: string | null }
+        | null;
     }[]
   )
     .filter((post) =>
-      (post.social_post_channels ?? []).every(
+      embeddedRows<{ next_attempt_at: string | null }>(post.social_post_channels).every(
         (link) => !link.next_attempt_at || Date.parse(link.next_attempt_at) <= now.getTime(),
       ),
     )
@@ -174,7 +180,7 @@ async function publishPost(
   post: PostRow,
   now: Date,
 ): Promise<{ state: string; published: number; retrying: number; failed: number; emailed: boolean }> {
-  const links = post.social_post_channels ?? [];
+  const links = embeddedRows<LinkRow>(post.social_post_channels);
   const nowIso = now.toISOString();
   const errors: string[] = [];
   let published = 0;

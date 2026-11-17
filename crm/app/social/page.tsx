@@ -9,6 +9,7 @@ import {
   reschedulePost,
   retryPost,
 } from '@/lib/social-actions';
+import { embeddedRows } from '@/lib/embed';
 import { PLATFORM_LABELS, phoenixLabel, utcToPhoenixInput, type Platform } from '@/lib/social';
 
 type ChannelLink = {
@@ -25,7 +26,8 @@ type QueueRow = {
   scheduled_for: string | null;
   published_at: string | null;
   updated_at: string | null;
-  social_post_channels: ChannelLink[] | null;
+  // Typed for both shapes: readers go through embeddedRows().
+  social_post_channels: ChannelLink[] | ChannelLink | null;
 };
 
 const SAVED: Record<string, string> = {
@@ -44,7 +46,7 @@ const FIELDS =
   'id, body, state, scheduled_for, published_at, updated_at, social_post_channels(status, error, remote_id, social_channels(platform, handle))';
 
 function Channels({ row }: { row: QueueRow }) {
-  const channels = row.social_post_channels ?? [];
+  const channels = embeddedRows<ChannelLink>(row.social_post_channels);
   if (channels.length === 0) return <span className="muted">None</span>;
   return (
     <>
@@ -79,7 +81,7 @@ function Move({ row }: { row: QueueRow }) {
 // What each channel did, which is the only place a part-failure is visible: the post's own
 // state says "partial", and this says which platform is the reason.
 function Delivery({ row }: { row: QueueRow }) {
-  const links = row.social_post_channels ?? [];
+  const links = embeddedRows<ChannelLink>(row.social_post_channels);
   if (links.length === 0) return <span className="muted">None</span>;
   return (
     <>

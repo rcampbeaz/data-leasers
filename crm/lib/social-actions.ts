@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
+import { embeddedRows } from '@/lib/embed';
 import { publishDue } from '@/lib/social-publish';
 import {
   PLATFORMS,
@@ -246,10 +247,14 @@ export async function reschedulePost(postId: string, formData: FormData) {
     media_url: string | null;
     social_post_channels:
       | { body: string | null; social_channels: { platform: string; active: boolean } | null }[]
+      | { body: string | null; social_channels: { platform: string; active: boolean } | null }
       | null;
   };
 
-  const links = stored.social_post_channels ?? [];
+  const links = embeddedRows<{
+    body: string | null;
+    social_channels: { platform: string; active: boolean } | null;
+  }>(stored.social_post_channels);
   if (links.length === 0) {
     redirect(
       `${path}?error=${encodeURIComponent('That post has no channels, so there is nothing to publish.')}`,

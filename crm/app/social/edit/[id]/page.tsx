@@ -2,8 +2,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
+import { embeddedRows } from '@/lib/embed';
 import { PLATFORM_LABELS, utcToPhoenixInput, type Platform } from '@/lib/social';
 import Composer, { type ChannelOption, type ComposerPost } from '../../compose/composer';
+
+type StoredLink = {
+  channel_id: string;
+  body: string | null;
+  social_channels: { platform: string; handle: string; active: boolean } | null;
+};
 
 type StoredPost = {
   id: string;
@@ -14,13 +21,8 @@ type StoredPost = {
   media_id: string | null;
   state: string;
   scheduled_for: string | null;
-  social_post_channels:
-    | {
-        channel_id: string;
-        body: string | null;
-        social_channels: { platform: string; handle: string; active: boolean } | null;
-      }[]
-    | null;
+  // Typed for both shapes: reads go through embeddedRows().
+  social_post_channels: StoredLink[] | StoredLink | null;
   social_media: { id: string; alt_text: string; rights_note: string } | null;
 };
 
@@ -70,7 +72,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
 
   const channels = (channelRows ?? []) as ChannelOption[];
   const offered = new Set(channels.map((channel) => channel.id));
-  const storedLinks = stored.social_post_channels ?? [];
+  const storedLinks = embeddedRows<StoredLink>(stored.social_post_channels);
 
   // Each link arrives with its channel's platform, handle and active flag, so the notice
   // below needs no second lookup. A post keeps its channel rows when a channel is
