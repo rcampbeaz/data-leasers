@@ -217,12 +217,18 @@ export default async function MarketingPage({
 
   // A row rather than a boolean, so the banner can quote the actual error — "it is failing" with no
   // reason is the kind of notice people learn to scroll past.
-  const sweepStateValue = sweepState?.value as { error?: unknown; at?: unknown } | null | undefined;
+  const sweepStateValue = sweepState?.value as
+    | { error?: unknown; at?: unknown; degraded?: unknown }
+    | null
+    | undefined;
   const sweepFailure =
     sweepStateValue && typeof sweepStateValue.error === 'string'
       ? {
           error: sweepStateValue.error,
           at: typeof sweepStateValue.at === 'string' ? sweepStateValue.at : null,
+          // The sweep is running on the older signature: held posts are still stopped, so the queue's
+          // note stays true and only the banner changes.
+          degraded: sweepStateValue.degraded === true,
         }
       : null;
 
@@ -390,9 +396,11 @@ export default async function MarketingPage({
         </p>
       ) : null}
       {sweepFailure ? (
-        <p className="notice blocked">
-          The sweep that stops posts whose publishing run died is failing, so a held post stays held
-          until somebody looks at it — it will not clear itself. Publishing itself is unaffected.
+        <p className={sweepFailure.degraded ? 'notice review' : 'notice blocked'}>
+          {sweepFailure.degraded
+            ? 'The database is behind this code. The sweep is running and still stops posts whose publishing run died, but the migration that lets it clear this notice has not been applied. Run ' +
+              '0020_sweep_clears_its_own_warning.sql; this notice goes away on the next publishing run.'
+            : 'The sweep that stops posts whose publishing run died is failing, so a held post stays held until somebody looks at it — it will not clear itself. Publishing itself is unaffected.'}
           {sweepFailure.at
             ? ` Last failure ${new Date(sweepFailure.at).toLocaleString('en-US', {
                 timeZone: 'America/Phoenix',
@@ -751,7 +759,7 @@ export default async function MarketingPage({
                       {p.status === 'publishing' ? (
                         <span className="muted small">
                           {' '}
-                          {publishHold(claimsById.get(p.id), Boolean(sweepFailure))}
+                          {publishHold(claimsById.get(p.id), Boolean(sweepFailure && !sweepFailure.degraded))}
                         </span>
                       ) : null}
                       {retryBlocked ? (

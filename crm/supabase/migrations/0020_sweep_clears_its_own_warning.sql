@@ -1,6 +1,11 @@
 -- dataleasers CRM: the sweep clears the console's record of its own failure. Run after
 -- 0019_social_claim_recovery.sql.
 --
+-- Order does not matter here. Applied before the code, nothing calls the widened signature yet, and the
+-- old two-argument form is simply gone. Applied after the code, the publisher's widened call is rejected
+-- until this file runs, so it falls back to the two-argument form: held posts are still stopped, and the
+-- console shows that the database is behind until the next run after this migration clears it.
+--
 -- The publisher writes a failed sweep into app_settings so the Marketing page can show it. Clearing that
 -- record is done here rather than in the publisher, because only this function reaching its end proves
 -- the sweep works. A tick that succeeds then costs no extra statement and no extra read, and the delete

@@ -11,6 +11,45 @@ import { alertAbandonedPosts, alertStoppedPost, recordSweepFailure } from '@/lib
 
 export const dynamic = 'force-dynamic';
 
+// PostgREST answers a function it cannot find by that name and those arguments with PGRST202. Anything
+// else — a permission error, a statement that failed — is a real sweep failure and is reported as one.
+function isMissingFunction(error: { code?: string; message: string }): boolean {
+  return error.code === 'PGRST202' || /could not find the function/i.test(error.message);
+}
+
+// 0020 widened the sweep's signature so the sweep can clear the console's warning itself. A database
+// that has not had 0020 rejects the widened call outright, and a sweep that stops running is far worse
+// than the extra statement that used to clear the warning, so fall back to the two-argument form: held
+// posts are still stopped either way, and the caller records that the database is behind.
+async function sweepHeldPosts(admin: ReturnType<typeof createIntakeClient>): Promise<{
+  data: unknown[] | null;
+  error: { code?: string; message: string } | null;
+  sweepSignatureMissing: string | null;
+}> {
+  const widened = await admin.rpc('sweep_stale_social_posts', {
+    // The same number the queue's note quotes, so the two cannot disagree.
+    stale_after_minutes: SWEEP_AFTER_MINUTES,
+    // Clearing the warning is the sweep's own job: only the sweep finishing proves it works, and doing
+    // it there costs a healthy tick no extra statement and no read.
+    clear_state_key: SWEEP_STATE_KEY,
+  });
+  if (!widened.error) {
+    return { data: widened.data as unknown[] | null, error: null, sweepSignatureMissing: null };
+  }
+  if (!isMissingFunction(widened.error)) {
+    return { data: null, error: widened.error, sweepSignatureMissing: null };
+  }
+
+  const narrow = await admin.rpc('sweep_stale_social_posts', {
+    stale_after_minutes: SWEEP_AFTER_MINUTES,
+  });
+  return {
+    data: (narrow.data ?? null) as unknown[] | null,
+    error: narrow.error ?? null,
+    sweepSignatureMissing: narrow.error ? null : widened.error.message,
+  };
+}
+
 // The publisher. Called by cron every few minutes with CRON_SECRET, never from a page.
 // It claims due posts atomically, publishes each one, and records exactly what happened.
 export async function POST(request: Request) {
@@ -41,15 +80,14 @@ export async function POST(request: Request) {
   // Anything a dead run abandoned stops here rather than being sent again. The sweep has already put
   // those rows in needs_manual; this announces them, because the post may be live on the channel and
   // only a person can check. A sweep that fails is reported in the response and recorded for the
-  // console, but does not stop publishing: before 0019 is applied the rest of the queue should still
-  // go out, and a broken sweep is no reason to hold posts that are fine.
-  const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts', {
-    // The same number the queue's note quotes, so the two cannot disagree.
-    stale_after_minutes: SWEEP_AFTER_MINUTES,
-    // Clearing the warning is the sweep's own job: only the sweep finishing proves it works, and doing
-    // it there costs a healthy tick no extra statement and no read.
-    clear_state_key: SWEEP_STATE_KEY,
-  });
+  // console, but does not stop publishing: the rest of the queue still goes out, and a sweep problem
+  // is no reason to hold posts that are fine. A database behind the code falls back rather than
+  // failing, so the sweep keeps running and only the warning says the migration is missing.
+  const {
+    data: swept,
+    error: sweepError,
+    sweepSignatureMissing,
+  } = await sweepHeldPosts(admin);
 
   // Where the console can see it. The response below is read by whatever calls this route on a timer,
   // and nobody watches that; the Marketing page is where a person looks, and where the queue's note
@@ -58,6 +96,10 @@ export async function POST(request: Request) {
   // itself in the same transaction.
   if (sweepError) {
     await recordSweepFailure(sweepError.message);
+  } else if (sweepSignatureMissing) {
+    // The sweep ran, on the older signature. Nothing is held because of it, but the database is behind
+    // the code and the warning it is leaving cannot clear itself until 0020 is applied.
+    await recordSweepFailure(sweepSignatureMissing, { degraded: true });
   }
 
   const sweptResults: { id: string; outcome: string; detail?: string; alert?: string }[] = [];
