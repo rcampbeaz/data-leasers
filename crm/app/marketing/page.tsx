@@ -713,7 +713,13 @@ export default async function MarketingPage({
             ) : null}
             {canWrite ? (
               <form action={attachImage.bind(null, d.id)} className="inline-form">
-                <input type="file" name="image" accept="image/png,image/jpeg,image/webp" required />
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/png,image/jpeg,image/webp"
+                  aria-label="Image to attach"
+                  required
+                />
                 <button className="btn" type="submit">Attach image</button>
               </form>
             ) : null}
