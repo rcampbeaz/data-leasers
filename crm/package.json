@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "audit:routes": "node scripts/audit-routes.mjs",
+    "check": "npm run check:migrations && npm run check:dates",
     "check:migrations": "node scripts/check-migrations.mjs",
     "check:dates": "node scripts/check-dates.mjs",
     "preflight": "node scripts/preflight.mjs",

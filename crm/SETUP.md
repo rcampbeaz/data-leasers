@@ -135,6 +135,20 @@ date cannot quietly undo 0021 and 0022. A month or a year taken from UTC is coun
 run rather than failed: those affect keys, chart labels and a company's age, not a stored day. An
 `<input type="date">` is exempt, because that control's value is `YYYY-MM-DD` by definition.
 
+### Before a deploy
+
+`npm run check` runs both — the migration series first, then the clock scan — and stops at whichever
+fails. Run it before a deploy: neither needs credentials or a network, so it is the same command on a
+laptop and in CI. Which half matters depends on what you are shipping:
+
+- **Pasting SQL into the Supabase SQL Editor:** `check:migrations` is the one that has to be green; it
+  is the only thing that proves the files still apply in order and still apply twice.
+- **Shipping code under `lib/` or `app/`:** `check:dates` is the one that has to be green; a route that
+  builds a day from UTC or prints a stored date raw would pass a type check and a build.
+
+`npm run preflight` is a different check, and the only one that needs the project and the environment:
+run it on the server after a deploy.
+
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
 - **Offers and agreements** are recorded on the company page. An agreement stores the licence end, the exclusivity end, and a deletion date 120 days after delivery.
