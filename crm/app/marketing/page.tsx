@@ -1,6 +1,6 @@
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
-import { CHANNELS, channelSpec, providerConfigured } from '@/lib/social';
+import { CHANNELS, channelSpec, providerConfigured, retryAdvice, retryRoute } from '@/lib/social';
 import {
   addChannel,
   attachImage,
@@ -53,18 +53,25 @@ type PostRow = {
   permalink: string | null;
   last_error: string | null;
   attempts: number;
-  channel: { platform: string; display_name: string } | null;
+  channel: { platform: string; display_name: string; status: string } | null;
 };
 
 // A joined channel comes back as an object or a one-item array depending on the
 // relationship, so the label is read defensively rather than assumed.
-function channelRow(channel: unknown): { platform: string; display_name: string } | null {
+function channelRow(
+  channel: unknown,
+): { platform: string; display_name: string; status: string } | null {
   const row = (Array.isArray(channel) ? channel[0] : channel) as
-    | { platform?: string; display_name?: string }
+    | { platform?: string; display_name?: string; status?: string }
     | null
     | undefined;
   if (!row?.platform) return null;
-  return { platform: row.platform, display_name: row.display_name ?? row.platform };
+  return {
+    platform: row.platform,
+    display_name: row.display_name ?? row.platform,
+    // Read for retryRoute, not for display: whether Retry is offered depends on it.
+    status: row.status ?? 'missing',
+  };
 }
 
 function channelLabel(channel: unknown): string {
@@ -126,7 +133,7 @@ export default async function MarketingPage({
       supabase
         .from('social_posts')
         .select(
-          'id, status, scheduled_for, published_at, body, permalink, last_error, attempts, channel:social_channels(platform, display_name)',
+          'id, status, scheduled_for, published_at, body, permalink, last_error, attempts, channel:social_channels(platform, display_name, status)',
         )
         .gte('scheduled_for', windowStart)
         .order('scheduled_for', { ascending: false })
@@ -612,6 +619,7 @@ export default async function MarketingPage({
             <tbody>
               {postRows.slice(0, 40).map((p) => {
                 const when = new Date(new Date(p.scheduled_for).getTime() - 7 * 60 * 60 * 1000);
+                const channel = channelRow(p.channel);
                 return (
                   <tr key={p.id}>
                     <td>{when.toISOString().slice(0, 16).replace('T', ' ')}</td>
@@ -627,9 +635,22 @@ export default async function MarketingPage({
                       <div className="cell-actions">
                         {canWrite &&
                         (p.status === 'failed' || p.status === 'needs_manual') ? (
-                          <form action={retryPost.bind(null, p.id)}>
-                            <button className="btn" type="submit">Retry</button>
-                          </form>
+                          // The same check retryPost refuses on, so the button cannot offer a send the
+                          // action will answer with just the advice sentence.
+                          retryRoute(channel?.status ?? null) === 'retry' ? (
+                            <form action={retryPost.bind(null, p.id)}>
+                              <button className="btn" type="submit">Retry</button>
+                            </form>
+                          ) : (
+                            <button
+                              className="btn"
+                              type="button"
+                              disabled
+                              title={retryAdvice(channel?.status ?? null)}
+                            >
+                              Retry
+                            </button>
+                          )
                         ) : null}
                         {canWrite &&
                         (p.status === 'scheduled' ||
