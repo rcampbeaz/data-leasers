@@ -673,6 +673,14 @@ export default async function MarketingPage({
               {postRows.slice(0, 40).map((p) => {
                 const when = new Date(new Date(p.scheduled_for).getTime() - 7 * 60 * 60 * 1000);
                 const channel = channelRow(p.channel);
+                const retryAllowed = retryRoute(channel?.status ?? null) === 'retry';
+                // Why Retry is not on offer, in the row itself: a tooltip is not reachable by
+                // keyboard or touch. Null unless the button is actually disabled, so rows that can be
+                // retried stay as they were.
+                const retryBlocked =
+                  (p.status === 'failed' || p.status === 'needs_manual') && !retryAllowed
+                    ? retryAdvice(channel?.status ?? null)
+                    : null;
                 return (
                   <tr key={p.id}>
                     <td>{when.toISOString().slice(0, 16).replace('T', ' ')}</td>
@@ -687,7 +695,12 @@ export default async function MarketingPage({
                       {p.status === 'publishing' ? (
                         <span className="muted small"> {publishHold(claimsById.get(p.id))}</span>
                       ) : null}
-                      {!p.permalink && !p.last_error && p.status !== 'publishing' ? '-' : null}
+                      {retryBlocked ? (
+                        <span className="muted small"> {retryBlocked}</span>
+                      ) : null}
+                      {!p.permalink && !p.last_error && p.status !== 'publishing' && !retryBlocked
+                        ? '-'
+                        : null}
                     </td>
                     <td>
                       <div className="cell-actions">
@@ -695,7 +708,7 @@ export default async function MarketingPage({
                         (p.status === 'failed' || p.status === 'needs_manual') ? (
                           // The same check retryPost refuses on, so the button cannot offer a send the
                           // action will answer with just the advice sentence.
-                          retryRoute(channel?.status ?? null) === 'retry' ? (
+                          retryAllowed ? (
                             <form action={retryPost.bind(null, p.id)}>
                               <button className="btn" type="submit">Retry</button>
                             </form>
