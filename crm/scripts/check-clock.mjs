@@ -20,10 +20,29 @@ import ts from 'typescript';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
+const SOURCE = resolve(HERE, '..', 'lib', 'time.ts');
+const source = readFileSync(SOURCE, 'utf8');
+
 // The clock is TypeScript and this runs without a build step, so lib/time.ts is transpiled with the
-// TypeScript that is already in devDependencies and imported as a module. lib/time.ts imports nothing —
-// it is the leaf everything else builds on — which is what lets the copy live outside the project.
-const source = readFileSync(resolve(HERE, '..', 'lib', 'time.ts'), 'utf8');
+// TypeScript that is already in devDependencies and imported as a module. The copy is written to a temp
+// directory, which is only possible because lib/time.ts stands alone: a relative import would point at
+// nothing from there. So the assumption is asserted rather than hoped for — an edit that gives the clock
+// a dependency is stopped here, with a sentence saying why, instead of failing later on a /tmp path.
+const DEPENDENCY = /^\s*import\s*[\s{*'"]|^\s*export\s+(?:type\s+)?(?:\*|\{[^}]*\})\s+from\s*['"]|\bimport\s*\(|\brequire\s*\(/m;
+const dependency = source.match(DEPENDENCY);
+if (dependency) {
+  const line = source.slice(0, dependency.index).split('\n').length;
+  console.error('lib/time.ts is no longer standalone, so check:clock cannot load it.\n');
+  console.error(`  lib/time.ts:${line}  ${source.split('\n')[line - 1].trim()}`);
+  console.error('');
+  console.error('This check transpiles the clock into a temp directory and imports the copy from there, so');
+  console.error('a module it imports — a relative file, a type re-export, a require — has nothing to resolve');
+  console.error('against. The clock is the leaf every page builds on; keep it that way, or change how this');
+  console.error('check loads it (the copy has to sit where its imports resolve, e.g. transpiled into the');
+  console.error('project with the rest of lib/ instead of into a temp directory).');
+  process.exit(1);
+}
+
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
@@ -31,10 +50,19 @@ const scratch = mkdtempSync(join(tmpdir(), 'clock-check-'));
 const copy = join(scratch, 'time.mjs');
 writeFileSync(copy, outputText);
 let clock;
+let loadError = null;
 try {
   clock = await import(pathToFileURL(copy).href);
-} finally {
-  rmSync(scratch, { recursive: true, force: true });
+} catch (error) {
+  loadError = error;
+}
+rmSync(scratch, { recursive: true, force: true });
+if (loadError) {
+  console.error('check:clock could not load its copy of lib/time.ts.\n');
+  console.error('The copy is imported from a temp directory, so anything the file needs at load time — an');
+  console.error('import, a package, an environment variable read while the module initialises — is not there.');
+  console.error(`Fix the clock or this check's loader. The loader reported:\n\n  ${loadError.message}\n`);
+  process.exit(1);
 }
 
 const {

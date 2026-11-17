@@ -147,7 +147,9 @@ already rolled over; the last seven hours of a month and of a year; a stored dat
 the `daysLeft` nulls; and the datetime-local round trip through the schedule form, including 31
 February, which has to be refused. It prints one line when they all hold, and otherwise the value it
 expected beside the one it got, so a day or an hour that moves fails here rather than in a page nobody
-opened.
+opened. Because the copy it loads lives in a temp directory, it also refuses a `lib/time.ts` that has
+picked up an import, saying which line and why — the clock is meant to be the leaf everything else
+builds on, so nothing would resolve from there.
 
 ### Before a deploy
 
