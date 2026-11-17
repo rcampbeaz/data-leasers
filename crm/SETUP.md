@@ -165,10 +165,21 @@ opened. Because the copy it loads lives in a temp directory, it also refuses a `
 picked up an import, saying which line and why — the clock is meant to be the leaf everything else
 builds on, so nothing would resolve from there.
 
+### Checking the code against the schema
+
+`npm run check:schema` reads the tables and columns the migrations create and compares them with every
+`.from('table').select('a, b')` in `lib/` and `app/`, plus every `.rpc('name')` against the functions the
+migrations define. A page that asks for a column no migration creates fails at runtime with a PostgREST
+error, which after the schema fallback can look like a degraded database rather than a missing column;
+this catches it before a deploy and needs no project. Nested relations like `buyers(name)` are skipped
+because they name another table's columns, and aliases, wildcards and JSON paths are skipped because they
+are not plain column names; writes (`insert`/`update` objects) are not judged at all, so this covers the
+commonest drift rather than being a schema type system.
+
 ### Before a deploy
 
-`npm run check` runs all three — the migration series, the clock scan, then the clock's own values —
-and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
+`npm run check` runs all five — the migration record, the series itself, the date scan, the schema
+check, the clock's values, then the money table — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
 laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
 than a laptop. Which part matters depends on what you are shipping:
@@ -180,6 +191,10 @@ than a laptop. Which part matters depends on what you are shipping:
 - **Editing `lib/time.ts`:** `check:clock` is the one that has to be green; it is the only place the
   console's expected days, months and instants are written down. A deliberate change to one of them
   means changing the expectation here as well as the helper.
+- **Adding or renaming a column, or changing a query:** `check:schema` is the one that has to be green;
+  it is the only thing that compares the pages with the migrations.
+- **Touching a fee or a money format:** `check:money` is the one that has to be green; `referralFee`
+  works in whole cents and rounds once, and that check is where the cases live.
 
 `npm run preflight` is a different check, and the only one that needs the project and the environment:
 run it on the server after a deploy.
@@ -187,7 +202,7 @@ run it on the server after a deploy.
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
 - **Offers and agreements** are recorded on the company page. An agreement stores the licence end, the exclusivity end, and a deletion date 120 days after delivery.
-- **Partners** are external referrers with a fee rate and floor. Registering a referral sets a six-month deadline, and the fee estimate is the greater of the percentage and the floor.
+- **Partners** are external referrers with a fee rate and floor. Registering a referral sets a six-month deadline, and the fee estimate is the greater of the percentage and the floor. The fee is computed in whole cents and rounded once, so 3% of $250,000 is $7,500.00 exactly; `npm run check:money` pins those cases.
 - **Documents** hold metadata and a link. To store the files themselves, create a private Storage bucket and add a signed-URL upload; the table is ready for it.
 
 ## Marketing console (0009)
@@ -210,6 +225,11 @@ scheduled ──cron──▶ publishing ──▶ published
 `failed` and `needs_manual` are where a post waits for a person: Retry puts it back in the queue when the
 channel allows it, Cancel withdraws it and returns the content. Retry, cancel and marking a channel
 active each write an `audit_log` row, so `/audit` answers who acted and when.
+
+**Scheduler health** (`/health`, under Automation) is where those states are visible without reading
+the server: the last sweep warning or the absence of one, posts waiting for a person, a post held in
+`publishing` past the sweep threshold, and any outbound enrolment left at `sending` because a run never
+recorded its outcome. Each figure has the sentence explaining what a non-zero one means.
 
 ### Posting to Facebook without a provider
 

@@ -42,9 +42,20 @@ export function deadlineFor(registeredOn: string): string {
 }
 
 // The published referral fee: the percentage or the floor, whichever is larger.
-export function referralFee(amount: number | null, rate: number, floor: number): number | null {
-  if (amount === null || !Number.isFinite(amount) || amount <= 0) return null;
-  return Math.round(Math.max(amount * rate, floor) * 100) / 100;
+export function referralFee(
+  amount: number | string | null | undefined,
+  rate: number,
+  floor: number,
+): number | null {
+  const value = Number(amount);
+  if (amount === null || amount === undefined || amount === '' || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  // Whole cents, rounded once. 0.03 has no exact binary form, so multiplying dollars by the rate and
+  // rounding at the end is how a fee on a six-figure licence ends up a cent out. A rate on cents is the
+  // same arithmetic with the error below the level being rounded away.
+  const byRate = Math.round(Math.round(value * 100) * rate);
+  return Math.max(byRate, Math.round(floor * 100)) / 100;
 }
 
 export function money(amount: number | string | null | undefined, currency = 'USD'): string {
@@ -52,14 +63,16 @@ export function money(amount: number | string | null | undefined, currency = 'US
   const value = Number(amount);
   if (!Number.isFinite(value)) return '-';
   // Show cents only when the figure has them, so an offer reads $250,000 and a
-  // referral fee of $15,000.06 is not quietly rounded to $15,000.
-  const hasCents = Math.round(value * 100) % 100 !== 0;
+  // referral fee of $15,000.06 is not quietly rounded to $15,000. The figure is put on whole cents
+  // first, so the decision and the printed value come from the same number.
+  const cents = Math.round(value * 100);
+  const hasCents = cents % 100 !== 0;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency || 'USD',
     minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: hasCents ? 2 : 0,
-  }).format(value);
+  }).format(cents / 100);
 }
 
 export function label(value: string): string {
