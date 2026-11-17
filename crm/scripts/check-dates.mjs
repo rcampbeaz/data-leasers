@@ -40,7 +40,7 @@ const UTC_DAY_ALLOWED = {
   'lib/deals.ts': 'addMonths and addDays do calendar arithmetic on ISO day strings',
 };
 
-const HELPERS = /calendarDate|calendarMonth|phoenix|daysUntil|daysLeft/;
+const HELPERS = /calendarDate|calendarMonth|phoenix|daysLeft/;
 
 const findings = [];
 const report = (file, line, rule, source) =>

@@ -1,6 +1,6 @@
 import { createStaffClient } from '@/lib/supabase';
 import { STAGES, normalizeStage } from '@/lib/pipeline';
-import { todayIso } from '@/lib/data';
+import { todayIso } from '@/lib/time';
 import PipelineBoard, { type BoardCompany } from './board';
 
 export default async function PipelinePage() {

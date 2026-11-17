@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { calendarDate } from '@/lib/time';
+import { calendarDate, todayIso } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { setTaskDone } from '@/lib/admin-actions';
-import { currentStaff, todayIso } from '@/lib/data';
+import { currentStaff } from '@/lib/data';
 
 type Task = {
   id: string;

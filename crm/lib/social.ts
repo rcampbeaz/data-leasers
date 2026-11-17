@@ -169,16 +169,6 @@ export function blockingProblems(lints: Lint[]): string[] {
   return lints.filter((l) => l.level === 'block').map((l) => l.message);
 }
 
-// Display time is America/Phoenix, which does not observe daylight saving, so the
-// offset never moves. Storage is UTC.
-export const PHOENIX_OFFSET = '-07:00';
-
-export function phoenixInputToUtc(value: string): Date | null {
-  if (!value) return null;
-  const parsed = new Date(`${value}:00${PHOENIX_OFFSET}`);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
 export type PublishInput = {
   channel: Channel;
   body: string;

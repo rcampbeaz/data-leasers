@@ -5,8 +5,8 @@
 // escalation at 7 days when the window is about to close. They are separate tasks with separate
 // links, so completing one does not silently complete the other.
 
-import { OPEN_STATUSES, daysLeft } from './partner-report';
-import { calendarDate, phoenixDay } from './time';
+import { OPEN_STATUSES } from './partner-report';
+import { calendarDate, daysLeft, phoenixDay } from './time';
 
 export const CHASE_WINDOW_DAYS = 30;
 export const ESCALATION_WINDOW_DAYS = 7;

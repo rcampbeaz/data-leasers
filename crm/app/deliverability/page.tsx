@@ -6,15 +6,12 @@ import { releaseDomainHold } from '@/lib/domain-actions';
 import {
   domainReport,
   formatRate,
-  isMonthKey,
-  monthLabel,
   monthlyReport,
-  recentMonths,
-  shiftMonth,
   totalOf,
   type SendLike,
   type SuppressionLike,
 } from '@/lib/deliverability';
+import { calendarMonth, isMonthKey, phoenixMonths, shiftMonth } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +38,7 @@ export default async function DeliverabilityPage({
   const me = await currentStaff(supabase);
   const canRelease = me?.role === 'admin' || me?.role === 'introducer';
 
-  const months = recentMonths(MONTHS);
+  const months = phoenixMonths(MONTHS);
   const selected = isMonthKey(month) ? month : months[months.length - 1];
   const earliest = selected < months[0] ? `${selected}-01` : `${months[0]}-01`;
 
@@ -123,7 +120,7 @@ export default async function DeliverabilityPage({
         <Link href={`/deliverability?month=${shiftMonth(selected, -1)}`}>← Earlier</Link>
         {months.map((key) => (
           <Link key={key} href={`/deliverability?month=${key}`} className={key === selected ? 'active' : ''}>
-            {monthLabel(key)}
+            {calendarMonth(key)}
           </Link>
         ))}
         {selected < months[months.length - 1] ? (
@@ -131,7 +128,7 @@ export default async function DeliverabilityPage({
         ) : null}
       </nav>
 
-      <section className="kpis" aria-label={`Figures for ${monthLabel(selected)}`}>
+      <section className="kpis" aria-label={`Figures for ${calendarMonth(selected)}`}>
         <div className="kpi"><span>Sent</span><strong>{monthTotal.sent}</strong></div>
         <div className="kpi">
           <span>Bounce rate</span>
@@ -196,7 +193,7 @@ export default async function DeliverabilityPage({
       </section>
 
       <section className="panel">
-        <h2>By domain, {monthLabel(selected)}</h2>
+        <h2>By domain, {calendarMonth(selected)}</h2>
         {domains.length === 0 ? (
           <p className="muted">Nothing sent in this month, and nothing recorded against it.</p>
         ) : (

@@ -1,7 +1,16 @@
 import Link from 'next/link';
-import { calendarDate, calendarMonth, phoenix, phoenixDay, phoenixMonth, phoenixMonths, phoenixYear } from '@/lib/time';
+import {
+  calendarDate,
+  calendarMonth,
+  phoenix,
+  phoenixDay,
+  phoenixMonth,
+  phoenixMonths,
+  phoenixYear,
+  todayIso,
+} from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
-import { currentStaff, todayIso } from '@/lib/data';
+import { currentStaff } from '@/lib/data';
 import { STAGES } from '@/lib/pipeline';
 import { BarChart, DonutChart, LineChart } from '@/components/charts';
 

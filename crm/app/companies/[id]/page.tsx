@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { calendarDate, phoenix } from '@/lib/time';
+import { calendarDate, phoenix, todayIso } from '@/lib/time';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
-import { loadStaff, todayIso } from '@/lib/data';
+import { loadStaff } from '@/lib/data';
 import { STAGES, normalizeStage, suggestStage, type DatasetStatus, type Stage } from '@/lib/pipeline';
 import {
   addActivity,
@@ -395,9 +395,9 @@ export default async function CompanyPage({
                 <tr key={agreement.id}>
                   <td>{buyerName(agreement.buyer_id)}</td>
                   <td>{calendarDate(agreement.licence_start)}</td>
-                  <td>{agreement.licence_end ? calendarDate(agreement.licence_end) : '-'}</td>
-                  <td>{agreement.exclusivity_end ? calendarDate(agreement.exclusivity_end) : '-'}</td>
-                  <td>{agreement.deletion_due ? calendarDate(agreement.deletion_due) : '-'}</td>
+                  <td>{calendarDate(agreement.licence_end) || '-'}</td>
+                  <td>{calendarDate(agreement.exclusivity_end) || '-'}</td>
+                  <td>{calendarDate(agreement.deletion_due) || '-'}</td>
                   <td>{agreement.audit_right ? 'Yes' : 'No'}</td>
                   <td><span className="stage">{agreement.status}</span></td>
                 </tr>

@@ -3,7 +3,8 @@ import { calendarDate, phoenixDay } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { addPartner, anonymisePartner, registerReferral, updateReferral } from '@/lib/deal-actions';
-import { REFERRAL_STATUSES, daysUntil, money, referralFee } from '@/lib/deals';
+import { REFERRAL_STATUSES, money, referralFee } from '@/lib/deals';
+import { daysLeft } from '@/lib/time';
 import { BUCKET_LABELS, buildPartnerReport } from '@/lib/partner-report';
 
 type Partner = {
@@ -98,7 +99,10 @@ export default async function PartnersPage({
   };
 
   const openReferrals = referralRows.filter((r) => ['registered', 'introduced'].includes(r.status));
-  const atRisk = openReferrals.filter((r) => daysUntil(r.deadline_on) <= 30);
+  const atRisk = openReferrals.filter((r) => {
+    const days = daysLeft(r.deadline_on);
+    return days !== null && days <= 30;
+  });
 
   const report = buildPartnerReport(
     openReferrals.map((r) => ({
@@ -365,7 +369,7 @@ export default async function PartnersPage({
             <tbody>
               {referralRows.map((referral) => {
                 const partner = partnerById.get(referral.partner_id);
-                const days = daysUntil(referral.deadline_on);
+                const days = daysLeft(referral.deadline_on);
                 const open = ['registered', 'introduced'].includes(referral.status);
                 const accepted = referral.company_id ? acceptedValue.get(referral.company_id) ?? null : null;
                 const estimate = partner ? referralFee(accepted, Number(partner.fee_rate), Number(partner.fee_floor)) : null;
@@ -380,9 +384,9 @@ export default async function PartnersPage({
                     </td>
                     <td>{partnerName.get(referral.partner_id) ?? 'Unknown'}</td>
                     <td>{calendarDate(referral.registered_on)}</td>
-                    <td className={open && days <= 30 ? 'overdue' : ''}>
+                    <td className={open && days !== null && days <= 30 ? 'overdue' : ''}>
                       {calendarDate(referral.deadline_on)}
-                      {open ? <span className="muted small"> ({days}d)</span> : null}
+                      {open && days !== null ? <span className="muted small"> ({days}d)</span> : null}
                     </td>
                     <td>
                       {chaseLine('Routine', referral.chase_task_id)}

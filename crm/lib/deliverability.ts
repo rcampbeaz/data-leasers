@@ -6,7 +6,7 @@
 // which is why the page says where those rows come from rather than implying the numbers are
 // complete.
 
-import { calendarMonth, phoenixMonths } from './time';
+import { calendarMonth, phoenixMonth } from './time';
 
 export type Verdict = 'ok' | 'watch' | 'stop';
 
@@ -30,32 +30,6 @@ export function domainOf(email: string | null | undefined): string | null {
   return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)
     ? domain
     : null;
-}
-
-export function monthKeyOf(iso: string): string {
-  return String(iso ?? '').slice(0, 7);
-}
-
-export function monthLabel(key: string): string {
-  return calendarMonth(key);
-}
-
-// Oldest first, so a chart reads left to right, and ending on the console's month.
-export function recentMonths(count: number, today: Date = new Date()): string[] {
-  return phoenixMonths(count, today);
-}
-
-// Counted in months, not through a Date: the argument is already a calendar month, and a Date would
-// need a zone to say which month one step from it is.
-export function shiftMonth(key: string, delta: number): string {
-  const [year, month] = key.split('-').map(Number);
-  if (!year || !month) return String(key);
-  const months = year * 12 + (month - 1) + delta;
-  return `${Math.floor(months / 12)}-${String((months % 12) + 1).padStart(2, '0')}`;
-}
-
-export function isMonthKey(value: unknown): value is string {
-  return typeof value === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
 }
 
 export type Tally = {
@@ -110,11 +84,11 @@ export function monthlyReport(
 
   for (const send of sends) {
     if (send.status !== 'sent') continue;
-    const bucket = buckets.get(monthKeyOf(send.sent_at));
+    const bucket = buckets.get(phoenixMonth(send.sent_at));
     if (bucket) bucket.sent += 1;
   }
   for (const row of suppressions) {
-    const bucket = buckets.get(monthKeyOf(row.created_at));
+    const bucket = buckets.get(phoenixMonth(row.created_at));
     if (bucket) addSuppression(bucket, String(row.reason));
   }
 
@@ -123,7 +97,7 @@ export function monthlyReport(
     return {
       ...t,
       key,
-      label: monthLabel(key),
+      label: calendarMonth(key),
       bounceRate: rate(t.bounced, t.sent),
       complaintRate: rate(t.complained, t.sent),
       verdict: verdictFor(t),
@@ -157,14 +131,14 @@ export function domainReport(
 
   for (const send of sends) {
     if (send.status !== 'sent') continue;
-    if (monthKeyOf(send.sent_at) !== month) continue;
+    if (phoenixMonth(send.sent_at) !== month) continue;
     const domain = domainOf(send.email);
     if (!domain) continue;
     bucketFor(domain).sent += 1;
   }
 
   for (const row of suppressions) {
-    if (monthKeyOf(row.created_at) !== month) continue;
+    if (phoenixMonth(row.created_at) !== month) continue;
     const domain = domainOf(row.email);
     // An address with no domain is unusable but still a suppression that happened; it is
     // reported under a label rather than dropped, so the month's totals add up.

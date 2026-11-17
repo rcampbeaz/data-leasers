@@ -1,8 +1,6 @@
 // Deal maths. Pure functions, so they can be tested without a database.
 // Dates are handled as ISO day strings (YYYY-MM-DD) throughout, on the console's clock.
 
-import { phoenixDay } from './time';
-
 export const OFFER_STATUSES = ['offered', 'accepted', 'declined', 'withdrawn'] as const;
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
 
@@ -24,12 +22,6 @@ export const REFERRAL_SIGNING_MONTHS = 6;
 // The published term for deleting the raw upload after delivery.
 export const DELETION_DAYS = 120;
 
-// The console's day, for the same reason as lib/data: a deadline count taken against UTC's date is a
-// day out from 5pm Phoenix onwards.
-export function todayIso(): string {
-  return phoenixDay(Date.now());
-}
-
 // Adds whole months in UTC, clamping to the last day of a short month
 // (January 31 plus one month is February 28, not March 3).
 export function addMonths(iso: string, months: number): string {
@@ -43,14 +35,6 @@ export function addMonths(iso: string, months: number): string {
 export function addDays(iso: string, days: number): string {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
-
-// Whole days from one ISO day to another. Negative means the second date is past.
-export function daysUntil(iso: string, from = todayIso()): number {
-  const a = Date.parse(`${from}T00:00:00Z`);
-  const b = Date.parse(`${iso}T00:00:00Z`);
-  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
-  return Math.round((b - a) / 86_400_000);
 }
 
 export function deadlineFor(registeredOn: string): string {

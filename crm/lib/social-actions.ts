@@ -10,11 +10,11 @@ import {
   blockingProblems,
   channelSpec,
   lintPost,
-  phoenixInputToUtc,
   retryAdvice,
   retryRoute,
   type Channel,
 } from '@/lib/social';
+import { phoenixInputToUtc } from '@/lib/time';
 
 // Everything here writes drafts, schedules them, or cancels them. Publishing happens in
 // the cron route, which is the only place that talks to a provider.

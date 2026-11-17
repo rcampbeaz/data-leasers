@@ -5,7 +5,7 @@
 // a date has until that date plus six months for the agreement to be signed. The deadline is
 // stored on the row, so a later change to the rule cannot rewrite an existing referral.
 
-import { calendarDate, phoenixDay } from './time';
+import { calendarDate, daysLeft, phoenixDay } from './time';
 
 export type ReferralInput = {
   id: string;
@@ -28,24 +28,6 @@ export const BUCKET_LABELS: Record<Bucket, string> = {
   month: 'Inside 30 days',
   later: 'Later',
 };
-
-function parseDay(iso: string): number | null {
-  const trimmed = String(iso ?? '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return null;
-  const time = Date.parse(`${trimmed}T00:00:00Z`);
-  return Number.isFinite(time) ? time : null;
-}
-
-// Whole days between two ISO days, so a report run in the morning and one run in the evening agree
-// on how long is left. Both arguments are days, not instants: pass '2026-11-17', never a Date. A
-// Date at UTC midnight is already the previous day in Phoenix, and turning an instant into a day
-// here would quietly do the wrong thing for a caller who meant a date.
-export function daysLeft(deadline: string, today: string = phoenixDay(Date.now())): number | null {
-  const due = parseDay(deadline);
-  const from = parseDay(today);
-  if (due === null || from === null) return null;
-  return Math.round((due - from) / 86_400_000);
-}
 
 export function bucketFor(days: number | null): Bucket {
   if (days === null) return 'later';

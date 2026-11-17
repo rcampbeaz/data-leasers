@@ -234,7 +234,7 @@ export default async function ImportPage({
                             </div>
                           ) : null}
                         </td>
-                        <td>{c.incorporated_on ? calendarYear(c.incorporated_on) : '-'}</td>
+                        <td>{calendarYear(c.incorporated_on) || '-'}</td>
                         <td>{c.industry ?? (c.sic_codes?.join(', ') || '-')}</td>
                         <td>{c.locality ?? c.region ?? '-'}</td>
                         <td>
