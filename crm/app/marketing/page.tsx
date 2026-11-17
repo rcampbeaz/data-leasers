@@ -9,6 +9,7 @@ import {
   retryAdvice,
   retryRoute,
 } from '@/lib/social';
+import { phoenix, phoenixClock, phoenixDay, phoenixInput, phoenixStamp } from '@/lib/time';
 import {
   addChannel,
   attachImage,
@@ -158,65 +159,9 @@ function platformColor(platform: string): string {
   return PALETTE[(i < 0 ? 0 : i) % PALETTE.length];
 }
 
-// Every time on this page is on the console's clock, resolved from the zone rather than by subtracting
-// seven hours. Phoenix is UTC−7 all year — Arizona does not observe daylight saving — so the old
-// arithmetic gave the right answer by coincidence, and would stop giving it the moment the brand's clock
-// changed, or on a server whose own zone differed.
-const PHOENIX_TIME_ZONE = 'America/Phoenix';
-
-// Building an Intl formatter is the expensive half of formatting, and the page formats one per post,
-// so each shape is built once and kept. The options are the key because they are what define a shape;
-// the page asks for four.
-const PHOENIX_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
-
-function phoenix(when: string | number | Date, options: Intl.DateTimeFormatOptions): string {
-  const key = JSON.stringify(options);
-  let formatter = PHOENIX_FORMATTERS.get(key);
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat('en-US', { timeZone: PHOENIX_TIME_ZONE, ...options });
-    PHOENIX_FORMATTERS.set(key, formatter);
-  }
-  return formatter.format(new Date(when));
-}
-
-// The machine-readable shapes — a sortable day, a clock time, a stamp and the value a datetime-local
-// input expects — built from parts, so none of them depends on how a formatted string happens to look.
-const PHOENIX_PARTS = new Intl.DateTimeFormat('en-US', {
-  timeZone: PHOENIX_TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-});
-
-function phoenixKey(when: string | number | Date): { date: string; clock: string } {
-  const parts = PHOENIX_PARTS.formatToParts(new Date(when));
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
-  return {
-    date: `${get('year')}-${get('month')}-${get('day')}`,
-    clock: `${get('hour')}:${get('minute')}`,
-  };
-}
-
-function phoenixDay(when: string | number | Date): string {
-  return phoenixKey(when).date;
-}
-
-function phoenixClock(when: string | number | Date): string {
-  return phoenixKey(when).clock;
-}
-
-function phoenixStamp(when: string | number | Date): string {
-  const { date, clock } = phoenixKey(when);
-  return `${date} ${clock}`;
-}
-
-// The next hour in Phoenix, as the value a datetime-local input expects.
+// The console's clock lives in lib/time, so every page shows the same one.
 function defaultSlot(): string {
-  const { date, clock } = phoenixKey(Date.now() + 60 * 60 * 1000);
-  return `${date}T${clock}`;
+  return phoenixInput(Date.now() + 60 * 60 * 1000);
 }
 
 export default async function MarketingPage({

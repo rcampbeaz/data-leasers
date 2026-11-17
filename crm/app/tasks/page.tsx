@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { calendarDate } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { setTaskDone } from '@/lib/admin-actions';
 import { currentStaff, todayIso } from '@/lib/data';
@@ -69,7 +70,7 @@ export default async function TasksPage({
               const late = !t.done && t.due_on < today;
               return (
                 <tr key={t.id} className={late ? 'overdue' : undefined}>
-                  <td>{new Date(t.due_on + 'T00:00:00').toLocaleDateString('en-US')}{late ? ' (overdue)' : ''}</td>
+                  <td>{calendarDate(t.due_on)}{late ? ' (overdue)' : ''}</td>
                   <td>{t.title}</td>
                   <td>
                     {t.companies ? <Link href={`/companies/${t.companies.id}`}>{t.companies.name}</Link> : '-'}

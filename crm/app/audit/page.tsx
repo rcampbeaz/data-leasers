@@ -1,4 +1,5 @@
 import { createStaffClient } from '@/lib/supabase';
+import { phoenix } from '@/lib/time';
 
 type Row = {
   id: number;
@@ -46,7 +47,7 @@ export default async function AuditPage() {
           <tbody>
             {((rows ?? []) as Row[]).map((r) => (
               <tr key={r.id}>
-                <td>{new Date(r.created_at).toLocaleString('en-US')}</td>
+                <td>{phoenix(r.created_at, { dateStyle: 'medium', timeStyle: 'short' })}</td>
                 <td>{nameOf(r.actor_id)}</td>
                 <td>{r.entity} {r.action.replace(/_/g, ' ')}</td>
                 <td className="wrap-cell small">{r.detail ? JSON.stringify(r.detail) : '-'}</td>

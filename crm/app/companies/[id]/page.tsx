@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { phoenix } from '@/lib/time';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { loadStaff, todayIso } from '@/lib/data';
@@ -533,8 +534,8 @@ export default async function CompanyPage({
             {(activities.data ?? []).map((a) => (
               <li key={a.id}>
                 <strong>{a.kind}</strong>
-                {a.call_at ? ` on ${new Date(a.call_at).toLocaleString('en-US')}` : ''}
-                {' · '}{new Date(a.created_at).toLocaleDateString('en-US')}
+                {a.call_at ? ` on ${phoenix(a.call_at, { dateStyle: 'medium', timeStyle: 'short' })}` : ''}
+                {' · '}{phoenix(a.created_at, { dateStyle: 'medium' })}
                 {a.body ? <div className="wrap-cell">{a.body}</div> : null}
               </li>
             ))}
@@ -547,7 +548,7 @@ export default async function CompanyPage({
         {(history.data ?? []).length === 0 ? <p className="muted">No changes yet.</p> : (
           <ul className="list small">
             {(history.data ?? []).map((h, i) => (
-              <li key={i}>{h.from_stage ?? 'Start'} to {h.to_stage} · {new Date(h.changed_at).toLocaleString('en-US')}</li>
+              <li key={i}>{h.from_stage ?? 'Start'} to {h.to_stage} · {phoenix(h.changed_at, { dateStyle: 'medium', timeStyle: 'short' })}</li>
             ))}
           </ul>
         )}

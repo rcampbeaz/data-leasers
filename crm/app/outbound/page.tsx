@@ -1,4 +1,5 @@
 import { createStaffClient } from '@/lib/supabase';
+import { phoenix } from '@/lib/time';
 import { currentStaff } from '@/lib/data';
 import {
   BASIS_LABELS,
@@ -410,7 +411,7 @@ export default async function OutboundPage({
             <tbody>
               {sendRows.map((s) => (
                 <tr key={s.id}>
-                  <td>{new Date(s.sent_at).toLocaleString('en-US')}</td>
+                  <td>{phoenix(s.sent_at, { dateStyle: 'medium', timeStyle: 'short' })}</td>
                   <td>{label(s.contact, 'email')}</td>
                   <td className="wrap-cell">{s.subject}</td>
                   <td>

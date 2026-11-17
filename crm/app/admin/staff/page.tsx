@@ -1,4 +1,5 @@
 import { createStaffClient } from '@/lib/supabase';
+import { phoenix } from '@/lib/time';
 import { currentStaff } from '@/lib/data';
 import { ROLE_LABELS, type Role } from '@/lib/nav';
 import { addStaff, changeRole, removeStaff, updateStaffProfile } from '@/lib/staff-actions';
@@ -99,7 +100,7 @@ export default async function StaffPage({
                 <td>{p.email ? <a href={`mailto:${p.email}`}>{p.email}</a> : <span className="muted">-</span>}</td>
                 <td>{p.phone ?? <span className="muted">-</span>}</td>
                 <td>{ROLE_LABELS[r.role as Role] ?? r.role}</td>
-                <td>{new Date(r.created_at).toLocaleDateString('en-US')}</td>
+                <td>{phoenix(r.created_at, { dateStyle: 'medium' })}</td>
               </tr>
             );
           })}

@@ -6,6 +6,8 @@
 // which is why the page says where those rows come from rather than implying the numbers are
 // complete.
 
+import { calendarMonth } from '@/lib/time';
+
 export type Verdict = 'ok' | 'watch' | 'stop';
 
 // House thresholds. The complaint figure follows the published bulk-sender guidance of staying
@@ -35,13 +37,7 @@ export function monthKeyOf(iso: string): string {
 }
 
 export function monthLabel(key: string): string {
-  const [year, month] = key.split('-').map(Number);
-  if (!year || !month) return key;
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
+  return calendarMonth(key);
 }
 
 // Oldest first, so a chart reads left to right.

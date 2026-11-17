@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { calendarDate, phoenixDay } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { addPartner, anonymisePartner, registerReferral, updateReferral } from '@/lib/deal-actions';
@@ -262,7 +263,7 @@ export default async function PartnersPage({
             </label>
             <label>
               Registered on
-              <input type="date" name="registeredOn" defaultValue={new Date().toISOString().slice(0, 10)} />
+              <input type="date" name="registeredOn" defaultValue={phoenixDay(Date.now())} />
             </label>
             <label className="span-2">
               Notes
@@ -323,7 +324,7 @@ export default async function PartnersPage({
                   </td>
                   <td>{row.partnerName}</td>
                   <td><span className="stage">{row.status}</span></td>
-                  <td>{String(row.deadline_on).slice(0, 10)}</td>
+                  <td>{calendarDate(row.deadline_on)}</td>
                   <td>
                     <span
                       className={`status ${row.bucket === 'overdue' ? 'blocked' : row.bucket === 'week' || row.bucket === 'month' ? 'review' : 'approved'}`}

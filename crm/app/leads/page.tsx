@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { phoenix } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { createCompanyFromLead } from '@/lib/actions';
 import { addLead } from '@/lib/admin-actions';
@@ -98,7 +99,7 @@ export default async function LeadsPage({
               const company = lead.companies?.[0];
               return (
                 <tr key={lead.id}>
-                  <td>{new Date(lead.created_at).toLocaleDateString('en-US')}</td>
+                  <td>{phoenix(lead.created_at, { dateStyle: 'medium' })}</td>
                   <td>{lead.company}</td>
                   <td>
                     {lead.name}

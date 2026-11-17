@@ -1,4 +1,5 @@
 import { SWEEP_STATE_KEY, channelSpec, retryAdvice } from '@/lib/social';
+import { phoenix } from '@/lib/time';
 import { createIntakeClient } from '@/lib/supabase';
 
 // One email per post that stops for good. A post whose sending run died is not one of these: it goes
@@ -42,11 +43,7 @@ function label(platform: string): string {
 
 // Phoenix, because that is the clock the console runs on and the clock the reader is looking at.
 function when(scheduledFor: string): string {
-  return new Date(scheduledFor).toLocaleString('en-US', {
-    timeZone: 'America/Phoenix',
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  return phoenix(scheduledFor, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 function consoleUrl(): string {
