@@ -37,7 +37,7 @@ try {
   process.exit(1);
 }
 
-const { seed, failureLines } = await import('./seed.mjs');
+const { seed, failureLines, StepFailure } = await import('./seed.mjs');
 
 // The parts of a Supabase project the migrations lean on. Nothing of the CRM's own schema is created
 // here, so everything the series needs it has to build itself.
@@ -100,11 +100,16 @@ const insertSql = (table, rows, conflict) => {
 };
 
 // The shape the seed uses: a builder whose filters accumulate until it is awaited, then one statement.
-const client = (db) => {
+// `failOn` makes one write refuse, which is how a PostgREST error arrives at the seed: as a value, not a
+// throw. The seed is what turns that into a failure, and the caller is what decides what it means.
+const client = (db, { failOn } = {}) => {
   const from = (table) => {
     const state = { table, op: null, payload: null, conflict: null, columns: '*', filters: [] };
     const run = async () => {
       try {
+        if (failOn && state.table === failOn.table && state.op === failOn.op) {
+          return { data: null, error: { message: failOn.message } };
+        }
         if (state.op === 'delete') {
           if (state.filters.length === 0) throw new Error('refusing a delete without a filter');
           await db.query(`delete from public.${state.table}${where(state.filters)}`);
@@ -326,6 +331,35 @@ expect(
   'the seed account was reused, not duplicated',
   await count(`select count(*) as n from auth.users where email = 'walkthrough@dataleasers.test'`),
   1,
+);
+
+// The contract with a failed step, asserted rather than left to a mutation: the seed throws a
+// StepFailure that carries the step's label, and the caller is still running and can report it and shut
+// the database down. One write refuses here; everything before it in the run still reports success.
+const refusing = client(db, {
+  failOn: { table: 'offers', op: 'insert', message: 'permission denied for table offers' },
+});
+const saidBeforeFailure = [];
+let thrown = null;
+try {
+  await seed({
+    supabase: refusing,
+    email: 'walkthrough@dataleasers.test',
+    password: 'check-only',
+    log: (line) => saidBeforeFailure.push(line),
+  });
+} catch (error) {
+  thrown = error;
+}
+
+expect('a refused write is thrown, not an exit', thrown instanceof StepFailure, true);
+expect('the failure names the step it happened in', thrown?.label, 'an offer and a signed agreement');
+expect('the failure carries the database message', thrown?.reason, 'permission denied for table offers');
+expect('the failure renders with that label', failureLines(thrown)[0], '  FAIL an offer and a signed agreement');
+expect(
+  'the steps before it still reported success',
+  saidBeforeFailure.filter((line) => line.startsWith('  ok')).length,
+  7,
 );
 
 await db.close();

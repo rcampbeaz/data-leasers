@@ -201,6 +201,10 @@ second run and has to survive both it and the clear step, so the deletes are sho
 seed's own ids and markers. Every column, type, not-null rule, check constraint and conflict target the
 payloads touch is therefore proved before a project sees them.
 
+It also runs the seed a third time with a client that refuses one write, and asserts what comes back: a
+`StepFailure` naming the step it happened in, with the database's message — the contract that lets the
+check report a failure and shut down instead of dying mid-run.
+
 It is not PostgREST: grants and policies are never evaluated, so something PostgREST alone would refuse
 can still pass here, and the password is discarded because the harness's `auth.users` has no password
 column. What it does catch is what would fail first on staging — a column that has been renamed, a value a
