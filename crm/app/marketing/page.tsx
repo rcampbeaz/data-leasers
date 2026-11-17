@@ -118,7 +118,10 @@ export default async function MarketingPage({
   const now = Date.now();
   const windowStart = new Date(now - 90 * DAY).toISOString();
 
-  const [{ data: channels }, { data: contents }, { data: posts }, { data: setting }] =
+  const POST_COLUMNS =
+    'id, status, scheduled_for, published_at, body, permalink, last_error, attempts, channel:social_channels(platform, display_name, status)';
+
+  const [{ data: channels }, { data: contents }, { data: stopped }, { data: posts }, { data: setting }] =
     await Promise.all([
       supabase
         .from('social_channels')
@@ -130,12 +133,22 @@ export default async function MarketingPage({
         .in('status', ['draft', 'approved'])
         .order('created_at', { ascending: false })
         .limit(10),
+      // A stopped post is not history. Nothing moves it without a person, so an age window would let
+      // it fall off the page and hide exactly the post that has to be dealt with — including one the
+      // sweep has just stopped. This query has no date bound at all.
       supabase
         .from('social_posts')
-        .select(
-          'id, status, scheduled_for, published_at, body, permalink, last_error, attempts, channel:social_channels(platform, display_name, status)',
-        )
+        .select(POST_COLUMNS)
+        .in('status', ['failed', 'needs_manual'])
+        .order('scheduled_for', { ascending: false })
+        .limit(200),
+      // The window is for the rest: published, scheduled, cancelled and publishing rows, where old
+      // does mean finished with. The exclusion keeps a stopped post from appearing in both lists.
+      supabase
+        .from('social_posts')
+        .select(POST_COLUMNS)
         .gte('scheduled_for', windowStart)
+        .not('status', 'in', '("failed","needs_manual")')
         .order('scheduled_for', { ascending: false })
         .limit(500),
       supabase.from('app_settings').select('value').eq('key', 'marketing').maybeSingle(),
@@ -169,7 +182,11 @@ export default async function MarketingPage({
     last_ok_at: string | null;
   }[];
   const draftRows = (contents ?? []) as unknown as ContentRow[];
-  const postRows = (posts ?? []) as unknown as PostRow[];
+  // Stopped first, so the cap further down cannot hide one behind newer history.
+  const postRows = [
+    ...((stopped ?? []) as unknown as PostRow[]),
+    ...((posts ?? []) as unknown as PostRow[]),
+  ];
   const due = defaultSlot();
 
   // ---- figures -------------------------------------------------------------
@@ -617,6 +634,7 @@ export default async function MarketingPage({
               <tr><th>When (Phoenix)</th><th>Channel</th><th>Status</th><th>Post</th><th>Result</th><th></th></tr>
             </thead>
             <tbody>
+              {/* Stopped posts are at the front of postRows, so this cap never drops one. */}
               {postRows.slice(0, 40).map((p) => {
                 const when = new Date(new Date(p.scheduled_for).getTime() - 7 * 60 * 60 * 1000);
                 const channel = channelRow(p.channel);
