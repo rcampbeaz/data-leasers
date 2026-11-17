@@ -444,6 +444,61 @@ export async function publishDueNow() {
   redirect(`${path}?saved=ran`);
 }
 
+// A post whose result could not be recorded sits in 'publishing', where no other part of
+// the queue looks for it. Releasing it puts it back in the sweep without waiting for the
+// stale timer. Channels that already published keep that status and are skipped.
+export async function releasePost(postId: string) {
+  const path = '/social';
+  const { supabase, me } = await requireWriter(path);
+  if (me.role !== 'admin') {
+    redirect(`${path}?error=${encodeURIComponent('Only an admin can release a held post.')}`);
+  }
+
+  const { data: post, error: readError } = await supabase
+    .from('social_posts')
+    .select('id, state, updated_at')
+    .eq('id', postId)
+    .maybeSingle();
+  if (readError) redirect(`${path}?error=${encodeURIComponent('Could not read the post.')}`);
+  if (!post) redirect(`${path}?error=${encodeURIComponent('That post no longer exists.')}`);
+
+  const held = post as { state: string; updated_at: string | null };
+  if (held.state !== 'publishing') {
+    redirect(`${path}?error=${encodeURIComponent('That post is not being held by a run.')}`);
+  }
+
+  // A live run refreshes this timestamp before every send, so a recent one means the post
+  // may still be in flight. Releasing it then could send the same channel twice, which is
+  // worse than waiting for the sweep to do it.
+  if (held.updated_at && Date.parse(held.updated_at) > Date.now() - 2 * 60_000) {
+    redirect(
+      `${path}?error=${encodeURIComponent('That post is still being worked on. It releases itself if the run has died.')}`,
+    );
+  }
+
+  const nowIso = new Date().toISOString();
+
+  // A channel waiting on a retry clock further out would be skipped by the next sweep, so
+  // releasing also brings its attempt forward.
+  const { error: linkError } = await supabase
+    .from('social_post_channels')
+    .update({ next_attempt_at: nowIso })
+    .eq('post_id', postId)
+    .in('status', ['scheduled', 'pending']);
+  if (linkError) redirect(`${path}?error=${encodeURIComponent('Could not release the post.')}`);
+
+  const { error } = await supabase
+    .from('social_posts')
+    .update({ state: 'scheduled', updated_at: nowIso })
+    .eq('id', postId)
+    .eq('state', 'publishing');
+  if (error) redirect(`${path}?error=${encodeURIComponent('Could not release the post.')}`);
+
+  await audit(me.user_id, 'social_post', postId, 'released', {});
+  refresh();
+  redirect(`${path}?saved=released`);
+}
+
 // A post that ended up failed or partial is not a dead end: the channels that failed go
 // back in the queue with a clean attempt count, and the next sweep sends them again.
 // Channels that already published are left alone, so nothing is posted twice.

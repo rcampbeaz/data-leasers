@@ -5,6 +5,7 @@ import {
   cancelPost,
   deletePost,
   publishDueNow,
+  releasePost,
   reschedulePost,
   retryPost,
 } from '@/lib/social-actions';
@@ -23,6 +24,7 @@ type QueueRow = {
   state: string;
   scheduled_for: string | null;
   published_at: string | null;
+  updated_at: string | null;
   social_post_channels: ChannelLink[] | null;
 };
 
@@ -34,11 +36,12 @@ const SAVED: Record<string, string> = {
   cancelled: 'Post cancelled.',
   deleted: 'Draft deleted.',
   retried: 'Queued for another attempt.',
+  released: 'Released back to the queue.',
   ran: 'Publishing run finished. Results are below.',
 };
 
 const FIELDS =
-  'id, body, state, scheduled_for, published_at, social_post_channels(status, error, remote_id, social_channels(platform, handle))';
+  'id, body, state, scheduled_for, published_at, updated_at, social_post_channels(status, error, remote_id, social_channels(platform, handle))';
 
 function Channels({ row }: { row: QueueRow }) {
   const channels = row.social_post_channels ?? [];
@@ -121,8 +124,12 @@ export default async function SocialPage({
   const canWrite = me?.role === 'admin' || me?.role === 'introducer';
   const isAdmin = me?.role === 'admin';
 
-  const [{ data: scheduled, error: scheduledError }, { data: drafts }, { data: recent }] =
-    await Promise.all([
+  const [
+    { data: scheduled, error: scheduledError },
+    { data: drafts },
+    { data: recent },
+    { data: held },
+  ] = await Promise.all([
       supabase
         .from('social_posts')
         .select(FIELDS)
@@ -141,11 +148,18 @@ export default async function SocialPage({
         .in('state', ['published', 'partial', 'failed'])
         .order('updated_at', { ascending: false })
         .limit(20),
+      supabase
+        .from('social_posts')
+        .select(FIELDS)
+        .eq('state', 'publishing')
+        .order('updated_at', { ascending: true })
+        .limit(20),
     ]);
 
   const upcoming = (scheduled ?? []) as unknown as QueueRow[];
   const draftList = (drafts ?? []) as unknown as QueueRow[];
   const delivered = (recent ?? []) as unknown as QueueRow[];
+  const heldPosts = (held ?? []) as unknown as QueueRow[];
 
   return (
     <main className="page">
@@ -183,6 +197,50 @@ export default async function SocialPage({
             Runs the same sweep as the cron job. Simulated deliveries are marked below.
           </span>
         </form>
+      ) : null}
+
+      {heldPosts.length > 0 ? (
+        <section className="panel">
+          <h2>Held by a run</h2>
+          <p className="muted small">
+            These were claimed by a publishing run that never recorded the result, so they
+            appear in no other list. The sweep lets them go after ten minutes on its own;
+            releasing one now puts it back immediately. Channels that already published are
+            not sent again.
+          </p>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Held since</th>
+                <th>Was due</th>
+                <th>Post</th>
+                <th>Channels</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {heldPosts.map((post) => (
+                <tr key={post.id}>
+                  <td>{post.updated_at ? phoenixLabel(post.updated_at) : '-'}</td>
+                  <td>{post.scheduled_for ? phoenixLabel(post.scheduled_for) : '-'}</td>
+                  <td className="wrap-cell">{post.body.slice(0, 160)}</td>
+                  <td>
+                    <Delivery row={post} />
+                  </td>
+                  <td>
+                    {isAdmin ? (
+                      <form action={releasePost.bind(null, post.id)}>
+                        <button className="link-button" type="submit">
+                          Release
+                        </button>
+                      </form>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       ) : null}
 
       <section className="panel">
