@@ -16,6 +16,9 @@ _site/
 .od-frames/
 .od-skills/
 
+# Screenshots and one-off run output
+artifacts/
+
 # OS
 .DS_Store
 # Build and editor leftovers

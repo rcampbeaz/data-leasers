@@ -1,0 +1,27 @@
+{
+  "note": "sha256 of each migration as it was recorded, so an applied file cannot be edited afterwards. Record new files with `npm run migrations:record`; see scripts/migrations-lock.mjs.",
+  "files": {
+    "0001_init.sql": "3b8a21025808e0e0a1a3e40128da436628341cbe7717538e1f0ced0db124ef02",
+    "0002_pipeline.sql": "d0197446bf251fdd5d6a30f7c6f864293806600e12b78b0e9ea267d57732ca8e",
+    "0003_agents.sql": "e12344fda51951d933b082bf8dd15dfcd83200925ffe4b2e7e3e84305dd3d38e",
+    "0004_staff_admin.sql": "68fc139f71b955276e1f9dfd17bc56c2d66072e11008efcc084d032435a0ec81",
+    "0005_ops.sql": "2451d552b9cd7e770ca8500283cf87ffa96cf0ca8da5e805bf1a646c1054f3e7",
+    "0006_staff_profiles.sql": "64758856695cfc733519e68061bd8d4f70c396d8facf5567a50eaf7ef9f017e5",
+    "0007_deals.sql": "2b68afe4bd03165b2c9fdc9c162126f1664f28ac820699a6a0859025cb35d075",
+    "0008_partner_erasure.sql": "f6a90f6b37d50a9ea91ed09523c5fcfba6e8e4c9cb6ec01524582c68117b16b2",
+    "0009_social.sql": "45a5674120a1052a574bed4272adc868c5947ee186ae4d4b659e400ff53e760b",
+    "0010_company_profile.sql": "600cd2ae3fd46c7c55be070c0d797944a40940bdb633ab78e93a65ff2d2a038e",
+    "0011_outbound.sql": "0ae9f96cc6c50f9d978b51a7612158a8b368e1453a79f43716a2b2efa8aedbc4",
+    "0012_prospect_import.sql": "2e549088569bbcfac03964aa369029f7728380a6fb30e0f4098000a0843fa4fa",
+    "0013_domain_holds.sql": "3dff9ad963e01e6d8f2fb35626bced77ca095220748f4fa0be4d766f1c508825",
+    "0014_referral_chase.sql": "f161760e4ef7b9dcbef9c991f7c5437a8b5c5f38d516434dfb305aff6a516c81",
+    "0015_referral_escalation.sql": "c10bd7a98bfdf769c966058ea5c7886a3cc766e97747d2b060b806892814cd93",
+    "0016_email_templates.sql": "f4ebad00fb3ab4990074d4851a6c40f7716b40d1121381945afc6530aa5a6ed6",
+    "0017_step_kinds.sql": "c8dfeea7cfe228e678b9ee9e64133f134decc433111ac86ffe2d5d87d47b518b",
+    "0018_social_media_storage.sql": "821a5be34ddab0ad95808e3515e4ec25e0f7af9898049b7ca8c47bf170941012",
+    "0019_social_claim_recovery.sql": "5640535a446910d5c72b12a4162ec5ba00e44b391c981dec0323a23d71f195a1",
+    "0020_sweep_clears_its_own_warning.sql": "18c1476946ca06e92f8ae1149b6ecfc71d8583f664c4d45809c8a168f73b6271",
+    "0021_outbound_phoenix_day.sql": "b59138a0b528a5966a27792af1180fd2131d42ad6352ebc926022148e7f8270a",
+    "0022_phoenix_date_defaults.sql": "c28b2284580b2bdb70d282cc1e3311135af5fba04b04b74e59c5076eab1aca2b"
+  }
+}

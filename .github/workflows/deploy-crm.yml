@@ -31,6 +31,28 @@ jobs:
           # of two commits came first, so the guard would be a coin flip.
           fetch-depth: 0
 
+      # The checks are the only thing that knows about the console's clock, the migration series and
+      # whether an applied migration has been edited since. They are cheap, need no credentials, and
+      # run before the server is touched, so a UTC day or a file that has stopped applying fails the
+      # deploy in a minute instead of reaching a live site.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: crm/package-lock.json
+
+      - name: Install
+        working-directory: crm
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: crm
+        run: npx tsc --noEmit
+
+      - name: Checks (migrations, dates, clock)
+        working-directory: crm
+        run: npm run check
+
       # A route left behind the sign-in middleware answers 307 to /login, which looks like a working
       # schedule and does nothing. This runs before the server is touched, so a regressed exclusion
       # fails the deploy in seconds instead of silently disabling a cron job. No install needed: the
