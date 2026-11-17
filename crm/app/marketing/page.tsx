@@ -3,6 +3,7 @@ import { currentStaff } from '@/lib/data';
 import {
   CHANNELS,
   SWEEP_AFTER_MINUTES,
+  SWEEP_STATE_KEY,
   channelSpec,
   providerConfigured,
   retryAdvice,
@@ -98,10 +99,14 @@ function channelLabel(channel: unknown): string {
 // sweep's own, from SWEEP_AFTER_MINUTES, rather than a second copy of the number.
 const STUCK_AFTER_MINUTES = 2;
 
-function publishHold(claimedAt: unknown): string {
+// sweepBroken changes the second half of every wording: the age is still true, but the promise that a
+// run will come along and stop it is not, so the row points at the warning instead of naming a step
+// that is not coming.
+function publishHold(claimedAt: unknown, sweepBroken: boolean): string {
   const at = typeof claimedAt === 'string' ? Date.parse(claimedAt) : Number.NaN;
-  const sendingNow =
-    'Sending now. A run that dies here is stopped by the sweep and the admins are emailed.';
+  const sendingNow = sweepBroken
+    ? 'Sending now. If the run dies here, nothing stops it: the sweep is failing — see the warning above.'
+    : 'Sending now. A run that dies here is stopped by the sweep and the admins are emailed.';
   if (!Number.isFinite(at)) return sendingNow;
 
   const minutes = Math.max(0, (Date.now() - at) / 60_000);
@@ -110,6 +115,9 @@ function publishHold(claimedAt: unknown): string {
   const age =
     minutes < 120 ? `${Math.round(minutes)} minutes` : `${Math.round(minutes / 60)} hours`;
 
+  if (sweepBroken) {
+    return `Held by a publishing run for ${age}. The sweep that would stop it is failing, so it stays held until someone looks — see the warning above.`;
+  }
   if (minutes < SWEEP_AFTER_MINUTES) {
     return `Held by a publishing run for ${age}. The sweep stops it once the hold passes ${SWEEP_AFTER_MINUTES} minutes, then emails the admins.`;
   }
@@ -164,6 +172,7 @@ export default async function MarketingPage({
     { data: posts },
     { data: claims },
     { data: setting },
+    { data: sweepState },
   ] = await Promise.all([
       supabase
         .from('social_channels')
@@ -199,9 +208,23 @@ export default async function MarketingPage({
       // has been held. Deliberately not part of POST_COLUMNS, which would fail the whole queue.
       supabase.from('social_posts').select('id, claimed_at').eq('status', 'publishing'),
       supabase.from('app_settings').select('value').eq('key', 'marketing').maybeSingle(),
+      // Written by the publisher when a sweep fails, deleted when one works again. Its absence is the
+      // normal case: it means the sweep ran.
+      supabase.from('app_settings').select('value').eq('key', SWEEP_STATE_KEY).maybeSingle(),
     ]);
 
   const controls: MarketingControls = mergeControls(setting?.value);
+
+  // A row rather than a boolean, so the banner can quote the actual error — "it is failing" with no
+  // reason is the kind of notice people learn to scroll past.
+  const sweepStateValue = sweepState?.value as { error?: unknown; at?: unknown } | null | undefined;
+  const sweepFailure =
+    sweepStateValue && typeof sweepStateValue.error === 'string'
+      ? {
+          error: sweepStateValue.error,
+          at: typeof sweepStateValue.at === 'string' ? sweepStateValue.at : null,
+        }
+      : null;
 
   // What the AI panel can say honestly: whether a provider is configured at all, and whether the
   // Agents page switch and cap actually allow a run right now.
@@ -364,6 +387,20 @@ export default async function MarketingPage({
         <p className="notice review">
           Publishing is switched off. Scheduled posts stay queued and nothing is sent until it is
           switched back on.
+        </p>
+      ) : null}
+      {sweepFailure ? (
+        <p className="notice blocked">
+          The sweep that stops posts whose publishing run died is failing, so a held post stays held
+          until somebody looks at it — it will not clear itself. Publishing itself is unaffected.
+          {sweepFailure.at
+            ? ` Last failure ${new Date(sweepFailure.at).toLocaleString('en-US', {
+                timeZone: 'America/Phoenix',
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })} (Phoenix):`
+            : ' Last error:'}{' '}
+          <code>{sweepFailure.error}</code>
         </p>
       ) : null}
 
@@ -712,7 +749,10 @@ export default async function MarketingPage({
                       {/* Neither Retry nor Cancel applies to a send that may be in flight, so the row
                           says what is happening and what happens next instead of offering a button. */}
                       {p.status === 'publishing' ? (
-                        <span className="muted small"> {publishHold(claimsById.get(p.id))}</span>
+                        <span className="muted small">
+                          {' '}
+                          {publishHold(claimsById.get(p.id), Boolean(sweepFailure))}
+                        </span>
                       ) : null}
                       {retryBlocked ? (
                         <span className="muted small"> {retryBlocked}</span>

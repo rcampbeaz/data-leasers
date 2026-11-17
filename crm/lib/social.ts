@@ -65,6 +65,11 @@ export function channelSpec(key: string): ChannelSpec | undefined {
 // calls, but the app never relies on it. Changing it here changes both halves.
 export const SWEEP_AFTER_MINUTES = 15;
 
+// Where the publisher records that the sweep failed, and deletes when one works again. It lives in
+// app_settings because that is what the console already reads: the cron response is the only other
+// place the error appears, and nobody reads a cron response.
+export const SWEEP_STATE_KEY = 'marketing_sweep';
+
 // What has to happen before a stopped post can be sent again, from its channel's status.
 //
 // This is the single answer to that question. retryPost refuses on it, and both stop messages write
