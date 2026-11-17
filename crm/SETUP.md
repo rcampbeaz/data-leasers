@@ -88,13 +88,15 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0021_outbound_phoenix_day.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0022_phoenix_date_defaults.sql`. Each file is written to be safe on a database that already has it.
 
 `0019` adds `social_posts.claimed_at` and `sweep_stale_social_posts()`, which stops a post whose publishing run died mid-send. The publisher calls it before taking new work, moves any such post to `needs_manual` and emails the admins one message listing them, because a post may already be live on its channel and nobody can tell from here. The sweep is capped at 25 rows a tick, so a large backlog arrives in bounded batches rather than as a burst of mail. Check the account, then Retry or cancel it.
 
 `0020` replaces `sweep_stale_social_posts()` so a sweep that completes deletes the `marketing_sweep` record that the publisher leaves in `app_settings` when a sweep fails, which the Marketing page shows as a warning. Clearing it inside the sweep means a healthy tick writes nothing and a failing one cannot erase its own warning.
 
 `0021` replaces `claim_outbound_sends()` so an outbound step falls due on the Phoenix day rather than the database's UTC day. The two differ from 5pm Phoenix, when UTC is already tomorrow, and a step saved for the next day was claimable that evening — an email going out hours early. Nothing changes about what is stored: the code already writes `next_due_on` as a Phoenix date, and only the day the claim compares it to moves.
+
+`0022` moves the three date-column defaults — `introductions.introduced_on`, `offers.offered_on` and `referrals.registered_on` — from the database's day to the Phoenix day. Leaving the date field blank in the introduction or offer form omits that column, so this default is what dates the row; from 5pm Phoenix it was writing tomorrow. Defaults only: existing rows and the columns' nullability are untouched.
 
 Order does not matter between a migration and the code that uses it. Run the migration first when you can; if a deploy lands before it, the publisher falls back to the previous signature, the sweep keeps running, and the Marketing page says the database is behind until the migration is applied.
 
