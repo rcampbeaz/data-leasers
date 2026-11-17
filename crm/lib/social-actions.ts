@@ -467,16 +467,34 @@ export async function scheduleContent(contentId: string, formData: FormData) {
 
   // A cancelled row still holds its (content, channel) pair, and the table is uniquely constrained
   // on it, so scheduling the same content to a channel it was cancelled from would be rejected.
-  // Cancelled rows can never send, so the pair is cleared for the channels being scheduled now.
-  await supabase
+  // Cancelled rows can never send, so the pair is cleared for the channels being scheduled now — but
+  // only the insert decides whether that was the right move, so the rows it removed are kept rather
+  // than trusted to be unnecessary.
+  const { data: dropped } = await supabase
     .from('social_posts')
     .delete()
     .eq('content_id', contentId)
     .eq('status', 'cancelled')
-    .in('channel_id', rows.map((row) => row.channel_id));
+    .in('channel_id', rows.map((row) => row.channel_id))
+    .select('*');
 
   const { error } = await supabase.from('social_posts').insert(rows);
-  if (error) fail('Could not schedule. One of these channels may already have this post.');
+  if (error) {
+    // A rejected insert writes nothing, so the pairs are free again and the cancelled rows go back
+    // exactly as they were — same ids, same timestamps. If even that fails the error says so, rather
+    // than reporting a plain scheduling failure over a record that is now gone.
+    const restore = (dropped ?? []) as Record<string, unknown>[];
+    let restoreFailed = false;
+    if (restore.length > 0) {
+      const { error: restoreError } = await supabase.from('social_posts').insert(restore);
+      restoreFailed = Boolean(restoreError);
+    }
+    fail(
+      restoreFailed
+        ? 'Could not schedule, and the cancelled post on that channel could not be put back. Schedule it again to recreate it.'
+        : 'Could not schedule. One of these channels may already have this post.',
+    );
+  }
 
   await supabase.from('social_contents').update({ status: 'scheduled' }).eq('id', contentId);
 
