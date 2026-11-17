@@ -190,6 +190,18 @@ also have row-level security enabled, so a new table cannot arrive unguarded.
 only part of Supabase's own definition the policies use. Storage policies and the REST layer's treatment
 of the key are outside it.
 
+### Staging walk-through
+
+`npm run seed` fills a staging project with the states this branch changed, so the console can be walked
+through without customer data: a walk-through admin (password from `SEED_STAFF_PASSWORD`, never printed),
+two companies with a buyer, an offer, an agreement and a partner with two referrals, two channels, a
+queued post, one stopped for a person, one on a channel that needs reconnecting, a sweep warning, and a
+send with a suppression. It needs `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and
+`SEED_STAFF_PASSWORD`, reads `.env.local` (or `SEED_ENV_FILE`), prints only the host it would write to,
+and refuses to write anything without `SEED_CONFIRM=yes`. Rows have fixed ids and seed markers, so a
+second run replaces its own rather than piling up. It sends nothing: every post and send is a row. The
+script ends by printing the walk-through order — the screens, and what to look at on each.
+
 ### Before a deploy
 
 `npm run check` runs all six — the migration record, the series itself, the date scan, the schema

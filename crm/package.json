@@ -16,6 +16,7 @@
     "check:clock": "node scripts/check-clock.mjs",
     "check:money": "node scripts/check-money.mjs",
     "preflight": "node scripts/preflight.mjs",
+    "seed": "node scripts/seed.mjs",
     "check-ai": "node scripts/check-ai.mjs",
     "set-password": "node scripts/set-password.mjs"
   },

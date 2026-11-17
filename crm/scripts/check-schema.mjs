@@ -7,8 +7,9 @@
 // database can disagree: a page selecting a column that is not there fails at runtime with a PostgREST
 // error, and — after this branch's fallback — can look like a degraded banner rather than a bug. This
 // compares the two offline: tables and their columns are read from supabase/migrations, and every
-// `.from('table').select('a, b')` in lib/ and app/ is checked against them. `.rpc('name')` is checked
-// against the functions the migrations define.
+// `.from('table').select('a, b')` in lib/, app/ and scripts/ is checked against them — the seed script
+// reads rows too. The check scripts themselves are skipped, because they describe these very shapes.
+// `.rpc('name')` is checked against the functions the migrations define.
 //
 // What it does not check: writes. An `insert({...})` or `update({...})` object is not judged here, nor
 // are select strings that are built at runtime, embed another table (`buyers(name)`), rename a column
@@ -73,12 +74,14 @@ for (const file of readdirSync(MIGRATIONS).filter((name) => name.endsWith('.sql'
   }
 }
 
+// The check scripts are skipped: they contain the very shapes this looks for, in a header comment and
+// in their own regular expressions. scripts/seed.mjs is not a check and is scanned like the app.
 const walk = (dir) =>
   readdirSync(dir).flatMap((name) => {
     const full = join(dir, name);
-    if (name === 'node_modules' || name === '.next') return [];
+    if (name === 'node_modules' || name === '.next' || name.startsWith('check-')) return [];
     if (statSync(full).isDirectory()) return walk(full);
-    return /\.(?:ts|tsx)$/.test(name) ? [full] : [];
+    return /\.(?:ts|tsx|mjs)$/.test(name) ? [full] : [];
   });
 
 const FROM_SELECT = /\.from\(\s*['"]([a-z_][a-z0-9_]*)['"]\s*\)\s*\.select\(\s*['"]([^'"]*)['"]/g;
@@ -90,7 +93,7 @@ let selects = 0;
 
 const lineAt = (source, index) => source.slice(0, index).split('\n').length;
 
-for (const dir of ['lib', 'app']) {
+for (const dir of ['lib', 'app', 'scripts']) {
   for (const full of walk(join(ROOT, dir))) {
     const file = relative(ROOT, full).split('\\').join('/');
     const source = readFileSync(full, 'utf8');
