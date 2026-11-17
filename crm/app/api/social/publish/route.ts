@@ -17,15 +17,20 @@ function isMissingFunction(error: { code?: string; message: string }): boolean {
   return error.code === 'PGRST202' || /could not find the function/i.test(error.message);
 }
 
-// 0020 widened the sweep's signature so the sweep can clear the console's warning itself. A database
-// that has not had 0020 rejects the widened call outright, and a sweep that stops running is far worse
-// than the extra statement that used to clear the warning, so fall back to the two-argument form: held
-// posts are still stopped either way, and the caller records that the database is behind.
-async function sweepHeldPosts(admin: ReturnType<typeof createIntakeClient>): Promise<{
+// What came back from the sweep, in the shape the caller needs: the rows it stopped, and one message to
+// show a person when there is something to say. A database behind the code is the only case where both
+// a message and real work happen — the older signature still stops held posts, and only the notice it
+// cannot clear is missing — so that is a flag on a successful run rather than a case of its own.
+type SweepRun = {
   data: unknown[] | null;
-  error: { code?: string; message: string } | null;
-  sweepSignatureMissing: string | null;
-}> {
+  problem: string | null;
+  degraded: boolean;
+};
+
+// A map, not a literal: 0020 widened the sweep's signature so the sweep can clear the console's warning
+// itself, and a database that has not had 0020 rejects the widened call outright. A sweep that stops
+// running is far worse than the notice it cannot clear, so fall back to the two-argument form.
+async function sweepHeldPosts(admin: ReturnType<typeof createIntakeClient>): Promise<SweepRun> {
   const widened = await admin.rpc('sweep_stale_social_posts', {
     // The same number the queue's note quotes, so the two cannot disagree.
     stale_after_minutes: SWEEP_AFTER_MINUTES,
@@ -34,19 +39,20 @@ async function sweepHeldPosts(admin: ReturnType<typeof createIntakeClient>): Pro
     clear_state_key: SWEEP_STATE_KEY,
   });
   if (!widened.error) {
-    return { data: widened.data as unknown[] | null, error: null, sweepSignatureMissing: null };
+    return { data: widened.data as unknown[] | null, problem: null, degraded: false };
   }
   if (!isMissingFunction(widened.error)) {
-    return { data: null, error: widened.error, sweepSignatureMissing: null };
+    return { data: null, problem: widened.error.message, degraded: false };
   }
 
   const narrow = await admin.rpc('sweep_stale_social_posts', {
     stale_after_minutes: SWEEP_AFTER_MINUTES,
   });
+  if (narrow.error) return { data: null, problem: narrow.error.message, degraded: false };
   return {
     data: (narrow.data ?? null) as unknown[] | null,
-    error: narrow.error ?? null,
-    sweepSignatureMissing: narrow.error ? null : widened.error.message,
+    problem: widened.error.message,
+    degraded: true,
   };
 }
 
@@ -83,23 +89,16 @@ export async function POST(request: Request) {
   // console, but does not stop publishing: the rest of the queue still goes out, and a sweep problem
   // is no reason to hold posts that are fine. A database behind the code falls back rather than
   // failing, so the sweep keeps running and only the warning says the migration is missing.
-  const {
-    data: swept,
-    error: sweepError,
-    sweepSignatureMissing,
-  } = await sweepHeldPosts(admin);
+  const sweep = await sweepHeldPosts(admin);
+  const swept = sweep.data;
 
   // Where the console can see it. The response below is read by whatever calls this route on a timer,
   // and nobody watches that; the Marketing page is where a person looks, and where the queue's note
   // says a held post will be stopped. Written best effort and never fatal: the posts that are fine
-  // still go out this tick. Nothing is written when the sweep works — the sweep deletes the record
-  // itself in the same transaction.
-  if (sweepError) {
-    await recordSweepFailure(sweepError.message);
-  } else if (sweepSignatureMissing) {
-    // The sweep ran, on the older signature. Nothing is held because of it, but the database is behind
-    // the code and the warning it is leaving cannot clear itself until 0020 is applied.
-    await recordSweepFailure(sweepSignatureMissing, { degraded: true });
+  // still go out this tick. A working sweep writes nothing here — it deletes the record in its own
+  // transaction — except when the database is behind, where the sweep cannot reach the delete.
+  if (sweep.problem) {
+    await recordSweepFailure(sweep.problem, sweep.degraded);
   }
 
   const sweptResults: { id: string; outcome: string; detail?: string; alert?: string }[] = [];
@@ -151,7 +150,7 @@ export async function POST(request: Request) {
         paused: true,
         message: 'Publishing is switched off in the Marketing console.',
         swept: sweptResults,
-        ...(sweepError ? { sweepError: sweepError.message } : {}),
+        ...(sweep.problem ? { sweepError: sweep.problem } : {}),
       },
       { status: 409 },
     );
@@ -306,7 +305,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     claimed: posts.length,
     swept: sweptResults,
-    ...(sweepError ? { sweepError: sweepError.message } : {}),
+    ...(sweep.problem ? { sweepError: sweep.problem } : {}),
     results,
   });
 }

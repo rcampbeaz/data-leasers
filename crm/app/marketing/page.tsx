@@ -99,6 +99,36 @@ function channelLabel(channel: unknown): string {
 // sweep's own, from SWEEP_AFTER_MINUTES, rather than a second copy of the number.
 const STUCK_AFTER_MINUTES = 2;
 
+// The only two things a sweep problem can mean, and they differ in what is true rather than in tone: a
+// failing sweep means a held post will not clear itself, while a database behind the code means the
+// sweep is still stopping them and only this notice is stuck. "Since" is when the current message
+// started — the record is not rewritten on quiet ticks, so it is not the last time it was seen.
+function sweepNotice(failure: { error: string; at: string | null; degraded: boolean }): {
+  tone: string;
+  text: string;
+  since: string;
+} {
+  const since = failure.at
+    ? ` ${failure.degraded ? 'Seen since' : 'Failing since'} ${new Date(failure.at).toLocaleString('en-US', {
+        timeZone: 'America/Phoenix',
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })} (Phoenix)`
+    : '';
+  if (failure.degraded) {
+    return {
+      tone: 'notice review',
+      text: 'The database is behind this code. The sweep is running and still stops posts whose publishing run died, but the migration that lets it clear this notice has not been applied. Run 0020_sweep_clears_its_own_warning.sql; this notice goes away on the next publishing run.',
+      since,
+    };
+  }
+  return {
+    tone: 'notice blocked',
+    text: 'The sweep that stops posts whose publishing run died is failing, so a held post stays held until somebody looks at it — it will not clear itself. Publishing itself is unaffected.',
+    since,
+  };
+}
+
 // sweepBroken changes the second half of every wording: the age is still true, but the promise that a
 // run will come along and stop it is not, so the row points at the warning instead of naming a step
 // that is not coming.
@@ -231,6 +261,7 @@ export default async function MarketingPage({
           degraded: sweepStateValue.degraded === true,
         }
       : null;
+  const sweepNoticeText = sweepFailure ? sweepNotice(sweepFailure) : null;
 
   // What the AI panel can say honestly: whether a provider is configured at all, and whether the
   // Agents page switch and cap actually allow a run right now.
@@ -395,21 +426,10 @@ export default async function MarketingPage({
           switched back on.
         </p>
       ) : null}
-      {sweepFailure ? (
-        <p className={sweepFailure.degraded ? 'notice review' : 'notice blocked'}>
-          {sweepFailure.degraded
-            ? 'The database is behind this code. The sweep is running and still stops posts whose publishing run died, but the migration that lets it clear this notice has not been applied. Run ' +
-              '0020_sweep_clears_its_own_warning.sql; this notice goes away on the next publishing run.'
-            : 'The sweep that stops posts whose publishing run died is failing, so a held post stays held until somebody looks at it — it will not clear itself. Publishing itself is unaffected.'}
-          {sweepFailure.at
-            ? ` ${sweepFailure.degraded ? 'Seen since' : 'Failing since'} ${new Date(
-                sweepFailure.at,
-              ).toLocaleString('en-US', {
-                timeZone: 'America/Phoenix',
-                dateStyle: 'medium',
-                timeStyle: 'short',
-              })} (Phoenix):`
-            : ' Last error:'}{' '}
+      {sweepFailure && sweepNoticeText ? (
+        <p className={sweepNoticeText.tone}>
+          {sweepNoticeText.text}
+          {sweepNoticeText.since ? `${sweepNoticeText.since}:` : ' Last error:'}{' '}
           <code>{sweepFailure.error}</code>
         </p>
       ) : null}

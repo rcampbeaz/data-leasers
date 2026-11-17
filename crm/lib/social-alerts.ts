@@ -84,10 +84,7 @@ async function adminAddresses(): Promise<string[]> {
 //
 // degraded means the sweep is running but on the older two-argument signature — the database has the
 // code but not 0020 — so the console says the database is behind instead of saying the sweep is broken.
-export async function recordSweepFailure(
-  message: string,
-  { degraded = false }: { degraded?: boolean } = {},
-): Promise<void> {
+export async function recordSweepFailure(message: string, degraded = false): Promise<void> {
   try {
     const supabase = createIntakeClient();
     const { data: existing } = await supabase
@@ -98,11 +95,11 @@ export async function recordSweepFailure(
     const current = existing?.value as { error?: unknown; degraded?: unknown } | null | undefined;
     // `at` is left out of the comparison on purpose: it records when this message started, so
     // refreshing it would make the row differ from itself on every tick and defeat the check.
-    if (current && current.error === message && (current.degraded === true) === degraded) return;
+    if (current?.error === message && Boolean(current?.degraded) === degraded) return;
 
     const at = new Date().toISOString();
     await supabase.from('app_settings').upsert(
-      { key: SWEEP_STATE_KEY, value: { error: message, at, ...(degraded ? { degraded: true } : {}) }, updated_at: at },
+      { key: SWEEP_STATE_KEY, value: { error: message, at, degraded }, updated_at: at },
       { onConflict: 'key' },
     );
   } catch {
