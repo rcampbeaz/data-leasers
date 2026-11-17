@@ -140,10 +140,11 @@ const step = async (label, run) => {
   }
 };
 
-const must = async (label, promise) => {
+// One way of reporting a failed write: the step around it already says which write this was, so the
+// PostgREST message is all that has to travel.
+const must = async (promise) => {
   const { error } = await promise;
   if (error) throw new Error(error.message);
-  return label;
 };
 
 console.log(`seed: writing to ${host} as ${email}\n`);
@@ -170,7 +171,6 @@ const userId = await step('walk-through staff account', async () => {
 
 await step('staff row, as an admin', () =>
   must(
-    'crm_staff',
     supabase.from('crm_staff').upsert(
       { user_id: userId, full_name: 'Walk-through Admin', role: 'admin' },
       { onConflict: 'user_id' },
@@ -180,7 +180,6 @@ await step('staff row, as an admin', () =>
 
 await step('staff profile row', () =>
   must(
-    'crm_staff_profiles',
     supabase.from('crm_staff_profiles').upsert({ user_id: userId, email }, { onConflict: 'user_id' }),
   ),
 );
@@ -213,14 +212,12 @@ await step('clear the previous seed', async () => {
 // 3. Companies, a buyer, and the deal trail behind them.
 await step('one buyer', () =>
   must(
-    'buyers',
     supabase.from('buyers').insert({ id: BUYER, name: 'Seed — Meridian Capital', kind: 'program' }),
   ),
 );
 
 await step('two companies', () =>
   must(
-    'companies',
     supabase.from('companies').insert([
       {
         id: COMPANY_A,
@@ -246,7 +243,6 @@ await step('two companies', () =>
 
 await step('introductions to the buyer', () =>
   must(
-    'introductions',
     supabase.from('introductions').insert([
       {
         id: INTRODUCTION_A,
@@ -268,7 +264,6 @@ await step('introductions to the buyer', () =>
 
 await step('an offer and a signed agreement', async () => {
   await must(
-    'offers',
     supabase.from('offers').insert({
       id: OFFER,
       company_id: COMPANY_A,
@@ -280,7 +275,6 @@ await step('an offer and a signed agreement', async () => {
     }),
   );
   await must(
-    'agreements',
     supabase.from('agreements').insert({
       id: AGREEMENT,
       company_id: COMPANY_A,
@@ -300,7 +294,6 @@ await step('an offer and a signed agreement', async () => {
 // 4. A partner with two referrals: one inside the chase window, one already past its deadline.
 await step('a partner with two referrals', async () => {
   await must(
-    'partners',
     supabase.from('partners').insert({
       id: PARTNER,
       name: 'Seed — Beacon Introductions',
@@ -312,7 +305,6 @@ await step('a partner with two referrals', async () => {
     }),
   );
   await must(
-    'referrals',
     supabase.from('referrals').insert([
       {
         id: REFERRAL_AT_RISK,
@@ -339,7 +331,6 @@ await step('a partner with two referrals', async () => {
 // 5. Two channels and three posts: one queued, one stopped for a person, one on a dead channel.
 await step('two channels', () =>
   must(
-    'social_channels',
     supabase.from('social_channels').insert([
       {
         id: CHANNEL_LIVE,
@@ -365,7 +356,6 @@ await step('two channels', () =>
 
 await step('three pieces of content', () =>
   must(
-    'social_contents',
     supabase.from('social_contents').insert([
       {
         id: CONTENT_QUEUED,
@@ -400,7 +390,6 @@ await step('three pieces of content', () =>
 
 await step('a queued post, a stopped post and a post on a dead channel', () =>
   must(
-    'social_posts',
     supabase.from('social_posts').insert([
       {
         id: POST_QUEUED,
@@ -440,7 +429,6 @@ await step('a queued post, a stopped post and a post on a dead channel', () =>
 // 6. The sweep's own record, which is what the Marketing page and /health read.
 await step('a sweep warning', () =>
   must(
-    'app_settings',
     supabase.from('app_settings').upsert(
       {
         key: 'marketing_sweep',
@@ -448,14 +436,13 @@ await step('a sweep warning', () =>
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'key' },
-    ),
+  ),
   ),
 );
 
 // 7. Email health: two recipients, two sends, and a bounce that suppresses one of them.
 await step('contacts, two sends and a suppression', async () => {
   await must(
-    'outreach_contacts',
     supabase.from('outreach_contacts').insert([
       { email: BOUNCED_EMAIL, basis: 'opt_out_only', source: 'seed', status: 'active' },
       { email: DELIVERED_EMAIL, basis: 'opt_out_only', source: 'seed', status: 'active' },
@@ -470,7 +457,6 @@ await step('contacts, two sends and a suppression', async () => {
   if (!idOf(BOUNCED_EMAIL) || !idOf(DELIVERED_EMAIL)) throw new Error('seeded contacts not found');
 
   await must(
-    'outbound_sends',
     supabase.from('outbound_sends').insert([
       {
         contact_id: idOf(DELIVERED_EMAIL),
@@ -490,7 +476,6 @@ await step('contacts, two sends and a suppression', async () => {
     ]),
   );
   await must(
-    'suppressions',
     supabase.from('suppressions').insert({
       email: BOUNCED_EMAIL,
       reason: 'bounced',
