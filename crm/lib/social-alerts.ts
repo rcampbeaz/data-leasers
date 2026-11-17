@@ -69,7 +69,7 @@ export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome>
     `Post: ${post.body.slice(0, 400)}${post.body.length > 400 ? '…' : ''}`,
     '',
     missing
-      ? 'Connect the channel again on the Channels tab, then Retry the post.'
+      ? 'The account this post was queued for is no longer connected, and the post still points at the channel that has gone, so Retry cannot help. Connect the account again on the Channels tab, then cancel this post and schedule the content to the new channel.'
       : inactive
         ? 'Reconnect the channel with the provider, press Mark active on the Channels tab, then Retry the post.'
         : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.',
