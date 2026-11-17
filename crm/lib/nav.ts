@@ -34,6 +34,7 @@ export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     title: 'Automation',
     items: [
       { href: '/agents', label: 'Agents', hint: 'Model-written drafts, capped daily', roles: ['admin', 'introducer'] },
+      { href: '/health', label: 'Scheduler health', hint: 'Last sweep, stuck posts and outbound sends left open', roles: ['admin', 'introducer'] },
     ],
   },
   {

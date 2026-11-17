@@ -199,6 +199,7 @@ p { margin: 0 0 12px; }
 .notice { padding: 11px 14px; border-radius: var(--radius-sm); margin-bottom: 14px; border: 1px solid transparent; }
 .notice.blocked { background: var(--dl-blocked-bg); color: var(--dl-blocked-fg); border-color: rgba(248, 113, 113, 0.3); }
 .notice.review { background: var(--dl-review-bg); color: var(--dl-review-fg); border-color: rgba(245, 183, 76, 0.3); }
+.notice.approved { background: var(--dl-approved-bg); color: var(--dl-approved-fg); border-color: rgba(74, 222, 128, 0.3); }
 .status { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
 .status.approved { background: var(--dl-approved-bg); color: var(--dl-approved-fg); }
 .status.review { background: var(--dl-review-bg); color: var(--dl-review-fg); }
