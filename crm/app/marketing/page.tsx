@@ -87,10 +87,16 @@ function channelLabel(channel: unknown): string {
 // one wondering.
 const STUCK_AFTER_MINUTES = 2;
 
+// The sweep's default threshold in 0019_social_claim_recovery.sql. This row has no button of its own —
+// Retry and Cancel both refuse a send that may be in flight — so the note is the only thing telling
+// the reader what happens next, and it is worth naming the step that is actually coming rather than
+// leaving it conditional. Keep this equal to the migration's default.
+const SWEEP_AFTER_MINUTES = 15;
+
 function publishHold(claimedAt: unknown): string {
   const at = typeof claimedAt === 'string' ? Date.parse(claimedAt) : Number.NaN;
   const sendingNow =
-    'Sending now. If the run never reports back, the sweep stops it and emails the admins.';
+    'Sending now. A run that dies here is stopped by the sweep and the admins are emailed.';
   if (!Number.isFinite(at)) return sendingNow;
 
   const minutes = Math.max(0, (Date.now() - at) / 60_000);
@@ -98,7 +104,11 @@ function publishHold(claimedAt: unknown): string {
 
   const age =
     minutes < 120 ? `${Math.round(minutes)} minutes` : `${Math.round(minutes / 60)} hours`;
-  return `Held by a publishing run for ${age}. If it never reports back, the sweep stops it and emails the admins.`;
+
+  if (minutes < SWEEP_AFTER_MINUTES) {
+    return `Held by a publishing run for ${age}. The sweep stops it once the hold passes ${SWEEP_AFTER_MINUTES} minutes, then emails the admins.`;
+  }
+  return `Held by a publishing run for ${age} — past the sweep's ${SWEEP_AFTER_MINUTES} minutes, so the next publishing run stops it and emails the admins.`;
 }
 
 function platformColor(platform: string): string {
