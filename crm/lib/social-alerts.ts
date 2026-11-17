@@ -1,7 +1,8 @@
 import { channelSpec } from '@/lib/social';
 import { createIntakeClient } from '@/lib/supabase';
 
-// One email per post that stops for good. A spent retry ladder or a dead token is exactly the case
+// One email per post that stops for good. A post whose sending run died is not one of these: it goes
+// out with the sweep's digest below, which is the only caller for that case. A spent retry ladder or a dead token is exactly the case
 // where waiting for somebody to open the Marketing page is the wrong design.
 //
 // It is sent at the moment a post enters 'needs_manual'. That state is excluded from claiming, so
@@ -97,9 +98,6 @@ export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome>
   // than offering a button that will only say no.
   const missing = post.channelStatus === 'missing';
   const inactive = post.channelStatus !== 'active';
-  // The only case where the outcome is unknown rather than negative: a run died after claiming the
-  // post, so it may or may not have reached the provider. The advice has to send somebody to look.
-  const abandoned = post.code === 'abandoned_run';
 
   const text = [
     `A ${name} post stopped and is waiting for a person.`,
@@ -118,11 +116,9 @@ export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome>
     '',
     missing
       ? 'The account this post was queued for is no longer connected, and the post still points at the channel that has gone, so Retry cannot help. Connect the account again on the Channels tab, then cancel this post and schedule the content to the new channel.'
-      : abandoned
-        ? `The run that was sending this one died before it could record what happened, so it may already be live on ${name}. Open the account and look first: if the post is there, cancel it in the console; if it is not, press Retry and it goes back in the queue.`
-        : inactive
-          ? 'Reconnect the channel with the provider, press Mark active on the Channels tab, then Retry the post.'
-          : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.',
+      : inactive
+        ? 'Reconnect the channel with the provider, press Mark active on the Channels tab, then Retry the post.'
+        : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.',
     '',
     `Open the Marketing console: ${consoleUrl()}`,
   ].join('\n');
