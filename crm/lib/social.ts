@@ -60,9 +60,9 @@ export function channelSpec(key: string): ChannelSpec | undefined {
 
 // How long a publishing claim may stand before the sweep treats it as a dead run.
 //
-// The publisher passes this value to sweep_stale_social_posts and the queue's note reads it, so the note
-// cannot promise a threshold the sweep does not use. The migration has a default of its own for manual
-// calls, but the app never relies on it. Changing it here changes both halves.
+// The publisher passes this value to sweep_stale_social_posts, and the queue's note reads it, so the
+// note cannot promise a threshold the sweep does not use. The function takes the threshold as a
+// required argument with no default stored in the schema, so this constant is the only copy.
 export const SWEEP_AFTER_MINUTES = 15;
 
 // Where the publisher records that the sweep failed, and deletes when one works again. It lives in

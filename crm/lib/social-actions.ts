@@ -574,8 +574,6 @@ export async function cancelPost(postId: string) {
   revalidatePath(PATH);
 }
 
-// Registers a channel by hand, storing only the provider's profile key. OAuth flows are
-// per-platform and arrive with the provider; this is enough to schedule and publish.
 // The other half of what the publisher does. A dead token sets the channel needs_reauth, and
 // addChannel only inserts, so a channel that had been reconnected at the provider stayed unusable
 // for ever and the posts waiting on it could never be retried. Reconnecting itself happens with the
@@ -596,6 +594,8 @@ export async function reactivateChannel(channelId: string) {
   revalidatePath(PATH);
 }
 
+// Registers a channel by hand, storing only the provider's profile key. OAuth flows are
+// per-platform and arrive with the provider; this is enough to schedule and publish.
 export async function addChannel(formData: FormData) {
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);

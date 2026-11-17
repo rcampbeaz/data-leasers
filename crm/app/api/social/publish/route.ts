@@ -27,9 +27,9 @@ type SweepRun = {
   degraded: boolean;
 };
 
-// A map, not a literal: 0020 widened the sweep's signature so the sweep can clear the console's warning
-// itself, and a database that has not had 0020 rejects the widened call outright. A sweep that stops
-// running is far worse than the notice it cannot clear, so fall back to the two-argument form.
+// 0020 widened the sweep's signature so the sweep can clear the console's warning itself, and a database
+// that has not had 0020 rejects the widened call outright. A sweep that stops running is far worse than
+// the notice it cannot clear, so fall back to the two-argument form.
 async function sweepHeldPosts(admin: ReturnType<typeof createIntakeClient>): Promise<SweepRun> {
   const widened = await admin.rpc('sweep_stale_social_posts', {
     // The same number the queue's note quotes, so the two cannot disagree.

@@ -802,12 +802,9 @@ export default async function MarketingPage({
                               <button className="btn" type="submit">Retry</button>
                             </form>
                           ) : (
-                            <button
-                              className="btn"
-                              type="button"
-                              disabled
-                              title={retryAdvice(channel?.status ?? null)}
-                            >
+                            // The reason is the line in the Result cell: a title on a disabled
+                            // button is not reachable by keyboard or touch.
+                            <button className="btn" type="button" disabled>
                               Retry
                             </button>
                           )
