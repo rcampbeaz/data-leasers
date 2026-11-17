@@ -164,8 +164,19 @@ function platformColor(platform: string): string {
 // changed, or on a server whose own zone differed.
 const PHOENIX_TIME_ZONE = 'America/Phoenix';
 
+// Building an Intl formatter is the expensive half of formatting, and the page formats one per post,
+// so each shape is built once and kept. The options are the key because they are what define a shape;
+// the page asks for four.
+const PHOENIX_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
+
 function phoenix(when: string | number | Date, options: Intl.DateTimeFormatOptions): string {
-  return new Date(when).toLocaleString('en-US', { timeZone: PHOENIX_TIME_ZONE, ...options });
+  const key = JSON.stringify(options);
+  let formatter = PHOENIX_FORMATTERS.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', { timeZone: PHOENIX_TIME_ZONE, ...options });
+    PHOENIX_FORMATTERS.set(key, formatter);
+  }
+  return formatter.format(new Date(when));
 }
 
 // The machine-readable shapes — a sortable day, a clock time, a stamp and the value a datetime-local
