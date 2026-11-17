@@ -66,10 +66,10 @@ revoke all on function public.claim_social_posts(integer) from authenticated;
 -- attempts and puts the row back in the queue for the next tick. Sending it again costs a duplicate
 -- on the client's account that only they can delete. The attempt stays spent, because it did happen.
 --
--- The threshold then only has to keep the sweep away from a run that is still working: 15 minutes
--- against a send that normally takes seconds. The publisher passes it explicitly, from
--- SWEEP_AFTER_MINUTES in lib/social.ts, which is also what the queue's note reads — the default here is
--- for calling the function by hand, and the app does not depend on it.
+-- The threshold then only has to keep the sweep away from a run that is still working: a few minutes
+-- against a send that normally takes seconds. It has no default here on purpose: a default would be a
+-- second copy of the number that could drift from the code. The publisher always passes
+-- SWEEP_AFTER_MINUTES from lib/social.ts, which is also what the queue's note reads.
 --
 -- A row claimed before this migration was applied has no claimed_at, so scheduled_for is used as its
 -- clock instead — by then the claiming run has certainly finished, one way or the other.
@@ -82,7 +82,7 @@ drop function if exists public.sweep_stale_social_posts(interval);
 drop function if exists public.sweep_stale_social_posts(interval, integer);
 
 create or replace function public.sweep_stale_social_posts(
-  stale_after_minutes integer default 15,
+  stale_after_minutes integer,
   max_rows integer default 25
 )
 returns setof public.social_posts
