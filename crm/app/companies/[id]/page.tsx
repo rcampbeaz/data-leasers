@@ -146,10 +146,10 @@ export default async function CompanyPage({
         <section className="panel">
           <h2>Stage</h2>
           <form action={moveStageWithId} className="inline-form">
-            <select name="stage" defaultValue={normalizeStage(company.stage)}>
+            <select name="stage" aria-label="Stage" defaultValue={normalizeStage(company.stage)}>
               {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
-            <select name="closeReason" defaultValue={company.close_reason ?? ''}>
+            <select name="closeReason" aria-label="Close reason" defaultValue={company.close_reason ?? ''}>
               <option value="">Close reason (if Closed)</option>
               <option>Won</option><option>Lost</option><option>Paused</option><option>Not a fit</option>
             </select>
@@ -276,7 +276,7 @@ export default async function CompanyPage({
                   <td className="wrap-cell">{d.status_reason ?? '-'}</td>
                   <td>
                     <form action={setDatasetStatus.bind(null, id, d.id)} className="inline-form">
-                      <select name="status" defaultValue={d.status}>
+                      <select name="status" aria-label="Dataset status" defaultValue={d.status}>
                         <option>Approved</option><option>Review</option><option>Blocked</option>
                       </select>
                       <input name="reason" placeholder="Reason" aria-label="Reason for the status" maxLength={1000} />
@@ -290,7 +290,7 @@ export default async function CompanyPage({
         )}
         <form action={addDatasetWithId} className="inline-form">
           <input name="name" placeholder="Dataset name" aria-label="Dataset name" required maxLength={200} />
-          <select name="status" defaultValue="Review">
+          <select name="status" aria-label="Status for the new dataset" defaultValue="Review">
             <option>Approved</option><option>Review</option><option>Blocked</option>
           </select>
           <input name="reason" placeholder="Reason" aria-label="Reason for the status" maxLength={1000} />
@@ -320,7 +320,7 @@ export default async function CompanyPage({
           </table>
         )}
         <form action={addIntroductionWithId} className="inline-form">
-          <select name="buyerId" required defaultValue="">
+          <select name="buyerId" aria-label="Buyer" required defaultValue="">
             <option value="">Choose a buyer</option>
             {buyerList.filter((b) => b.active).map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
@@ -360,7 +360,7 @@ export default async function CompanyPage({
                   </td>
                   <td>
                     <form action={setOfferStatus.bind(null, id, offer.id)} className="inline-form">
-                      <select name="status" defaultValue={offer.status}>
+                      <select name="status" aria-label="Offer status" defaultValue={offer.status}>
                         <option>offered</option><option>accepted</option><option>declined</option><option>withdrawn</option>
                       </select>
                       <button className="btn" type="submit">Set</button>
@@ -373,7 +373,7 @@ export default async function CompanyPage({
         )}
         <form action={addOfferWithId} className="form-grid">
           <label>Buyer
-            <select name="buyerId" required defaultValue="">
+            <select name="buyerId" aria-label="Buyer" required defaultValue="">
               <option value="">Choose a buyer</option>
               {buyerList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -429,7 +429,7 @@ export default async function CompanyPage({
         )}
         <form action={addAgreementWithId} className="form-grid">
           <label>Buyer
-            <select name="buyerId" defaultValue="">
+            <select name="buyerId" aria-label="Buyer" defaultValue="">
               <option value="">Choose a buyer</option>
               {buyerList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -443,9 +443,6 @@ export default async function CompanyPage({
                 </option>
               ))}
             </select>
-          </label>
-          <label>Notes
-            <input name="notes" maxLength={2000} />
           </label>
           <label>Licence start
             <input type="date" name="licenceStart" required defaultValue={todayIso()} />
@@ -461,6 +458,9 @@ export default async function CompanyPage({
           </label>
           <label>Signed on
             <input type="date" name="signedOn" defaultValue={todayIso()} />
+          </label>
+          <label className="span-2">Notes
+            <input name="notes" maxLength={2000} />
           </label>
           <label className="span-2">
             <span><input type="checkbox" name="auditRight" /> Audit right included</span>
@@ -502,14 +502,14 @@ export default async function CompanyPage({
           <label>Title
             <input name="title" required maxLength={200} />
           </label>
-          <label className="span-2">Link
-            <input name="location" maxLength={1000} placeholder="https://..." />
-          </label>
           <label>Signed on
             <input type="date" name="signedOn" />
           </label>
           <label>Notes
             <input name="notes" maxLength={2000} />
+          </label>
+          <label className="span-2">Link
+            <input name="location" maxLength={1000} placeholder="https://..." />
           </label>
           <button className="btn" type="submit">Save document</button>
         </form>
