@@ -115,6 +115,10 @@ so a reordered, renamed or edited file, or one that is no longer safe to re-run,
 than in the SQL Editor. Run `npm install` once first; it needs no project, no network and no
 credentials.
 
+After both passes it also fails, printing what it found, if a date default sits on any clock other than
+Phoenix or any function body mentions `current_date` — the two things 0021 and 0022 fixed, so a new
+table added with `default current_date` cannot quietly put the UTC day back.
+
 It proves the series builds on an empty database, not that it behaves: policies are created but never
 evaluated, `auth.uid()` is a stub, and nothing calls storage. Apply each new file to the real project
 in the SQL Editor as before.

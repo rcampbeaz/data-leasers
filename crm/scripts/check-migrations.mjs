@@ -11,9 +11,13 @@
 // dropped before they are created, so nothing stops with "already exists". It reads only the files in
 // supabase/migrations: no network, no credentials, no project.
 //
+// After both passes it also refuses a date default that is not on the Phoenix clock, and any function
+// body that mentions current_date: the database runs in UTC, so those differ from the console after 5pm.
+//
 // What this does not prove. Policies are created but never evaluated, auth.uid() is a stub returning
 // null, and nothing calls storage. A file that applies here can still be wrong about behaviour; what it
-// catches is the series no longer building on an empty database, or no longer surviving a second run.
+// catches is the series no longer building on an empty database, no longer surviving a second run, or
+// drifting off the Phoenix clock.
 //
 // PGlite is a dev dependency, so `npm install` has to have run once.
 
@@ -79,5 +83,38 @@ for (const pass of [1, 2]) {
   }
 }
 
+// The one thing the series must never drift from: every date a default fills in, and every comparison
+// that turns an instant into a day, is on the console's clock. A table added with `default current_date`
+// would date its rows in UTC after 5pm Phoenix, and nothing else here would notice.
+const clockOffenders = (await db.query(`
+  select c.relname || '.' || a.attname as object, 'default' as kind,
+         pg_get_expr(d.adbin, d.adrelid) as expression
+    from pg_attrdef d
+    join pg_class c on c.oid = d.adrelid
+    join pg_attribute a on a.attrelid = c.oid and a.attnum = d.adnum
+   where c.relnamespace = 'public'::regnamespace
+     and (
+       (a.atttypid = 'date'::regtype
+        and pg_get_expr(d.adbin, d.adrelid) not ilike '%America/Phoenix%')
+       or pg_get_expr(d.adbin, d.adrelid) ilike '%current_date%'
+     )
+  union all
+  select p.proname, 'function', 'body mentions current_date'
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.prosrc ilike '%current_date%'
+   order by 1
+`)).rows;
+
 await db.close();
 console.log(`\n${files.length} files applied twice, in order, to an empty database.`);
+
+if (clockOffenders.length > 0) {
+  console.error('\nA date is still on the database\'s clock rather than Phoenix:');
+  for (const row of clockOffenders) {
+    console.error(`  ${row.object} (${row.kind}): ${row.expression}`);
+  }
+  console.error('\nDate defaults belong on America/Phoenix (see 0022) and day comparisons in a function');
+  console.error('belong on it too (see 0021). The database runs in UTC, so after 5pm Phoenix these differ.');
+  process.exit(1);
+}
