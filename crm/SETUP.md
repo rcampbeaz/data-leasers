@@ -226,12 +226,15 @@ the schema fails on a laptop instead of on the first staging run.
 
 ### Checking the environment contract
 
-`npm run check:env` compares the names the code reads with `crm/.env.example`, both ways: a name the
-running app reads that the template never mentions is how a server ends up unable to do something, and a
-name the template documents that nothing reads sends whoever sets up a server to configure nothing. It
-is why `FACEBOOK_PAGE_ID` and `FACEBOOK_PAGE_TOKEN` are in both places. Names read only by `scripts/`
-(`SEED_CONFIRM`, `SEED_STAFF_PASSWORD`) are operator flags and are exempt; `NODE_ENV` comes from the
-runtime. It proves the contract, not that any particular machine has the values — that is preflight.
+`npm run check:env` holds three lists to each other: the names the code reads, the names
+`crm/.env.example` documents, and the names a group in `crm/scripts/preflight.mjs` reports. They drift
+separately, which is the point — `.env.example` already had `FACEBOOK_PAGE_ID` and
+`FACEBOOK_PAGE_TOKEN` while preflight still listed only the provider's two, so a server configured for
+the Page failed its own readiness check. A name the app reads must now be both documented and reported,
+unless it is in the check's `NOT_A_SERVER_SETTING` map with the reason the code can supply a default;
+and a name either list keeps after nothing reads it is an error too. Names read only by `scripts/`
+(`SEED_CONFIRM`, `SEED_STAFF_PASSWORD`) are operator flags and are exempt. It proves the contract, not
+that a machine has the values — that is preflight.
 
 ### Before a deploy
 
