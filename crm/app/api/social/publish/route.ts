@@ -36,6 +36,11 @@ export async function POST(request: Request) {
     );
   }
 
+  // Anything a dead run abandoned comes back before new work is taken, so a post cannot be lost to a
+  // crash between being claimed and an outcome being recorded. A sweep that fails is reported but does
+  // not stop publishing: before 0019 is applied the rest of the queue should still go out.
+  const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts');
+
   const { data: claimed, error } = await admin.rpc('claim_social_posts', { batch_size: 10 });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -182,5 +187,10 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ claimed: posts.length, results });
+  return NextResponse.json({
+    claimed: posts.length,
+    swept: (swept ?? []).length,
+    ...(sweepError ? { sweepError: sweepError.message } : {}),
+    results,
+  });
 }
