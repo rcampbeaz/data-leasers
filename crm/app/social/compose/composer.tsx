@@ -7,6 +7,7 @@ import {
   charCount,
   issuesForChannel,
   mediaKindFor,
+  phoenixLabel,
   phoenixToUtc,
   type Issue,
   type MediaLibraryItem,
@@ -323,7 +324,7 @@ export default function Composer({
                       <option value="">Choose an asset…</option>
                       {library.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.altText.slice(0, 70)}
+                          {`${item.altText.slice(0, 60)} · ${item.kind} · ${phoenixLabel(item.createdAt, { month: 'short', day: 'numeric', year: 'numeric' })}`}
                         </option>
                       ))}
                     </select>

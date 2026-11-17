@@ -61,18 +61,26 @@ export async function currentStaff(supabase: SupabaseClient): Promise<StaffMembe
 export async function loadMediaLibrary(supabase: SupabaseClient): Promise<MediaLibraryItem[]> {
   const { data } = await supabase
     .from('social_media')
-    .select('id, public_url, kind, alt_text, rights_note')
+    .select('id, public_url, kind, alt_text, rights_note, created_at')
     .order('created_at', { ascending: false })
     .limit(100);
 
   return (
-    (data ?? []) as { id: string; public_url: string; kind: string; alt_text: string; rights_note: string }[]
+    (data ?? []) as {
+      id: string;
+      public_url: string;
+      kind: string;
+      alt_text: string;
+      rights_note: string;
+      created_at: string;
+    }[]
   ).map((row) => ({
     id: row.id,
     url: row.public_url,
     kind: row.kind === 'video' ? 'video' : 'image',
     altText: row.alt_text,
     rightsNote: row.rights_note,
+    createdAt: row.created_at,
   }));
 }
 

@@ -13,6 +13,9 @@ export type MediaLibraryItem = {
   kind: 'image' | 'video';
   altText: string;
   rightsNote: string;
+  // Shown in the picker: two uploads can share an alt text, and the date is what tells
+  // them apart.
+  createdAt: string;
 };
 
 export const PLATFORM_LABELS: Record<Platform, string> = {
