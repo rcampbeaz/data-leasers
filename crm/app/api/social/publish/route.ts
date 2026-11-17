@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createIntakeClient } from '@/lib/supabase';
 import { publishPost, retryDelayMinutes, type Channel } from '@/lib/social';
+import { alertStoppedPost } from '@/lib/social-alerts';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     attempts: number;
   }[];
 
-  const results: { id: string; outcome: string; detail?: string }[] = [];
+  const results: { id: string; outcome: string; detail?: string; alert?: string }[] = [];
 
   for (const post of posts) {
     const { data: channel } = await admin
@@ -118,7 +119,15 @@ export async function POST(request: Request) {
           last_error: result.message,
         })
         .eq('id', post.id);
-      results.push({ id: post.id, outcome: 'needs_reauth', detail: result.message });
+      const alert = await alertStoppedPost({
+        platform: String(channel.platform),
+        body: post.body,
+        code: result.code,
+        detail: result.message,
+        channelStatus: 'needs_reauth',
+        scheduledFor: post.scheduled_for,
+      });
+      results.push({ id: post.id, outcome: 'needs_reauth', detail: result.message, alert });
       continue;
     }
 
@@ -139,11 +148,25 @@ export async function POST(request: Request) {
         next_retry_at: nextRetry,
       })
       .eq('id', post.id);
+    // Only the endings that stop are worth waking somebody for; a retry is still happening on its own.
+    const alert =
+      delay === null
+        ? await alertStoppedPost({
+            platform: String(channel.platform),
+            body: post.body,
+            code: result.code,
+            detail: result.message,
+            channelStatus: String(channel.status),
+            scheduledFor: post.scheduled_for,
+          })
+        : null;
+
     results.push({
       id: post.id,
       outcome:
         delay === null ? (result.retryable ? 'gave_up' : 'not_retryable') : `retry_in_${delay}m`,
       detail: result.message,
+      ...(alert ? { alert } : {}),
     });
   }
 
