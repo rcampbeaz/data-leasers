@@ -1,21 +1,26 @@
 import { createStaffClient } from '@/lib/supabase';
 import { STAGES, normalizeStage } from '@/lib/pipeline';
 import { todayIso } from '@/lib/time';
+import { loadStaff } from '@/lib/data';
 import PipelineBoard, { type BoardCompany } from './board';
 
 export default async function PipelinePage() {
   const supabase = await createStaffClient();
-  const [{ data, error }, { data: history }] = await Promise.all([
+  const [{ data, error }, { data: history }, staff] = await Promise.all([
     supabase
       .from('companies')
-      .select('id, name, stage, next_action, next_action_due')
+      .select('id, name, stage, owner_id, next_action, next_action_due')
       .order('updated_at', { ascending: false }),
     supabase
       .from('stage_history')
       .select('company_id, changed_at')
       .order('changed_at', { ascending: false })
       .limit(2000),
+    loadStaff(supabase),
   ]);
+
+  // A card that does not say who owns it is a card nobody has picked up.
+  const ownerName = new Map(staff.map((s) => [s.user_id, s.full_name]));
 
   // The newest stage change is when the company entered the stage it is in now.
   const enteredAt = new Map<string, string>();
@@ -23,11 +28,17 @@ export default async function PipelinePage() {
     if (!enteredAt.has(row.company_id)) enteredAt.set(row.company_id, row.changed_at);
   }
 
-  const companies = ((data ?? []) as BoardCompany[]).map((c) => ({
-    ...c,
-    stage: normalizeStage(c.stage),
-    entered_on: enteredAt.get(c.id) ?? null,
-  }));
+  const companies = ((data ?? []) as (Omit<BoardCompany, 'owner' | 'entered_on'> & { owner_id: string | null })[]).map(
+    (c) => ({
+      id: c.id,
+      name: c.name,
+      stage: normalizeStage(c.stage),
+      next_action: c.next_action,
+      next_action_due: c.next_action_due,
+      owner: c.owner_id ? ownerName.get(c.owner_id) ?? null : null,
+      entered_on: enteredAt.get(c.id) ?? null,
+    }),
+  );
 
   return (
     <main className="page">

@@ -11,7 +11,7 @@ import {
   type SendLike,
   type SuppressionLike,
 } from '@/lib/deliverability';
-import { calendarMonth, isMonthKey, phoenixMonths, shiftMonth } from '@/lib/time';
+import { calendarMonth, isMonthKey, phoenix, phoenixMonths, shiftMonth } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
@@ -254,7 +254,7 @@ export default async function DeliverabilityPage({
         ) : (
           <table className="table">
             <thead>
-              <tr><th>Domain</th><th>Sent</th><th>Complaints</th><th>Rate</th><th>Why</th><th></th></tr>
+              <tr><th>Domain</th><th>Sent</th><th>Complaints</th><th>Rate</th><th>Held since</th><th>Why</th><th></th></tr>
             </thead>
             <tbody>
               {holdRows.map((h) => (
@@ -263,6 +263,7 @@ export default async function DeliverabilityPage({
                   <td>{h.sent}</td>
                   <td>{h.complained}</td>
                   <td>{h.complaint_rate === null ? '—' : `${(h.complaint_rate * 100).toFixed(2)}%`}</td>
+                  <td>{phoenix(h.created_at, { dateStyle: 'medium' })}</td>
                   <td className="wrap-cell muted small">{h.reason}</td>
                   <td>
                     {canRelease ? (

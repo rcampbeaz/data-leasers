@@ -12,6 +12,8 @@ export type BoardCompany = {
   stage: string;
   next_action: string | null;
   next_action_due: string | null;
+  // The staff member who owns the record, from crm_staff.
+  owner: string | null;
   // When the company entered its current stage, from stage_history.
   entered_on: string | null;
 };
@@ -102,6 +104,7 @@ export default function PipelineBoard({
                     <Link href={`/companies/${c.id}`} draggable={false}>
                       <strong>{c.name}</strong>
                     </Link>
+                    <span className="small muted">{c.owner ?? 'No owner'}</span>
                     {c.next_action ? <span className="small">{c.next_action}</span> : null}
                     {c.next_action_due ? (
                       <span className="small muted">

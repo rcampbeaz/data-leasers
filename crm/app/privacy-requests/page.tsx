@@ -28,7 +28,7 @@ export default async function PrivacyRequestsPage({
 
       {isAdmin ? (
         <form action={eraseByEmail} className="form-grid">
-          <label>
+          <label className="span-2">
             Email address of the request
             <input type="email" name="email" required maxLength={320} />
           </label>

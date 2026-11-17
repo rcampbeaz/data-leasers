@@ -591,13 +591,21 @@ export default async function MarketingPage({
         </p>
 
         {isAdmin ? (
-          <form action={addChannel} className="inline-form">
-            <select name="platform" aria-label="Platform" defaultValue="linkedin">
-              {CHANNELS.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-            </select>
-            <input name="displayName" placeholder="Account name" aria-label="Account name" required maxLength={200} />
-            <input name="externalId" placeholder="Provider profile id" aria-label="Provider profile id" required maxLength={200} />
-            <input type="date" name="tokenExpiresAt" aria-label="Token expires on" />
+          <form action={addChannel} className="form-grid">
+            <label>Platform
+              <select name="platform" defaultValue="linkedin">
+                {CHANNELS.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+            </label>
+            <label>Account name
+              <input name="displayName" required maxLength={200} />
+            </label>
+            <label>Provider profile id
+              <input name="externalId" required maxLength={200} />
+            </label>
+            <label>Token expires
+              <input type="date" name="tokenExpiresAt" />
+            </label>
             <button className="btn" type="submit">Connect</button>
           </form>
         ) : null}
@@ -642,14 +650,6 @@ export default async function MarketingPage({
             The agent writes channel variants from a topic. It is told not to invent figures, not to
             name the buyer, and not to promise an outcome. Runs are capped on the Agents page.
           </p>
-          <form action={testAi}>
-            <button className="btn" type="submit">Test the AI connection</button>
-          </form>
-          <p className="muted small">
-            Makes one call of a few tokens and reports what came back: the key being rejected, the
-            model not existing and the address being wrong each read differently. It works while
-            agents are switched off, and does not count against the daily cap.
-          </p>
           <form action={generateDraft} className="stack">
             <label>What is the post about?
               <input name="topic" required maxLength={400} placeholder="Why a 40-person accounting firm's old ticket notes are worth money" />
@@ -661,6 +661,14 @@ export default async function MarketingPage({
               Write the draft
             </button>
           </form>
+          <form action={testAi}>
+            <button className="btn" type="submit">Test the AI connection</button>
+          </form>
+          <p className="muted small">
+            Makes one call of a few tokens and reports what came back: the key being rejected, the
+            model not existing and the address being wrong each read differently. It works while
+            agents are switched off, and does not count against the daily cap.
+          </p>
         </section>
       ) : null}
 
@@ -697,7 +705,24 @@ export default async function MarketingPage({
             ) : (
               <p className="muted small">One version only. It will be used for every channel chosen.</p>
             )}
+            {canWrite && controls.require_approval && d.status === 'draft' ? (
+              <form action={approveContent.bind(null, d.id)} className="inline-form">
+                <span className="muted small">Approval is required before this can be scheduled.</span>
+                <button className="btn" type="submit">Approve</button>
+              </form>
+            ) : null}
             {canWrite ? (
+              <form action={attachImage.bind(null, d.id)} className="inline-form">
+                <input type="file" name="image" accept="image/png,image/jpeg,image/webp" required />
+                <button className="btn" type="submit">Attach image</button>
+              </form>
+            ) : null}
+            {canWrite && d.media && d.media.length > 0 ? (
+              <form action={removeImage.bind(null, d.id)}>
+                <button className="btn danger" type="submit">Remove image</button>
+              </form>
+            ) : null}
+            {canWrite && (!controls.require_approval || d.status === 'approved') ? (
               <form action={scheduleContent.bind(null, d.id)} className="stack">
                 <fieldset>
                   <legend>Channels</legend>
@@ -712,23 +737,6 @@ export default async function MarketingPage({
                   <input type="datetime-local" name="scheduledFor" defaultValue={due} required />
                 </label>
                 <button className="btn" type="submit">Schedule</button>
-              </form>
-            ) : null}
-            {canWrite ? (
-              <form action={attachImage.bind(null, d.id)} className="inline-form">
-                <input type="file" name="image" accept="image/png,image/jpeg,image/webp" required />
-                <button className="btn" type="submit">Attach image</button>
-              </form>
-            ) : null}
-            {canWrite && d.media && d.media.length > 0 ? (
-              <form action={removeImage.bind(null, d.id)}>
-                <button className="btn danger" type="submit">Remove image</button>
-              </form>
-            ) : null}
-            {canWrite && controls.require_approval && d.status === 'draft' ? (
-              <form action={approveContent.bind(null, d.id)} className="inline-form">
-                <span className="muted small">Approval is required before this can be scheduled.</span>
-                <button className="btn" type="submit">Approve</button>
               </form>
             ) : null}
           </article>
@@ -766,7 +774,9 @@ export default async function MarketingPage({
                       {/* The advice names the channel state and what to do about it, so the short
                           error says the same thing a second time. One line per row. */}
                       {p.last_error && !retryBlocked ? (
-                        <span className="muted small"> {p.last_error}</span>
+                        <span className="muted small">
+                          {' '}{p.last_error}{p.attempts > 1 ? ` · ${p.attempts} attempts` : ''}
+                        </span>
                       ) : null}
                       {/* Neither Retry nor Cancel applies to a send that may be in flight, so the row
                           says what is happening and what happens next instead of offering a button. */}

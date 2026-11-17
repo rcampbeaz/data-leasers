@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { calendarDate, todayIso } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { setTaskDone } from '@/lib/admin-actions';
-import { currentStaff } from '@/lib/data';
+import { currentStaff, loadStaff } from '@/lib/data';
 
 type Task = {
   id: string;
   title: string;
   due_on: string;
   done: boolean;
+  assigned_to: string | null;
   companies: { id: string; name: string } | null;
 };
 
@@ -25,9 +26,13 @@ export default async function TasksPage({
   const today = todayIso();
   const showDone = show === 'done';
 
+  const staff = await loadStaff(supabase);
+  const staffName = (uid: string | null) =>
+    staff.find((s) => s.user_id === uid)?.full_name ?? null;
+
   let query = supabase
     .from('tasks')
-    .select('id, title, due_on, done, companies(id, name)')
+    .select('id, title, due_on, done, assigned_to, companies(id, name)')
     .order('due_on', { ascending: true })
     .limit(200);
   if (!showDone) query = query.eq('done', false);
@@ -62,6 +67,7 @@ export default async function TasksPage({
               <th>Due</th>
               <th>Task</th>
               <th>Company</th>
+              <th>Owner</th>
               <th></th>
             </tr>
           </thead>
@@ -74,6 +80,9 @@ export default async function TasksPage({
                   <td>{t.title}</td>
                   <td>
                     {t.companies ? <Link href={`/companies/${t.companies.id}`}>{t.companies.name}</Link> : '-'}
+                  </td>
+                  <td>
+                    {staffName(t.assigned_to) ?? <span className="muted">Unassigned</span>}
                   </td>
                   <td>
                     {canEdit ? (

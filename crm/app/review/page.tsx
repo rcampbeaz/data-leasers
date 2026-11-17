@@ -76,7 +76,7 @@ export default async function ReviewPage({
                   <td>
                     <form action={setDatasetStatusFromReview.bind(null, row.id)} className="inline-form">
                       <input type="hidden" name="companyId" value={row.company_id} />
-                      <select name="status" defaultValue={row.status}>
+                      <select name="status" aria-label="Dataset status" defaultValue={row.status}>
                         <option>Approved</option>
                         <option>Review</option>
                         <option>Blocked</option>
