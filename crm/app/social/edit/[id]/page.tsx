@@ -11,6 +11,7 @@ type StoredPost = {
   link_url: string | null;
   media_url: string | null;
   media_alt: string | null;
+  media_id: string | null;
   state: string;
   scheduled_for: string | null;
   social_post_channels:
@@ -20,6 +21,7 @@ type StoredPost = {
         social_channels: { platform: string; handle: string; active: boolean } | null;
       }[]
     | null;
+  social_media: { id: string; alt_text: string; rights_note: string } | null;
 };
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,15 +33,32 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const { data, error } = await supabase
     .from('social_posts')
     .select(
-      'id, body, link_url, media_url, media_alt, state, scheduled_for, social_post_channels(channel_id, body, social_channels(platform, handle, active))',
+      'id, body, link_url, media_url, media_alt, media_id, state, scheduled_for, social_media(id, alt_text, rights_note), social_post_channels(channel_id, body, social_channels(platform, handle, active))',
     )
     .eq('id', id)
     .maybeSingle();
 
-  // A malformed id comes back as a database error, which is the same thing to the
-  // person who followed the link: there is no such post.
+  // A malformed id is the same thing to the person who followed the link as a missing
+  // post. Any other error is more likely a migration that has not been run, which deserves
+  // a message rather than a 404.
+  if (error?.code === '22P02') notFound();
   if (!error && !data) notFound();
-  if (error) notFound();
+  if (error || !data) {
+    return (
+      <main className="page">
+        <header className="page-head">
+          <h1>Edit post</h1>
+        </header>
+        <p className="notice blocked">
+          Could not load the post. Run <code>0012_social_media_link.sql</code> in Supabase, then
+          reload.
+        </p>
+        <p>
+          <Link href="/social">Back to the queue</Link>
+        </p>
+      </main>
+    );
+  }
 
   const stored = data as unknown as StoredPost;
 
@@ -69,6 +88,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     linkUrl: stored.link_url,
     mediaUrl: stored.media_url,
     mediaAlt: stored.media_alt,
+    asset: stored.social_media
+      ? { id: stored.social_media.id, rightsNote: stored.social_media.rights_note }
+      : null,
     scheduledFor: stored.scheduled_for ? utcToPhoenixInput(stored.scheduled_for) : null,
     channels: storedLinks
       .filter((link) => offered.has(link.channel_id))

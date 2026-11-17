@@ -85,6 +85,8 @@ export type ComposerPost = {
   // Phoenix local time, already in the shape a datetime-local input wants.
   scheduledFor: string | null;
   channels: { channelId: string; body: string | null }[];
+  // The uploaded asset, with the rights note recorded when it was uploaded.
+  asset?: { id: string; rightsNote: string } | null;
 };
 
 export default function Composer({
@@ -117,7 +119,9 @@ export default function Composer({
 
   // Media is uploaded rather than pasted: Instagram and TikTok fetch the asset themselves,
   // and a URL nobody can account for is a rights problem waiting to be published.
-  const [asset, setAsset] = useState<{ id: string; rightsNote: string } | null>(null);
+  const [asset, setAsset] = useState<{ id: string; rightsNote: string } | null>(
+    post?.asset ?? null,
+  );
   const [file, setFile] = useState<File | null>(null);
   const [newAlt, setNewAlt] = useState('');
   const [rightsNote, setRightsNote] = useState('');
@@ -202,6 +206,7 @@ export default function Composer({
         linkUrl: linkUrl.trim() || null,
         mediaUrl: mediaUrl.trim() || null,
         mediaAlt: mediaAlt.trim() || null,
+        mediaId: asset?.id ?? null,
         scheduledFor: when || null,
         channels: selected.map((id) => ({
           channelId: id,

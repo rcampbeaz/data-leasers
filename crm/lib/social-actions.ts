@@ -59,6 +59,7 @@ type CheckedDraft = {
   linkUrl: string | null;
   mediaUrl: string | null;
   mediaAlt: string | null;
+  mediaId: string | null;
   scheduledFor: string | null;
   // The override only, or null to mean "use the post body".
   channels: { channelId: string; body: string | null }[];
@@ -122,13 +123,33 @@ async function checkDraft(
     return { error: 'That time has already passed. Choose a later time, or save it as a draft.' };
   }
 
+  // An uploaded asset is the authority on its own address, so the row is read back rather
+  // than trusting the URL the browser sent.
+  let mediaUrl = draft.mediaUrl?.trim() || null;
+  const mediaId = draft.mediaId?.trim() || null;
+  if (mediaId) {
+    const { data: asset, error: assetError } = await supabase
+      .from('social_media')
+      .select('public_url')
+      .eq('id', mediaId)
+      .maybeSingle();
+    if (assetError) {
+      return {
+        error: 'Could not read the attached asset. Check that 0012_social_media_link.sql has been run.',
+      };
+    }
+    if (!asset) return { error: 'That asset no longer exists. Upload it again.' };
+    mediaUrl = (asset as { public_url: string }).public_url;
+  }
+
   // An override is only stored when it actually differs, so a later edit to the
   // master copy still reaches every channel that was left alone.
   return {
     body,
     linkUrl: draft.linkUrl?.trim() || null,
-    mediaUrl: draft.mediaUrl?.trim() || null,
+    mediaUrl,
     mediaAlt: draft.mediaAlt?.trim() || null,
+    mediaId,
     scheduledFor,
     channels: wanted.map((channel) => {
       const override = channel.body?.trim();
@@ -151,7 +172,7 @@ export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
 
   const checked = await checkDraft(supabase, draft);
   if ('error' in checked) return checked;
-  const { body, linkUrl, mediaUrl, mediaAlt, scheduledFor, channels } = checked;
+  const { body, linkUrl, mediaUrl, mediaAlt, mediaId, scheduledFor, channels } = checked;
 
   const { data: post, error: insertError } = await supabase
     .from('social_posts')
@@ -160,6 +181,7 @@ export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
       link_url: linkUrl,
       media_url: mediaUrl,
       media_alt: mediaAlt,
+      media_id: mediaId,
       state: scheduledFor ? 'scheduled' : 'draft',
       scheduled_for: scheduledFor,
       created_by: me.user_id,
@@ -378,6 +400,7 @@ export async function updatePost(postId: string, draft: PostDraft): Promise<Crea
       link_url: checked.linkUrl,
       media_url: checked.mediaUrl,
       media_alt: checked.mediaAlt,
+      media_id: checked.mediaId,
       state: checked.scheduledFor ? 'scheduled' : 'draft',
       scheduled_for: checked.scheduledFor,
       updated_at: new Date().toISOString(),

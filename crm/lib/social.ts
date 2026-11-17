@@ -62,6 +62,9 @@ export type PostDraft = {
   linkUrl: string | null;
   mediaUrl: string | null;
   mediaAlt: string | null;
+  // The uploaded asset, when there is one. The server reads its address from the asset so
+  // the post cannot pair one file's URL with another file's rights note.
+  mediaId: string | null;
   // Phoenix local time, "YYYY-MM-DDTHH:mm", or null to keep it as a draft.
   scheduledFor: string | null;
   channels: { channelId: string; body: string | null }[];
