@@ -533,6 +533,26 @@ export async function cancelPost(postId: string) {
 
 // Registers a channel by hand, storing only the provider's profile key. OAuth flows are
 // per-platform and arrive with the provider; this is enough to schedule and publish.
+// The other half of what the publisher does. A dead token sets the channel needs_reauth, and
+// addChannel only inserts, so a channel that had been reconnected at the provider stayed unusable
+// for ever and the posts waiting on it could never be retried. Reconnecting itself happens with the
+// provider; this records that it has, and clears the error left by the failure that took it down.
+// No attempt count is touched, because that belongs to the posts, not the channel.
+export async function reactivateChannel(channelId: string) {
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || me.role !== 'admin') fail('Only an admin can mark a channel active.');
+
+  const { error } = await supabase
+    .from('social_channels')
+    .update({ status: 'active', last_error: null })
+    .eq('id', channelId)
+    .in('status', ['needs_reauth', 'revoked']);
+  if (error) fail('Could not mark that channel active.');
+
+  revalidatePath(PATH);
+}
+
 export async function addChannel(formData: FormData) {
   const supabase = await createStaffClient();
   const me = await currentStaff(supabase);

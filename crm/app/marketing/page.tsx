@@ -7,6 +7,7 @@ import {
   cancelPost,
   generateDraft,
   retryPost,
+  reactivateChannel,
   removeImage,
   scheduleContent,
   testAi,
@@ -428,7 +429,7 @@ export default async function MarketingPage({
         ) : (
           <table className="table">
             <thead>
-              <tr><th>Platform</th><th>Account</th><th>Status</th><th>Token expires</th><th>Last success</th></tr>
+              <tr><th>Platform</th><th>Account</th><th>Status</th><th>Token expires</th><th>Last success</th><th></th></tr>
             </thead>
             <tbody>
               {channelRows.map((c) => (
@@ -440,11 +441,23 @@ export default async function MarketingPage({
                   </td>
                   <td>{c.token_expires_at ? new Date(c.token_expires_at).toLocaleDateString('en-US') : '-'}</td>
                   <td>{c.last_ok_at ? new Date(c.last_ok_at).toLocaleString('en-US') : 'never'}</td>
+                  <td>
+                    {isAdmin && c.status !== 'active' ? (
+                      <form action={reactivateChannel.bind(null, c.id)}>
+                        <button className="btn" type="submit">Mark active</button>
+                      </form>
+                    ) : null}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
+
+        <p className="muted small">
+          If a token has been reconnected with the provider, <strong>Mark active</strong> clears the
+          error and lets the posts that channel was holding be retried. Until then, Retry refuses.
+        </p>
 
         {isAdmin ? (
           <form action={addChannel} className="inline-form">
