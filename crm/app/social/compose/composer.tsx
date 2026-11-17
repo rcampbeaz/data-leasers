@@ -12,6 +12,7 @@ import {
   type Platform,
 } from '@/lib/social';
 import { createPost, updatePost } from '@/lib/social-actions';
+import { uploadMedia } from '@/lib/media-actions';
 
 export type ChannelOption = {
   id: string;
@@ -114,6 +115,15 @@ export default function Composer({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // Media is uploaded rather than pasted: Instagram and TikTok fetch the asset themselves,
+  // and a URL nobody can account for is a rights problem waiting to be published.
+  const [asset, setAsset] = useState<{ id: string; rightsNote: string } | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [newAlt, setNewAlt] = useState('');
+  const [rightsNote, setRightsNote] = useState('');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, startUpload] = useTransition();
+
   const mediaKind = mediaKindFor(mediaUrl.trim() || null);
   const hasLink = Boolean(linkUrl.trim()) || /https?:\/\//i.test(body);
 
@@ -159,6 +169,28 @@ export default function Composer({
     setSelected((current) =>
       current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
+  }
+
+  function upload() {
+    if (!file) return;
+    setUploadError(null);
+    const form = new FormData();
+    form.append('file', file);
+    form.append('altText', newAlt);
+    form.append('rightsNote', rightsNote);
+    startUpload(async () => {
+      const result = await uploadMedia(form);
+      if ('error' in result) {
+        setUploadError(result.error);
+        return;
+      }
+      setMediaUrl(result.asset.url);
+      setMediaAlt(result.asset.altText);
+      setAsset({ id: result.asset.id, rightsNote: result.asset.rightsNote });
+      setFile(null);
+      setNewAlt('');
+      setRightsNote('');
+    });
   }
 
   function submit() {
@@ -216,28 +248,99 @@ export default function Composer({
                 onChange={(event) => setWhen(event.target.value)}
               />
             </label>
-            <label>
-              Media URL
-              <input
-                type="url"
-                value={mediaUrl}
-                onChange={(event) => setMediaUrl(event.target.value)}
-                placeholder="A public image or video address"
-              />
-            </label>
-            <label>
-              Media description
-              <input
-                value={mediaAlt}
-                onChange={(event) => setMediaAlt(event.target.value)}
-                placeholder="What the image shows, for screen readers"
-              />
-            </label>
           </div>
-          <p className="muted small">
-            Leave the time empty to keep it as a draft. Media has to be at a public address because
-            that is what Instagram and TikTok fetch.
-          </p>
+          <p className="muted small">Leave the time empty to keep it as a draft.</p>
+        </div>
+
+        <div className="panel">
+          <h2>Media</h2>
+          {mediaUrl.trim() ? (
+            <div className="media-row">
+              {mediaKindFor(mediaUrl.trim()) === 'video' ? (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video src={mediaUrl.trim()} controls muted playsInline />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={mediaUrl.trim()} alt={mediaAlt || 'Attached media'} />
+              )}
+              <div className="stack">
+                <label>
+                  Media description
+                  <input
+                    value={mediaAlt}
+                    onChange={(event) => setMediaAlt(event.target.value)}
+                    placeholder="What the asset shows, for screen readers"
+                  />
+                </label>
+                <p className="muted small">
+                  {asset
+                    ? `Rights: ${asset.rightsNote}`
+                    : 'Rights note not recorded for this asset.'}
+                </p>
+                <button
+                  className="link-button"
+                  type="button"
+                  onClick={() => {
+                    setMediaUrl('');
+                    setMediaAlt('');
+                    setAsset(null);
+                  }}
+                >
+                  Replace
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="stack">
+              <label>
+                File
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+              <label>
+                Media description
+                <input
+                  value={newAlt}
+                  onChange={(event) => setNewAlt(event.target.value)}
+                  placeholder="What the asset shows, for screen readers"
+                />
+              </label>
+              <label>
+                Rights note
+                <input
+                  value={rightsNote}
+                  onChange={(event) => setRightsNote(event.target.value)}
+                  placeholder="Where it came from and what it may be used for"
+                />
+              </label>
+              <button
+                className="btn"
+                type="button"
+                onClick={upload}
+                disabled={!file || uploading || !newAlt.trim() || !rightsNote.trim()}
+              >
+                {uploading ? 'Uploading…' : 'Upload media'}
+              </button>
+              {uploadError ? <p className="notice blocked">{uploadError}</p> : null}
+              <details>
+                <summary className="muted small">Or attach a public URL</summary>
+                <input
+                  type="url"
+                  value={mediaUrl}
+                  onChange={(event) => setMediaUrl(event.target.value)}
+                  placeholder="https://…"
+                />
+              </details>
+              <p className="muted small">
+                Instagram and TikTok fetch the asset themselves, which is why the file is
+                uploaded rather than referenced. The rights note is the record of why this
+                asset is ours to publish.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="panel">

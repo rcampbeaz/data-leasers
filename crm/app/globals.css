@@ -393,6 +393,7 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
 .composer textarea,
 .composer input[type="url"],
 .composer input[type="datetime-local"],
+.composer input[type="file"],
 .composer input[type="text"] {
   font: inherit;
   width: 100%;
@@ -434,6 +435,19 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
 }
 
 .delivery { margin: 0 0 8px; }
+
+/* The uploaded asset sits beside its description and rights note, so the file and the
+   reason we may publish it are read together. */
+.media-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: start; }
+.media-row img,
+.media-row video {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--dl-line);
+  border-radius: var(--radius-sm);
+  background: var(--dl-panel);
+}
+@media (max-width: 720px) { .media-row { grid-template-columns: 1fr; } }
 
 .preview-wrap { margin-bottom: 18px; }
 .preview {

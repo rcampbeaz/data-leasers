@@ -60,7 +60,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0010_social_publish.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0011_social_media.sql`. Each file is written to be safe on a database that already has it.
 
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
@@ -84,4 +84,5 @@ Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new
 ```
 
 - The queue has an admin-only **Publish due posts now** button that runs the same sweep, so a test does not need to wait for cron.
+- Media is uploaded in the composer and stored in the public `social-media` bucket, with alt text and a rights note recorded against each asset. The bucket is public because Instagram and TikTok fetch the file from its URL themselves. `0011_social_media.sql` creates the bucket and the storage policies, so run it as the database owner.
 - A channel gets three attempts, two then ten minutes apart. A failure that no retry can fix — a refusal, an inactive channel, a post that now fails the checks — stops at the first attempt and appears in the failure email.
