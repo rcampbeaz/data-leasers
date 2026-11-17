@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-// Applies the whole migration series to a throwaway Postgres and fails if any file errors.
+// Applies the whole migration series to a throwaway Postgres twice, and fails if any file errors.
 //
 // Run with:  npm run check:migrations
 //
 // The series is applied by hand in the Supabase SQL Editor, so nothing else exercises the order the
 // files run in, or whether an early file and a late one still agree with each other. This does: a fresh
 // in-memory database (PGlite, Postgres compiled to WASM), the objects Supabase provides that the
-// migrations assume, then every numbered file in order. It reads only the files in supabase/migrations:
-// no network, no credentials, no project.
+// migrations assume, then every numbered file in order — and then all of them again. The second pass is
+// the one that proves each file can be re-pasted: policies and the constraints that could collide are
+// dropped before they are created, so nothing stops with "already exists". It reads only the files in
+// supabase/migrations: no network, no credentials, no project.
 //
 // What this does not prove. Policies are created but never evaluated, auth.uid() is a stub returning
 // null, and nothing calls storage. A file that applies here can still be wrong about behaviour; what it
-// catches is the series no longer building on an empty database.
+// catches is the series no longer building on an empty database, or no longer surviving a second run.
 //
 // PGlite is a dev dependency, so `npm install` has to have run once.
 
@@ -61,24 +63,21 @@ if (files.length === 0) {
 const db = new PGlite();
 await db.exec(SUPABASE);
 
-let failed = false;
-for (const file of files) {
-  try {
-    await db.exec(readFileSync(join(MIGRATIONS, file), 'utf8'));
-    console.log(`  ok   ${file}`);
-  } catch (error) {
-    const reason = String(error?.message ?? error).split('\n')[0];
-    console.error(`  FAIL ${file}\n       ${reason}`);
-    failed = true;
-    break;
+for (const pass of [1, 2]) {
+  console.log(`\npass ${pass}`);
+  for (const file of files) {
+    try {
+      await db.exec(readFileSync(join(MIGRATIONS, file), 'utf8'));
+      console.log(`  ok   ${file}`);
+    } catch (error) {
+      const reason = String(error?.message ?? error).split('\n')[0];
+      console.error(`  FAIL ${file}\n       ${reason}`);
+      console.error(`\nThe series stops at the file above, on pass ${pass}.`);
+      await db.close();
+      process.exit(1);
+    }
   }
 }
 
 await db.close();
-
-if (failed) {
-  console.error('\nThe series does not apply in order on an empty database, so it stops at the file above.');
-  process.exit(1);
-}
-
-console.log(`\n${files.length} files applied in order to an empty database.`);
+console.log(`\n${files.length} files applied twice, in order, to an empty database.`);

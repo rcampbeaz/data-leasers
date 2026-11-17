@@ -78,35 +78,45 @@ alter table public.datasets enable row level security;
 alter table public.audit_log enable row level security;
 
 -- Staff can see their own row; admins manage staff.
+drop policy if exists "staff read own row" on public.crm_staff;
 create policy "staff read own row" on public.crm_staff
   for select using (user_id = auth.uid());
+drop policy if exists "admins manage staff" on public.crm_staff;
 create policy "admins manage staff" on public.crm_staff
   for all using (public.is_staff(array['admin'])) with check (public.is_staff(array['admin']));
 
 -- Leads: any active staff can read. Introducers and admins can update stage and assignment.
 -- Inserts come only from the server intake route, which uses the service role key.
+drop policy if exists "staff read leads" on public.leads;
 create policy "staff read leads" on public.leads
   for select using (public.is_staff());
+drop policy if exists "introducers update leads" on public.leads;
 create policy "introducers update leads" on public.leads
   for update using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
 -- Companies: read for all staff; write for admins and introducers.
+drop policy if exists "staff read companies" on public.companies;
 create policy "staff read companies" on public.companies
   for select using (public.is_staff());
+drop policy if exists "introducers write companies" on public.companies;
 create policy "introducers write companies" on public.companies
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
 -- Datasets: read for all staff; reviewers and admins set status.
+drop policy if exists "staff read datasets" on public.datasets;
 create policy "staff read datasets" on public.datasets
   for select using (public.is_staff());
+drop policy if exists "reviewers set dataset status" on public.datasets;
 create policy "reviewers set dataset status" on public.datasets
   for all using (public.is_staff(array['admin', 'reviewer']))
   with check (public.is_staff(array['admin', 'reviewer']));
 
 -- Audit log: admins and reviewers read; nobody updates or deletes through the API.
+drop policy if exists "admins reviewers read audit" on public.audit_log;
 create policy "admins reviewers read audit" on public.audit_log
   for select using (public.is_staff(array['admin', 'reviewer']));
+drop policy if exists "staff insert audit" on public.audit_log;
 create policy "staff insert audit" on public.audit_log
   for insert with check (public.is_staff());

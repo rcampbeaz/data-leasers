@@ -54,11 +54,13 @@ create index if not exists import_candidates_band_idx
 
 alter table public.import_candidates enable row level security;
 
+drop policy if exists "staff read import candidates" on public.import_candidates;
 create policy "staff read import candidates" on public.import_candidates
   for select using (public.is_staff());
 
 -- Sourcing is introducer work; reviewers are deliberately excluded so the queue a reviewer
 -- sees stays the dataset review queue.
+drop policy if exists "introducers write import candidates" on public.import_candidates;
 create policy "introducers write import candidates" on public.import_candidates
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));

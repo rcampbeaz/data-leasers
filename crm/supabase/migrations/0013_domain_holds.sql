@@ -29,9 +29,11 @@ create index if not exists domain_holds_active_idx
 
 alter table public.domain_holds enable row level security;
 
+drop policy if exists "staff read domain holds" on public.domain_holds;
 create policy "staff read domain holds" on public.domain_holds
   for select using (public.is_staff());
 
+drop policy if exists "introducers write domain holds" on public.domain_holds;
 create policy "introducers write domain holds" on public.domain_holds
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));

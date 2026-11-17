@@ -158,35 +158,46 @@ alter table public.social_media enable row level security;
 alter table public.social_slots enable row level security;
 alter table public.social_metrics enable row level security;
 
+drop policy if exists "staff read channels" on public.social_channels;
 create policy "staff read channels" on public.social_channels
   for select using (public.is_staff());
+drop policy if exists "admins manage channels" on public.social_channels;
 create policy "admins manage channels" on public.social_channels
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));
 
+drop policy if exists "staff read contents" on public.social_contents;
 create policy "staff read contents" on public.social_contents
   for select using (public.is_staff());
+drop policy if exists "introducers write contents" on public.social_contents;
 create policy "introducers write contents" on public.social_contents
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read posts" on public.social_posts;
 create policy "staff read posts" on public.social_posts
   for select using (public.is_staff());
+drop policy if exists "introducers write posts" on public.social_posts;
 create policy "introducers write posts" on public.social_posts
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read media" on public.social_media;
 create policy "staff read media" on public.social_media
   for select using (public.is_staff());
+drop policy if exists "introducers write media" on public.social_media;
 create policy "introducers write media" on public.social_media
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read slots" on public.social_slots;
 create policy "staff read slots" on public.social_slots
   for select using (public.is_staff());
+drop policy if exists "admins write slots" on public.social_slots;
 create policy "admins write slots" on public.social_slots
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));
 
+drop policy if exists "staff read metrics" on public.social_metrics;
 create policy "staff read metrics" on public.social_metrics
   for select using (public.is_staff());

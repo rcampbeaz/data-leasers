@@ -139,44 +139,58 @@ alter table public.referrals enable row level security;
 alter table public.agreements enable row level security;
 alter table public.documents enable row level security;
 
+drop policy if exists "staff read buyers" on public.buyers;
 create policy "staff read buyers" on public.buyers
   for select using (public.is_staff());
+drop policy if exists "introducers write buyers" on public.buyers;
 create policy "introducers write buyers" on public.buyers
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read introductions" on public.introductions;
 create policy "staff read introductions" on public.introductions
   for select using (public.is_staff());
+drop policy if exists "introducers write introductions" on public.introductions;
 create policy "introducers write introductions" on public.introductions
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read offers" on public.offers;
 create policy "staff read offers" on public.offers
   for select using (public.is_staff());
+drop policy if exists "introducers write offers" on public.offers;
 create policy "introducers write offers" on public.offers
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read partners" on public.partners;
 create policy "staff read partners" on public.partners
   for select using (public.is_staff());
+drop policy if exists "introducers write partners" on public.partners;
 create policy "introducers write partners" on public.partners
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read referrals" on public.referrals;
 create policy "staff read referrals" on public.referrals
   for select using (public.is_staff());
+drop policy if exists "introducers write referrals" on public.referrals;
 create policy "introducers write referrals" on public.referrals
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read agreements" on public.agreements;
 create policy "staff read agreements" on public.agreements
   for select using (public.is_staff());
+drop policy if exists "introducers write agreements" on public.agreements;
 create policy "introducers write agreements" on public.agreements
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read documents" on public.documents;
 create policy "staff read documents" on public.documents
   for select using (public.is_staff());
+drop policy if exists "introducers write documents" on public.documents;
 create policy "introducers write documents" on public.documents
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));

@@ -65,17 +65,22 @@ alter table public.agent_runs enable row level security;
 alter table public.agent_drafts enable row level security;
 alter table public.approvals enable row level security;
 
+drop policy if exists "staff read agent runs" on public.agent_runs;
 create policy "staff read agent runs" on public.agent_runs
   for select using (public.is_staff());
 
+drop policy if exists "staff read agent drafts" on public.agent_drafts;
 create policy "staff read agent drafts" on public.agent_drafts
   for select using (public.is_staff());
+drop policy if exists "introducers review drafts" on public.agent_drafts;
 create policy "introducers review drafts" on public.agent_drafts
   for update using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read approvals" on public.approvals;
 create policy "staff read approvals" on public.approvals
   for select using (public.is_staff());
+drop policy if exists "introducers record approvals" on public.approvals;
 create policy "introducers record approvals" on public.approvals
   for insert with check (
     public.is_staff(array['admin', 'introducer'])

@@ -27,6 +27,7 @@ on conflict (user_id) do nothing;
 alter table public.crm_staff_profiles enable row level security;
 
 -- Only admins can read or change personal details.
+drop policy if exists "admins manage staff profiles" on public.crm_staff_profiles;
 create policy "admins manage staff profiles" on public.crm_staff_profiles
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));

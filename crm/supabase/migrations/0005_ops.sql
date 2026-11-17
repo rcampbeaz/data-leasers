@@ -14,13 +14,16 @@ on conflict (key) do nothing;
 
 alter table public.app_settings enable row level security;
 
+drop policy if exists "staff read settings" on public.app_settings;
 create policy "staff read settings" on public.app_settings
   for select using (public.is_staff());
+drop policy if exists "admins write settings" on public.app_settings;
 create policy "admins write settings" on public.app_settings
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));
 
 -- Staff may mark tasks done (introducers already can write tasks; viewers and reviewers can now complete a task assigned to them).
+drop policy if exists "assignee completes task" on public.tasks;
 create policy "assignee completes task" on public.tasks
   for update using (assigned_to = auth.uid())
   with check (assigned_to = auth.uid());

@@ -88,7 +88,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0022_phoenix_date_defaults.sql`. Run each new file once: the ones that create a policy or add a constraint stop with "already exists" if run a second time, so re-pasting an old file does nothing rather than breaking anything. The newest files — 0019 onwards — are written to run again safely.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0022_phoenix_date_defaults.sql`. Each file is written to be safe to run again: a policy, or a constraint that could collide, is dropped first, so re-pasting an old file changes nothing instead of stopping with "already exists". You only need to run the files your database has not had yet.
 
 `0019` adds `social_posts.claimed_at` and `sweep_stale_social_posts()`, which stops a post whose publishing run died mid-send. The publisher calls it before taking new work, moves any such post to `needs_manual` and emails the admins one message listing them, because a post may already be live on its channel and nobody can tell from here. The sweep is capped at 25 rows a tick, so a large backlog arrives in bounded batches rather than as a burst of mail. Check the account, then Retry or cancel it.
 
@@ -109,10 +109,11 @@ provider, because the provider fetches the image itself.
 
 `npm run check:migrations` applies every file in `supabase/migrations/` in order to a throwaway
 in-memory Postgres (PGlite), after creating the objects Supabase provides that the files assume:
-`auth.users`, `auth.uid()`, `storage.buckets` and the three roles. It prints each file as it applies,
-stops at the first one that errors, and exits non-zero — so a reordered, renamed or edited file is
-caught here rather than in the SQL Editor. Run `npm install` once first; it needs no project, no
-network and no credentials.
+`auth.users`, `auth.uid()`, `storage.buckets` and the three roles — and then applies the whole series a
+second time. It prints each file as it applies, stops at the first one that errors, and exits non-zero,
+so a reordered, renamed or edited file, or one that is no longer safe to re-run, is caught here rather
+than in the SQL Editor. Run `npm install` once first; it needs no project, no network and no
+credentials.
 
 It proves the series builds on an empty database, not that it behaves: policies are created but never
 evaluated, `auth.uid()` is a stub, and nothing calls storage. Apply each new file to the real project

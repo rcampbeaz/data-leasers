@@ -135,35 +135,46 @@ alter table public.sequence_steps enable row level security;
 alter table public.sequence_enrolments enable row level security;
 alter table public.outbound_sends enable row level security;
 
+drop policy if exists "staff read suppressions" on public.suppressions;
 create policy "staff read suppressions" on public.suppressions
   for select using (public.is_staff());
+drop policy if exists "introducers add suppressions" on public.suppressions;
 create policy "introducers add suppressions" on public.suppressions
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read contacts" on public.outreach_contacts;
 create policy "staff read contacts" on public.outreach_contacts
   for select using (public.is_staff());
+drop policy if exists "introducers write contacts" on public.outreach_contacts;
 create policy "introducers write contacts" on public.outreach_contacts
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read sequences" on public.sequences;
 create policy "staff read sequences" on public.sequences
   for select using (public.is_staff());
+drop policy if exists "admins write sequences" on public.sequences;
 create policy "admins write sequences" on public.sequences
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));
 
+drop policy if exists "staff read steps" on public.sequence_steps;
 create policy "staff read steps" on public.sequence_steps
   for select using (public.is_staff());
+drop policy if exists "admins write steps" on public.sequence_steps;
 create policy "admins write steps" on public.sequence_steps
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));
 
+drop policy if exists "staff read enrolments" on public.sequence_enrolments;
 create policy "staff read enrolments" on public.sequence_enrolments
   for select using (public.is_staff());
+drop policy if exists "introducers write enrolments" on public.sequence_enrolments;
 create policy "introducers write enrolments" on public.sequence_enrolments
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read sends" on public.outbound_sends;
 create policy "staff read sends" on public.outbound_sends
   for select using (public.is_staff());

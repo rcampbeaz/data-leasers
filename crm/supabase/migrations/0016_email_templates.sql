@@ -28,9 +28,11 @@ create index if not exists email_templates_purpose_idx on public.email_templates
 alter table public.email_templates enable row level security;
 
 -- Every staff member can read the library; only an admin changes what a sequence will send.
+drop policy if exists "staff read templates" on public.email_templates;
 create policy "staff read templates" on public.email_templates
   for select using (public.is_staff());
 
+drop policy if exists "admins write templates" on public.email_templates;
 create policy "admins write templates" on public.email_templates
   for all using (public.is_staff(array['admin']))
   with check (public.is_staff(array['admin']));

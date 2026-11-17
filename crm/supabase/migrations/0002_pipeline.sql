@@ -20,6 +20,7 @@ alter table public.companies
     'Mode in discussion', 'Owner decision', 'Closed'));
 
 -- A company cannot be Closed without a reason. Closed records are kept, not deleted.
+alter table public.companies drop constraint if exists companies_close_reason_required;
 alter table public.companies
   add constraint companies_close_reason_required
   check (stage <> 'Closed' or close_reason is not null);
@@ -99,30 +100,38 @@ alter table public.activities enable row level security;
 alter table public.tasks enable row level security;
 alter table public.stage_history enable row level security;
 
+drop policy if exists "staff read contacts" on public.contacts;
 create policy "staff read contacts" on public.contacts
   for select using (public.is_staff());
+drop policy if exists "introducers write contacts" on public.contacts;
 create policy "introducers write contacts" on public.contacts
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read activities" on public.activities;
 create policy "staff read activities" on public.activities
   for select using (public.is_staff());
+drop policy if exists "introducers write activities" on public.activities;
 create policy "introducers write activities" on public.activities
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
+drop policy if exists "staff read tasks" on public.tasks;
 create policy "staff read tasks" on public.tasks
   for select using (public.is_staff());
+drop policy if exists "introducers write tasks" on public.tasks;
 create policy "introducers write tasks" on public.tasks
   for all using (public.is_staff(array['admin', 'introducer']))
   with check (public.is_staff(array['admin', 'introducer']));
 
 -- Stage history is written only by the trigger. Staff can read it.
+drop policy if exists "staff read stage history" on public.stage_history;
 create policy "staff read stage history" on public.stage_history
   for select using (public.is_staff());
 
 -- Staff can see each other's names and roles, so owner and introducer pickers work.
 -- The first policy only let each person read their own row.
+drop policy if exists "staff read names" on public.crm_staff;
 create policy "staff read names" on public.crm_staff
   for select using (public.is_staff());
 
