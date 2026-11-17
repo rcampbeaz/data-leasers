@@ -48,6 +48,25 @@ async function requireWriter() {
   return { supabase, me };
 }
 
+// Records a change to a post or a channel, so /audit can answer who stopped one and when. The
+// server-only client is used for the same reason lib/admin-actions uses it: the log is append-only
+// and not staff-writable.
+async function audit(
+  actorId: string,
+  entity: string,
+  entityId: string,
+  action: string,
+  detail: Record<string, unknown>,
+) {
+  await createIntakeClient().from('audit_log').insert({
+    actor_id: actorId,
+    entity,
+    entity_id: entityId,
+    action,
+    detail,
+  });
+}
+
 // Proves the provider works from inside the app, so nobody needs a terminal on the server to find
 // out why drafting is refused. It ignores the agent switches on purpose: a test you cannot run while
 // the feature is switched off is not a test. It also does not write an agent_runs row, so it never
@@ -508,7 +527,7 @@ export async function scheduleContent(contentId: string, formData: FormData) {
 // whole backoff ladder is available again, and no retry time, so the next cron tick claims it.
 // scheduled_for is deliberately left where it is; being in the past is what makes it due.
 export async function retryPost(postId: string) {
-  const { supabase } = await requireWriter();
+  const { supabase, me } = await requireWriter();
 
   const { data: post } = await supabase
     .from('social_posts')
@@ -545,6 +564,7 @@ export async function retryPost(postId: string) {
     .in('status', ['failed', 'needs_manual']);
   if (error) fail('Could not put that post back in the queue.');
 
+  await audit(me.user_id, 'social_post', postId, 'retried', { from: String(post.status) });
   revalidatePath(PATH);
 }
 
@@ -554,7 +574,7 @@ export async function retryPost(postId: string) {
 // content usable. Scheduling moves the content to 'scheduled' and nothing moved it back, which left
 // the content invisible on Ready to schedule with no way to schedule it again.
 export async function cancelPost(postId: string) {
-  const { supabase } = await requireWriter();
+  const { supabase, me } = await requireWriter();
 
   const { data: cancelled } = await supabase
     .from('social_posts')
@@ -589,6 +609,8 @@ export async function cancelPost(postId: string) {
     .eq('id', contentId)
     .in('status', ['scheduled', 'published']);
 
+  // Who withdrew a post, and what the content went back to, is the question asked after the fact.
+  await audit(me.user_id, 'social_post', postId, 'cancelled', { content_id: contentId, content: next });
   revalidatePath(PATH);
 }
 
@@ -609,6 +631,7 @@ export async function reactivateChannel(channelId: string) {
     .in('status', ['needs_reauth', 'revoked']);
   if (error) fail('Could not mark that channel active.');
 
+  await audit(me.user_id, 'social_channel', channelId, 'reactivated', {});
   revalidatePath(PATH);
 }
 

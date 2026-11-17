@@ -119,9 +119,23 @@ After both passes it also fails, printing what it found, if a date default sits 
 Phoenix or any function body mentions `current_date` — the two things 0021 and 0022 fixed, so a new
 table added with `default current_date` cannot quietly put the UTC day back.
 
+`npm run check:migrations` also compares the files with `supabase/migrations.lock.json`, which holds a
+sha256 of each file as it was when it went in. The series is applied by hand, once each, so a file
+production has already run is finished: editing it changes what a fresh database would get without
+changing the live one, and the two drift apart with nothing to show for it. The check fails if a recorded
+file's contents move, if a file is not recorded yet, or if a recorded file has been deleted — and
+`npm run migrations:record` only adds files, refusing to update a fingerprint that is already there, so
+recording cannot be used to bless an edit made after the fact.
+
+Then it exercises `claim_outbound_sends` itself, with the session moved to UTC+14 — a database whose own
+day has already rolled over, which is the state a UTC Supabase is in after 5pm Phoenix. The claim has to
+take the step due today and leave tomorrow's queued, which is 0021's bug asserted rather than described.
+The scan above also refuses a function that turns `now()` into a day without naming the zone, so a
+comparison against UTC cannot creep back in the seven hours of the day when it looks correct.
+
 It proves the series builds on an empty database, not that it behaves: policies are created but never
-evaluated, `auth.uid()` is a stub, and nothing calls storage. Apply each new file to the real project
-in the SQL Editor as before.
+evaluated, `auth.uid()` is a stub, nothing calls storage, and the claim is the only function whose
+behaviour is exercised. Apply each new file to the real project in the SQL Editor as before.
 
 ### Checking the console's clock
 
@@ -154,8 +168,10 @@ builds on, so nothing would resolve from there.
 ### Before a deploy
 
 `npm run check` runs all three — the migration series, the clock scan, then the clock's own values —
-and stops at whichever fails. Run it before a deploy: neither needs credentials or a network, so it is the same command on a
-laptop and in CI. Which half matters depends on what you are shipping:
+and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
+laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
+to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
+than a laptop. Which part matters depends on what you are shipping:
 
 - **Pasting SQL into the Supabase SQL Editor:** `check:migrations` is the one that has to be green; it
   is the only thing that proves the files still apply in order and still apply twice.
@@ -179,6 +195,21 @@ run it on the server after a deploy.
 - An admin connects a channel once. The form stores only the provider's profile id, never an OAuth token.
 - An agent writes channel variants, and every run counts against the daily cap on the Agents page. A person always schedules the post.
 - A post that makes a numeric claim without a source link cannot be scheduled. That is the one rule that blocks.
+
+A post moves through these states, and the last two are the ones a person leaves:
+
+```
+scheduled ──cron──▶ publishing ──▶ published
+    │                    ├─ transient error ──▶ scheduled (retry, with backoff)
+    │                    └─ attempts used up ──▶ failed
+    ├─ sweep finds the run died ──▶ needs_manual (announced by email, never re-sent)
+    ├─ retry (channel healthy) ──▶ scheduled, attempts 0
+    └─ cancel ──▶ cancelled, content back on the schedule list
+```
+
+`failed` and `needs_manual` are where a post waits for a person: Retry puts it back in the queue when the
+channel allows it, Cancel withdraws it and returns the content. Retry, cancel and marking a channel
+active each write an `audit_log` row, so `/audit` answers who acted and when.
 
 ### Posting to Facebook without a provider
 
