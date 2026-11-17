@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createIntakeClient } from '@/lib/supabase';
 import { publishPost, retryDelayMinutes, type Channel } from '@/lib/social';
-import { alertStoppedPost } from '@/lib/social-alerts';
+import { alertAbandonedPosts, alertStoppedPost } from '@/lib/social-alerts';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,29 +43,44 @@ export async function POST(request: Request) {
   const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts');
 
   const sweptResults: { id: string; outcome: string; detail?: string; alert?: string }[] = [];
-  for (const post of (swept ?? []) as {
+  const sweptPosts = (swept ?? []) as {
     id: string;
     channel_id: string;
     body: string;
     scheduled_for: string;
     last_error: string | null;
-  }[]) {
-    const { data: channel } = await admin
-      .from('social_channels')
-      .select('platform, status')
-      .eq('id', post.channel_id)
-      .maybeSingle();
+  }[];
 
-    const detail = post.last_error ?? 'A publishing run died before recording an outcome.';
-    const alert = await alertStoppedPost({
-      platform: channel ? String(channel.platform) : 'unknown',
-      body: post.body,
-      code: 'abandoned_run',
-      detail,
-      channelStatus: channel ? String(channel.status) : 'missing',
-      scheduledFor: post.scheduled_for,
-    });
-    sweptResults.push({ id: post.id, outcome: 'needs_manual', detail, alert });
+  if (sweptPosts.length > 0) {
+    // One channel lookup for the whole sweep rather than one per post, and one message rather than
+    // one per post: a backlog left by an outage can be dozens of rows, and fifty emails say less than
+    // one list. The sweep is capped in SQL for the same reason — the rest is taken on the next tick.
+    const { data: channels } = await admin
+      .from('social_channels')
+      .select('id, platform, status')
+      .in('id', [...new Set(sweptPosts.map((post) => post.channel_id))]);
+    const byId = new Map((channels ?? []).map((c) => [String(c.id), c]));
+
+    const alert = await alertAbandonedPosts(
+      sweptPosts.map((post) => {
+        const channel = byId.get(post.channel_id);
+        return {
+          platform: channel ? String(channel.platform) : 'unknown',
+          body: post.body,
+          channelStatus: channel ? String(channel.status) : 'missing',
+          scheduledFor: post.scheduled_for,
+        };
+      }),
+    );
+
+    for (const post of sweptPosts) {
+      sweptResults.push({
+        id: post.id,
+        outcome: 'needs_manual',
+        detail: post.last_error ?? 'A publishing run died before recording an outcome.',
+        alert,
+      });
+    }
   }
 
   const { data: claimed, error } = await admin.rpc('claim_social_posts', { batch_size: 10 });

@@ -70,7 +70,17 @@ revoke all on function public.claim_social_posts(integer) from authenticated;
 -- against a send that normally takes seconds. A row claimed before this migration was applied has no
 -- claimed_at, so scheduled_for is used as its clock instead — by then the claiming run has certainly
 -- finished, one way or the other.
-create or replace function public.sweep_stale_social_posts(stale_after interval default '15 minutes')
+--
+-- It is capped at 25 rows per call. One outage can abandon a hundred posts at once, and the publisher
+-- alerts on each sweep: a cap means one bounded message and a bounded amount of work before new posts
+-- are claimed, with the remainder picked up on the next tick a few minutes later.
+
+drop function if exists public.sweep_stale_social_posts(interval);
+
+create or replace function public.sweep_stale_social_posts(
+  stale_after interval default '15 minutes',
+  max_rows integer default 25
+)
 returns setof public.social_posts
 language plpgsql
 security definer
@@ -84,15 +94,22 @@ begin
          next_retry_at = null,
          last_error_code = 'abandoned_run',
          last_error = 'The publishing run died before recording an outcome. The post may already be live on the channel.'
-   where p.status = 'publishing'
-     and (
-       p.claimed_at < now() - stale_after
-       or (p.claimed_at is null and p.scheduled_for < now() - stale_after)
-     )
+   where p.id in (
+     select id
+       from public.social_posts
+      where status = 'publishing'
+        and (
+          claimed_at < now() - stale_after
+          or (claimed_at is null and scheduled_for < now() - stale_after)
+        )
+      order by coalesce(claimed_at, scheduled_for)
+      limit greatest(max_rows, 1)
+      for update skip locked
+   )
   returning p.*;
 end;
 $$;
 
-revoke all on function public.sweep_stale_social_posts(interval) from public;
-revoke all on function public.sweep_stale_social_posts(interval) from anon;
-revoke all on function public.sweep_stale_social_posts(interval) from authenticated;
+revoke all on function public.sweep_stale_social_posts(interval, integer) from public;
+revoke all on function public.sweep_stale_social_posts(interval, integer) from anon;
+revoke all on function public.sweep_stale_social_posts(interval, integer) from authenticated;
