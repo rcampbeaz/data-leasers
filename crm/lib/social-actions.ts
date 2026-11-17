@@ -472,6 +472,53 @@ export async function scheduleContent(contentId: string, formData: FormData) {
   redirect(`${PATH}?scheduled=1`);
 }
 
+// The other exit from a stopped post. Cancelling throws the work away, which is wrong when the
+// reason it stopped has since been fixed — a reconnected channel is holding a queue it can now
+// send. Retry clears what was recorded and puts the row back in the queue: zero attempts, so the
+// whole backoff ladder is available again, and no retry time, so the next cron tick claims it.
+// scheduled_for is deliberately left where it is; being in the past is what makes it due.
+export async function retryPost(postId: string) {
+  const { supabase } = await requireWriter();
+
+  const { data: post } = await supabase
+    .from('social_posts')
+    .select('id, status, channel_id')
+    .eq('id', postId)
+    .maybeSingle();
+  if (!post) fail('That post could not be found.');
+  if (!['failed', 'needs_manual'].includes(String(post.status))) {
+    fail('Only a post that has stopped can be retried.');
+  }
+
+  // The commonest reason a post is sitting here is a dead token, so check the channel first.
+  // Retrying into a channel that still needs reconnecting only spends another attempt to reach
+  // the same ending.
+  const { data: channel } = await supabase
+    .from('social_channels')
+    .select('status')
+    .eq('id', post.channel_id)
+    .maybeSingle();
+  if (!channel) fail('That channel no longer exists, so this post cannot be retried.');
+  if (channel.status !== 'active') {
+    fail('That channel needs reconnecting first. Retry once it is active again.');
+  }
+
+  const { error } = await supabase
+    .from('social_posts')
+    .update({
+      status: 'scheduled',
+      attempts: 0,
+      next_retry_at: null,
+      last_error_code: null,
+      last_error: null,
+    })
+    .eq('id', postId)
+    .in('status', ['failed', 'needs_manual']);
+  if (error) fail('Could not put that post back in the queue.');
+
+  revalidatePath(PATH);
+}
+
 // A post that has stopped and asked for a person can only leave the queue this way, so
 // 'needs_manual' belongs here as well as the two states that are still moving on their own.
 export async function cancelPost(postId: string) {

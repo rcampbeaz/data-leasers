@@ -636,6 +636,9 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
 /* ---------- button variants ---------- */
 /* Cancel and Remove used the same blue as Save, which made a destructive action look like the
    recommended one. */
+/* Two actions in one table cell without wrapping onto separate lines. */
+.cell-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
 .btn.ghost { background: transparent; border-color: var(--dl-line-strong); color: var(--dl-text-2); }
 .btn.ghost:hover { background: var(--dl-panel-raised); border-color: var(--dl-electric); color: var(--dl-text); }
 .btn.danger { background: transparent; border-color: rgba(248, 113, 113, 0.5); color: var(--dl-blocked-fg); }

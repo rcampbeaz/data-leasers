@@ -6,6 +6,7 @@ import {
   attachImage,
   cancelPost,
   generateDraft,
+  retryPost,
   removeImage,
   scheduleContent,
   testAi,
@@ -610,14 +611,22 @@ export default async function MarketingPage({
                       {!p.permalink && !p.last_error ? '-' : null}
                     </td>
                     <td>
-                      {canWrite &&
-                      (p.status === 'scheduled' ||
-                        p.status === 'failed' ||
-                        p.status === 'needs_manual') ? (
-                        <form action={cancelPost.bind(null, p.id)}>
-                          <button className="btn danger" type="submit">Cancel</button>
-                        </form>
-                      ) : null}
+                      <div className="cell-actions">
+                        {canWrite &&
+                        (p.status === 'failed' || p.status === 'needs_manual') ? (
+                          <form action={retryPost.bind(null, p.id)}>
+                            <button className="btn" type="submit">Retry</button>
+                          </form>
+                        ) : null}
+                        {canWrite &&
+                        (p.status === 'scheduled' ||
+                          p.status === 'failed' ||
+                          p.status === 'needs_manual') ? (
+                          <form action={cancelPost.bind(null, p.id)}>
+                            <button className="btn danger" type="submit">Cancel</button>
+                          </form>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 );
