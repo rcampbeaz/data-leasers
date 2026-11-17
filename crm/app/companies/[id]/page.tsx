@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { phoenix } from '@/lib/time';
+import { calendarDate, phoenix } from '@/lib/time';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { loadStaff, todayIso } from '@/lib/data';
@@ -509,7 +509,7 @@ export default async function CompanyPage({
                     <form action={toggleTask.bind(null, id, t.id, !t.done)}>
                       <button className="link-button" type="submit">{t.done ? 'Reopen' : 'Done'}</button>
                     </form>
-                    {t.title} · due {t.due_on}{overdue ? ' (overdue)' : ''} · {staffName(t.assigned_to)}
+                    {t.title} · due {calendarDate(t.due_on)}{overdue ? ' (overdue)' : ''} · {staffName(t.assigned_to)}
                   </li>
                 );
               })}

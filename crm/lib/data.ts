@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CompanyState, DatasetStatus, Stage } from './pipeline';
+import { phoenixDay } from './time';
 
 export type StaffMember = { user_id: string; full_name: string; role: string };
 
@@ -55,6 +56,9 @@ export async function currentStaff(supabase: SupabaseClient): Promise<StaffMembe
   return (data as StaffMember | null) ?? null;
 }
 
+// "Today" is the console's day, not UTC's. After 5pm in Phoenix the two differ, and a task due today
+// was being tagged overdue, a referral's countdown said a day less, and a date field was filled with
+// tomorrow.
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return phoenixDay(Date.now());
 }

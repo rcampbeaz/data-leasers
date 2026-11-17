@@ -1,5 +1,7 @@
 // Deal maths. Pure functions, so they can be tested without a database.
-// Dates are handled as UTC ISO day strings (YYYY-MM-DD) throughout.
+// Dates are handled as ISO day strings (YYYY-MM-DD) throughout, on the console's clock.
+
+import { phoenixDay } from './time';
 
 export const OFFER_STATUSES = ['offered', 'accepted', 'declined', 'withdrawn'] as const;
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
@@ -22,8 +24,10 @@ export const REFERRAL_SIGNING_MONTHS = 6;
 // The published term for deleting the raw upload after delivery.
 export const DELETION_DAYS = 120;
 
+// The console's day, for the same reason as lib/data: a deadline count taken against UTC's date is a
+// day out from 5pm Phoenix onwards.
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return phoenixDay(Date.now());
 }
 
 // Adds whole months in UTC, clamping to the last day of a short month

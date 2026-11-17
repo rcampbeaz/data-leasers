@@ -379,9 +379,9 @@ export default async function PartnersPage({
                       )}
                     </td>
                     <td>{partnerName.get(referral.partner_id) ?? 'Unknown'}</td>
-                    <td>{referral.registered_on}</td>
+                    <td>{calendarDate(referral.registered_on)}</td>
                     <td className={open && days <= 30 ? 'overdue' : ''}>
-                      {referral.deadline_on}
+                      {calendarDate(referral.deadline_on)}
                       {open ? <span className="muted small"> ({days}d)</span> : null}
                     </td>
                     <td>
