@@ -307,7 +307,7 @@ export async function seed({ supabase, email, password, log = console.log, failu
           platform: 'facebook',
           external_id: 'seed-facebook-page',
           display_name: 'Seed — Facebook page',
-          provider: 'aggregator',
+          provider: 'direct',
           status: 'needs_reauth',
           last_error: 'The page access token has expired.',
         },

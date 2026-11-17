@@ -42,7 +42,10 @@ const GROUPS = [
   ['Access', ['CRON_SECRET', 'INBOUND_EMAIL_SECRET', 'CRM_ORIGIN', 'PUBLIC_SITE_ORIGIN']],
   ['Email', ['RESEND_API_KEY', 'REMINDER_FROM_EMAIL', 'RESEND_WEBHOOK_SECRET', 'OUTBOUND_FROM_EMAIL', 'POSTAL_ADDRESS']],
   ['Sourcing', ['COMPANIES_HOUSE_API_KEY']],
-  ['Social', ['SOCIAL_API_URL', 'SOCIAL_API_KEY']],
+  // Publishing is either route or both: Facebook goes straight to Graph, the other networks through
+  // the provider. Neither being set is a report, not a failure, which is why both groups are optional.
+  ['Social', ['SOCIAL_API_URL', 'SOCIAL_API_KEY'], { optional: true }],
+  ['Facebook', ['FACEBOOK_PAGE_ID', 'FACEBOOK_PAGE_TOKEN'], { optional: true }],
   ['Agents', ['OPENAI_API_KEY', 'OPENAI_MODEL']],
 ];
 
@@ -83,14 +86,20 @@ const ROUTES = [
 const missingEnv = [];
 
 console.log('Environment (names only; values are never read out)');
-for (const [group, names] of GROUPS) {
+for (const [group, names, options = {}] of GROUPS) {
   const states = names.map((name) => {
     const set = Boolean(process.env[name]);
-    if (!set) missingEnv.push(name);
-    return `${name}${set ? '' : ' MISSING'}`;
+    if (!set && !options.optional) missingEnv.push(name);
+    return `${name}${set ? '' : options.optional ? ' (optional)' : ' MISSING'}`;
   });
   console.log(`  ${group.padEnd(10)} ${states.join('  ')}`);
 }
+const facebook = Boolean(process.env.FACEBOOK_PAGE_ID && process.env.FACEBOOK_PAGE_TOKEN);
+const aggregator = Boolean(process.env.SOCIAL_API_URL && process.env.SOCIAL_API_KEY);
+console.log(
+  `  publishing ${facebook ? 'Facebook direct' : 'Facebook not configured'}; ` +
+    `${aggregator ? 'other networks through the provider' : 'other networks not configured'}`,
+);
 if (!hadEnvFile && !existsSync('.env.local')) {
   console.log('  note       no .env in this directory; run this where the app reads its environment');
 }

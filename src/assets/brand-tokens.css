@@ -25,30 +25,17 @@
   --dl-electric-lift: #7FB0FF;
   --dl-electric-deep: #2563EB;
   --dl-electric-ink: #9CC2FF;
-  --dl-glow: rgba(47, 107, 255, 0.35);
 
   /* Legacy names resolve to the dark system so old markup keeps working */
-  --dl-navy: var(--dl-gunmetal-deep);
   --dl-navy-deep: #0D1116;
-  --dl-charcoal: var(--dl-text);
   --dl-slate: var(--dl-text-2);
-  --dl-cream: var(--dl-gunmetal);
-  --dl-mist: var(--dl-gunmetal);
   --dl-paper: var(--dl-panel);
   --dl-border: var(--dl-line);
   --dl-border-dark: var(--dl-line-strong);
-  --dl-burgundy: var(--dl-electric);
-  --dl-burgundy-ink: var(--dl-electric-lift);
-  --dl-rose: var(--dl-electric-ink);
-  --dl-copper: var(--dl-electric);
-  --dl-copper-ink: var(--dl-electric-lift);
-  --dl-sand: var(--dl-electric-ink);
   --dl-teal: var(--dl-electric);
   --dl-teal-ink: var(--dl-electric-lift);
   --dl-teal-bright: var(--dl-electric-ink);
   --dl-gold: var(--dl-electric-lift);
-  --dl-gold-ink: var(--dl-electric-lift);
-  --dl-amber: var(--dl-electric);
   --dl-ink: var(--dl-text);
 
   /* States: meaning only, never decoration */
@@ -60,7 +47,6 @@
   --dl-blocked-fg: #FF9C90;
 
   /* Dark surfaces */
-  --dl-dark-bg: var(--dl-gunmetal-deep);
   --dl-dark-fg: var(--dl-text);
   --dl-dark-muted: var(--dl-text-2);
   --dl-dark-accent: var(--dl-electric-ink);
@@ -69,11 +55,8 @@
   --color-text: var(--dl-text);
   --color-text-muted: var(--dl-text-2);
   --color-bg: var(--dl-gunmetal);
-  --color-surface: var(--dl-panel);
   --color-border: var(--dl-line);
   --color-primary: var(--dl-electric-lift);
-  --color-primary-text: #FFFFFF;
-  --color-accent: var(--dl-electric);
 
   /* Type: serif headlines for gravitas, a modern sans for everything else */
   --font-sans: "InterVar", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -84,7 +67,6 @@
   --text-lg: 20px;
   --text-xl: 26px;
   --text-2xl: 34px;
-  --text-3xl: 44px;
   --text-4xl: 56px;
   --leading-body: 1.68;
   --leading-heading: 1.14;
@@ -112,6 +94,4 @@
 
   /* Layout */
   --container: 1120px;
-  /* Logo clear space = 1/4 of the mark tile height */
-  --logo-clear-space: 30px;
 }

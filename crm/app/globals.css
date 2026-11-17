@@ -52,9 +52,7 @@
   /* Legacy names, so older markup keeps working */
   --dl-ink: var(--dl-text);
   --dl-teal: var(--dl-electric);
-  --dl-amber: var(--dl-review-fg);
   --dl-slate: var(--dl-text-muted);
-  --dl-mist: var(--dl-gunmetal);
   --dl-paper: var(--dl-panel);
   --dl-border: var(--dl-line);
   --dl-dark-accent: var(--dl-electric-ink);
@@ -71,7 +69,6 @@
   /* Names brand-tokens.css defines that the CRM had not: kept identical so a rule copied from the
      site behaves the same here. */
   --dl-navy-deep: #0D1116;
-  --dl-glow: rgba(47, 107, 255, 0.35);
   --dl-teal-ink: var(--dl-electric-lift);
   --dl-teal-bright: var(--dl-electric-ink);
 }

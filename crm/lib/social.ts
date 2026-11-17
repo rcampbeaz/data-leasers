@@ -190,6 +190,13 @@ export function facebookConfigured(): boolean {
   return Boolean(process.env.FACEBOOK_PAGE_ID && process.env.FACEBOOK_PAGE_TOKEN);
 }
 
+// The route a post for this channel takes, which is the same decision publishPost makes below. The
+// channel row stores it, so a Page connected here does not claim to be an aggregator channel: Facebook
+// is posted from this app, and the provider covers the networks whose approvals it holds.
+export function providerFor(channel: Channel): 'aggregator' | 'direct' {
+  return channel === 'facebook' ? 'direct' : 'aggregator';
+}
+
 export function providerConfigured(): boolean {
   return Boolean(process.env.SOCIAL_API_URL && process.env.SOCIAL_API_KEY) || facebookConfigured();
 }

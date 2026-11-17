@@ -7,6 +7,12 @@ Labels move between releases on all four platforms. Match settings by name rathe
 position, and if something is not where this says, search the settings page for the term before
 assuming it has been removed.
 
+> **Status.** Facebook now publishes directly from the CRM to the Page, with no provider: see
+> `crm/SETUP.md`, "Posting to Facebook without a provider". The aggregator still covers Instagram,
+> LinkedIn and TikTok, so read the exclusions below as applying to those three — a Meta app and a
+> Page token *are* needed for Facebook, but no Instagram permission request is, because Instagram
+> posts go out through the provider's app.
+
 ---
 
 ## What you do **not** need while using the aggregator

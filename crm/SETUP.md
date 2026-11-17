@@ -321,7 +321,7 @@ posts go to the feed, where Meta attaches a link preview for any URL in the mess
 ### Other networks
 
 Environment for sending:
-1. Create an account with a publishing provider that covers LinkedIn, Facebook, Instagram and TikTok and holds their approvals. The free tiers that exist at the time of writing are bundle.social (20 posts/month) and upload-post (10 uploads/month).
+1. Create an account with a publishing provider that covers LinkedIn, Instagram and TikTok and holds their approvals. Facebook does not need it: see the section above. The free tiers that exist at the time of writing are bundle.social (20 posts/month) and upload-post (10 uploads/month).
 2. Put its endpoint in `SOCIAL_API_URL` and its key in `SOCIAL_API_KEY`. Any provider that accepts `{ platform, text, media, scheduled_at }` and returns an id works, because the console calls one endpoint.
 3. Add a second cron entry, every five minutes, next to the reminder job:
 

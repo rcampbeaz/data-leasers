@@ -49,7 +49,7 @@ jobs:
         working-directory: crm
         run: npx tsc --noEmit
 
-      - name: Checks (migrations, dates, clock)
+      - name: Checks (migrations, seed, dates, schema, policies, clock, money)
         working-directory: crm
         run: npm run check
 

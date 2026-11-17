@@ -8,9 +8,6 @@ import { phoenixMonth, phoenixYear } from './time';
 
 export const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 
-// Raster only. An SVG is a document that can carry script, and no social network accepts one anyway.
-export const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
-
 export const MEDIA_BUCKET = 'social-media';
 
 export type ImageCheck =
@@ -66,7 +63,3 @@ export function mediaObjectPath(
 export function isPostableMediaUrl(url: string): boolean {
   return /^https:\/\/[^\s]+$/i.test(url.trim());
 }
-
-// The publisher takes a platform's media limit, not ours: one image is enough for a first launch,
-// and asking for more invites a provider error we cannot interpret.
-export const MAX_MEDIA_PER_POST = 1;

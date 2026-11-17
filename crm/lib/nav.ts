@@ -60,9 +60,6 @@ export function navFor(role: string): NavGroup[] {
   })).filter((group) => group.items.length > 0);
 }
 
-// Kept for anything that wants a flat list of reachable pages.
-export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
-
 export const ROLE_LABELS: Record<Role, string> = {
   admin: 'Admin',
   introducer: 'Introducer',
