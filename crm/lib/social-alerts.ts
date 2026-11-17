@@ -127,17 +127,35 @@ export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome>
 }
 
 // The sweep's message. Every post in it stopped for the same reason — a run died mid-send — and every
-// one of them may already be live, so the advice is the same for all of them and belongs once, at the
-// top, rather than repeated under each entry.
+// one of them may already be live, so the look-first check belongs to all of them. What follows it
+// depends on the channel, though; that part is repeated per entry.
 export async function alertAbandonedPosts(posts: AbandonedPost[]): Promise<AlertOutcome> {
   if (posts.length === 0) return 'skipped';
 
   const entries = posts.map((post, index) => {
     const name = label(post.platform);
     const body = post.body.length > 300 ? `${post.body.slice(0, 300)}…` : post.body;
+    // Retry refuses while the channel is not active, so the step for each post depends on its own
+    // channel: one digest can hold a post on a revoked token and a post whose channel is fine, and
+    // telling both to press Retry sends the first into a button that only says no. Same three cases
+    // as the single-post advice, and the same checks retryPost makes.
+    const missing = post.channelStatus === 'missing';
+    const inactive = post.channelStatus !== 'active';
+    const nextStep = missing
+      ? 'Its channel is no longer connected, so Retry cannot help: connect the account again on the Channels tab, then cancel this post and schedule the content to the new channel.'
+      : inactive
+        ? `Its channel is ${post.channelStatus}, and Retry refuses until it is active: reconnect it with the provider, press Mark active on the Channels tab, then Retry — after checking the account.`
+        : 'Open the account and look: if the post is there, cancel it in the console; if it is not, press Retry and it goes back in the queue.';
     return [
-      `${index + 1}. ${name} — ${post.channelStatus === 'active' ? 'connected' : `channel is ${post.channelStatus}`}, was due ${when(post.scheduledFor)} (Phoenix)`,
+      `${index + 1}. ${name} — ${
+        missing
+          ? 'channel no longer connected'
+          : inactive
+            ? `channel is ${post.channelStatus}`
+            : 'channel connected'
+      }, was due ${when(post.scheduledFor)} (Phoenix)`,
       `   ${body.replace(/\s+/g, ' ')}`,
+      `   ${nextStep}`,
     ].join('\n');
   });
 
@@ -146,8 +164,8 @@ export async function alertAbandonedPosts(posts: AbandonedPost[]): Promise<Alert
     `The run that was sending ${count === 1 ? 'a post' : `${count} posts`} died before it could record what happened, so ${count === 1 ? 'it' : 'any of them'} may already be live on the channel.`,
     '',
     count === 1
-      ? 'It is stopped in the console until somebody looks. Open the account and check: if the post is there, cancel it; if it is not, press Retry and it goes back in the queue.'
-      : 'They are stopped in the console until somebody looks. Open each account and check: if a post is there, cancel it; if it is not, press Retry and it goes back in the queue.',
+      ? 'It is stopped in the console until somebody looks. The next step is under it.'
+      : 'They are stopped in the console until somebody looks. Each one carries its own next step, because the channels are not all in the same state.',
     '',
     ...entries,
     '',
