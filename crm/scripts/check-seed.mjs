@@ -335,7 +335,8 @@ expect(
 
 // The contract with a failed step, asserted rather than left to a mutation: the seed throws a
 // StepFailure that carries the step's label, and the caller is still running and can report it and shut
-// the database down. One write refuses here; everything before it in the run still reports success.
+// the database down. One write refuses here; the steps before it report success, in the same order the
+// run that finished used.
 const refusing = client(db, {
   failOn: { table: 'offers', op: 'insert', message: 'permission denied for table offers' },
 });
@@ -356,10 +357,17 @@ expect('a refused write is thrown, not an exit', thrown instanceof StepFailure, 
 expect('the failure names the step it happened in', thrown?.label, 'an offer and a signed agreement');
 expect('the failure carries the database message', thrown?.reason, 'permission denied for table offers');
 expect('the failure renders with that label', failureLines(thrown)[0], '  FAIL an offer and a signed agreement');
+// The steps before the refused write, compared label by label with the completed run's own order: a
+// count would stop meaning anything the moment the seed gained or lost a step, and it could not tell
+// one step from another.
+const labelsOf = (lines) =>
+  lines.filter((line) => line.startsWith('  ok   ')).map((line) => line.slice('  ok   '.length));
+const offerStep = labelsOf(firstSteps).indexOf('an offer and a signed agreement');
+expect('the seed still has the offers step', offerStep > 0, true);
 expect(
-  'the steps before it still reported success',
-  saidBeforeFailure.filter((line) => line.startsWith('  ok')).length,
-  7,
+  'the steps before the refused write, in order',
+  labelsOf(saidBeforeFailure).join(' → '),
+  labelsOf(firstSteps).slice(0, offerStep).join(' → '),
 );
 
 await db.close();
@@ -369,9 +377,10 @@ console.log(
 );
 
 if (failures.length > 0) {
-  console.error('\nThe seed does not match the schema:');
+  console.error('\nThe seed does not behave as this check expects:');
   for (const failure of failures) console.error(`  ${failure}`);
-  console.error('\nA column above is missing, or a value does not fit its type, not-null rule or check');
-  console.error('constraint. The seed is the thing to change: it must fit the schema the migrations build.');
+  console.error('\nEither a payload no longer fits the schema the migrations build — a column that has');
+  console.error('gone, a value its type, not-null rule or check constraint refuses — or the write path');
+  console.error('stopped reporting or failing the way this check asserts. The seed is the thing to change.');
   process.exit(1);
 }
