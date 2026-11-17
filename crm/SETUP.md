@@ -140,16 +140,28 @@ console's clock, `phoenixYear` the year an instant falls in, and `calendarYear` 
 already belongs to. An `<input type="date">` is exempt, because that control's value is `YYYY-MM-DD` by
 definition.
 
+`npm run check:clock` then pins what those helpers answer, because a scan cannot see a return value. It
+transpiles `lib/time.ts` (with the TypeScript already in `devDependencies`, so there is no build step)
+and checks the instants where the clock is easiest to get wrong: 5pm Phoenix, when the UTC day has
+already rolled over; the last seven hours of a month and of a year; a stored date that must not move;
+the `daysLeft` nulls; and the datetime-local round trip through the schedule form, including 31
+February, which has to be refused. It prints one line when they all hold, and otherwise the value it
+expected beside the one it got, so a day or an hour that moves fails here rather than in a page nobody
+opened.
+
 ### Before a deploy
 
-`npm run check` runs both — the migration series first, then the clock scan — and stops at whichever
-fails. Run it before a deploy: neither needs credentials or a network, so it is the same command on a
+`npm run check` runs all three — the migration series, the clock scan, then the clock's own values —
+and stops at whichever fails. Run it before a deploy: neither needs credentials or a network, so it is the same command on a
 laptop and in CI. Which half matters depends on what you are shipping:
 
 - **Pasting SQL into the Supabase SQL Editor:** `check:migrations` is the one that has to be green; it
   is the only thing that proves the files still apply in order and still apply twice.
 - **Shipping code under `lib/` or `app/`:** `check:dates` is the one that has to be green; a route that
   builds a day from UTC or prints a stored date raw would pass a type check and a build.
+- **Editing `lib/time.ts`:** `check:clock` is the one that has to be green; it is the only place the
+  console's expected days, months and instants are written down. A deliberate change to one of them
+  means changing the expectation here as well as the helper.
 
 `npm run preflight` is a different check, and the only one that needs the project and the environment:
 run it on the server after a deploy.

@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "audit:routes": "node scripts/audit-routes.mjs",
-    "check": "npm run check:migrations && npm run check:dates",
+    "check": "npm run check:migrations && npm run check:dates && npm run check:clock",
     "check:migrations": "node scripts/check-migrations.mjs",
     "check:dates": "node scripts/check-dates.mjs",
+    "check:clock": "node scripts/check-clock.mjs",
     "preflight": "node scripts/preflight.mjs",
     "check-ai": "node scripts/check-ai.mjs",
     "set-password": "node scripts/set-password.mjs"
