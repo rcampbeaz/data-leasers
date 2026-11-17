@@ -10,8 +10,20 @@
 //   - an instant (created_at, sent_at, scheduled_for) is a moment, and is shown on the console's clock;
 //   - a calendar date (due_on, deadline_on, paid_on) is a day, with no time and no zone at all, so it is
 //     formatted as the day it already is. Putting one through a zone would move it.
+//
+// A missing or unreadable value comes back as an empty string instead of throwing. These are printed
+// straight into table cells, and a nullable column is a blank cell, not a failed page: the string
+// rendering this replaced printed something harmless for null, and so does this.
 
 export const TIME_ZONE = 'America/Phoenix';
+
+type Time = string | number | Date | null | undefined;
+
+function parse(when: Time): Date | null {
+  if (when === null || when === undefined || when === '') return null;
+  const at = new Date(when);
+  return Number.isNaN(at.getTime()) ? null : at;
+}
 
 // Building an Intl formatter is the expensive half of formatting, so each shape is built once and kept.
 // The options are the key because they are what define a shape.
@@ -29,8 +41,9 @@ function formatter(options: Intl.DateTimeFormatOptions, timeZone: string): Intl.
 
 // Anything human-readable: "Nov 17, 2026, 1:04 PM" with dateStyle and timeStyle, "Nov 17, 2026" with
 // dateStyle alone, or the field options a chart label needs.
-export function phoenix(when: string | number | Date, options: Intl.DateTimeFormatOptions): string {
-  return formatter(options, TIME_ZONE).format(new Date(when));
+export function phoenix(when: Time, options: Intl.DateTimeFormatOptions): string {
+  const at = parse(when);
+  return at ? formatter(options, TIME_ZONE).format(at) : '';
 }
 
 // The machine-readable shapes — a sortable day, a clock time, a stamp and the value a datetime-local
@@ -45,8 +58,10 @@ const PARTS = new Intl.DateTimeFormat('en-US', {
   hourCycle: 'h23',
 });
 
-export function phoenixKey(when: string | number | Date): { date: string; clock: string } {
-  const parts = PARTS.formatToParts(new Date(when));
+export function phoenixKey(when: Time): { date: string; clock: string } {
+  const at = parse(when);
+  if (!at) return { date: '', clock: '' };
+  const parts = PARTS.formatToParts(at);
   const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
   return {
     date: `${get('year')}-${get('month')}-${get('day')}`,
@@ -54,30 +69,36 @@ export function phoenixKey(when: string | number | Date): { date: string; clock:
   };
 }
 
-export function phoenixDay(when: string | number | Date): string {
+export function phoenixDay(when: Time): string {
   return phoenixKey(when).date;
 }
 
-export function phoenixClock(when: string | number | Date): string {
+export function phoenixClock(when: Time): string {
   return phoenixKey(when).clock;
 }
 
-export function phoenixStamp(when: string | number | Date): string {
+export function phoenixStamp(when: Time): string {
   const { date, clock } = phoenixKey(when);
-  return `${date} ${clock}`;
+  return date ? `${date} ${clock}` : '';
 }
 
 // The value a datetime-local input expects, on the console's clock.
-export function phoenixInput(when: string | number | Date): string {
+export function phoenixInput(when: Time): string {
   const { date, clock } = phoenixKey(when);
-  return `${date}T${clock}`;
+  return date ? `${date}T${clock}` : '';
 }
 
 // A day with no time: "2026-11-17" or a full timestamp whose date part is the day meant. Formatted in
 // UTC deliberately — not as the console's clock — because the value is already a day, and shifting it by
 // a zone is how a deadline ends up on the wrong date.
-export function calendarDate(day: string | Date): string {
-  const trimmed = typeof day === 'string' ? day.slice(0, 10) : day.toISOString().slice(0, 10);
+export function calendarDate(day: string | Date | null | undefined): string {
+  if (day === null || day === undefined) return '';
+  const trimmed =
+    typeof day === 'string'
+      ? day.slice(0, 10)
+      : Number.isNaN(day.getTime())
+        ? ''
+        : day.toISOString().slice(0, 10);
   const [year, month, date] = trimmed.split('-').map(Number);
   if (!year || !month || !date) return trimmed;
   return formatter({ dateStyle: 'medium' }, 'UTC').format(new Date(Date.UTC(year, month - 1, date)));
@@ -85,7 +106,10 @@ export function calendarDate(day: string | Date): string {
 
 // A calendar month: "2026-11" from a month key, shown as "Nov 2026" — or "Nov 26" where a chart has no
 // room for the fourth digit. Same reasoning as the day above.
-export function calendarMonth(key: string, yearStyle: 'numeric' | '2-digit' = 'numeric'): string {
+export function calendarMonth(
+  key: string | null | undefined,
+  yearStyle: 'numeric' | '2-digit' = 'numeric',
+): string {
   const [year, month] = String(key ?? '').slice(0, 7).split('-').map(Number);
   if (!year || !month) return String(key ?? '');
   return formatter({ month: 'short', year: yearStyle }, 'UTC').format(
