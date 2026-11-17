@@ -32,9 +32,6 @@
   --dl-paper: var(--dl-panel);
   --dl-border: var(--dl-line);
   --dl-border-dark: var(--dl-line-strong);
-  --dl-teal: var(--dl-electric);
-  --dl-teal-ink: var(--dl-electric-lift);
-  --dl-teal-bright: var(--dl-electric-ink);
   --dl-gold: var(--dl-electric-lift);
   --dl-ink: var(--dl-text);
 

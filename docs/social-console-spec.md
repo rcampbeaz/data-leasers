@@ -1,5 +1,11 @@
 # Social media console: specification
 
+> **Status: partly superseded.** Facebook now publishes directly from the CRM to the Page, with no
+> provider (`crm/SETUP.md`, "Posting to Facebook without a provider"); the aggregator below covers
+> Instagram, LinkedIn and TikTok. `social_channels.provider` records which route a channel takes. The
+> rest of this document is the decision record as written, kept for the reasoning rather than as a
+> description of the code.
+
 Status: design for review. No code yet.
 
 Scope: an internal console in the CRM (`app.dataleasers.com/social`) that writes, schedules and

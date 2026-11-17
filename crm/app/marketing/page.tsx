@@ -30,7 +30,7 @@ import { SocialComposer } from '@/components/social-composer';
 const DAY = 24 * 60 * 60 * 1000;
 
 // Brand colours for the donut, in the same family the dashboard uses.
-const PALETTE = ['var(--dl-teal)', '#F5C063', '#7C9CFF', '#6EE7A8', '#FF9C90', '#B7A6FF'];
+const PALETTE = ['var(--dl-electric)', '#F5C063', '#7C9CFF', '#6EE7A8', '#FF9C90', '#B7A6FF'];
 
 // The page held a composer, a week view, three charts, a channel table, six switches and two queues,
 // which is why it read as a wall. Tabs split it by what a person came to do.

@@ -3,7 +3,7 @@
 export function BarChart({
   data,
   ariaLabel,
-  color = 'var(--dl-teal)',
+  color = 'var(--dl-electric)',
 }: {
   data: { label: string; value: number }[];
   ariaLabel: string;
@@ -72,10 +72,10 @@ export function LineChart({
   return (
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="chart">
       <line x1={pad.left} x2={width - pad.right} y1={pad.top + innerH} y2={pad.top + innerH} stroke="var(--dl-border)" />
-      {points.length > 0 ? <path d={path} fill="none" stroke="var(--dl-teal)" strokeWidth={2.5} /> : null}
+      {points.length > 0 ? <path d={path} fill="none" stroke="var(--dl-electric)" strokeWidth={2.5} /> : null}
       {points.map((p) => (
         <g key={p.label}>
-          <circle cx={p.x} cy={p.y} r={3.5} fill="var(--dl-teal)" />
+          <circle cx={p.x} cy={p.y} r={3.5} fill="var(--dl-electric)" />
           <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="11" fill="var(--dl-ink)">
             {p.value}
           </text>

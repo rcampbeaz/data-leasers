@@ -51,7 +51,6 @@
 
   /* Legacy names, so older markup keeps working */
   --dl-ink: var(--dl-text);
-  --dl-teal: var(--dl-electric);
   --dl-slate: var(--dl-text-muted);
   --dl-paper: var(--dl-panel);
   --dl-border: var(--dl-line);
@@ -69,8 +68,6 @@
   /* Names brand-tokens.css defines that the CRM had not: kept identical so a rule copied from the
      site behaves the same here. */
   --dl-navy-deep: #0D1116;
-  --dl-teal-ink: var(--dl-electric-lift);
-  --dl-teal-bright: var(--dl-electric-ink);
 }
 
 * { box-sizing: border-box; }
@@ -207,7 +204,7 @@ p { margin: 0 0 12px; }
 .btn {
   display: inline-block;
   padding: 9px 16px;
-  border: 1px solid var(--dl-teal-ink);
+  border: 1px solid var(--dl-electric-lift);
   border-radius: var(--radius-sm);
   background: var(--dl-electric-deep);
   color: #FFFFFF;
@@ -402,9 +399,9 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
   background: #fff;
   transition: transform 0.15s ease;
 }
-.switch input:checked + .track { background: var(--dl-teal); }
+.switch input:checked + .track { background: var(--dl-electric); }
 .switch input:checked + .track::after { transform: translateX(20px); }
-.switch input:focus-visible + .track { outline: 2px solid var(--dl-teal); outline-offset: 2px; }
+.switch input:focus-visible + .track { outline: 2px solid var(--dl-electric); outline-offset: 2px; }
 .switch .switch-text strong { display: block; font-size: 14px; color: var(--dl-text); }
 .switch .switch-text span { display: block; font-size: 12.5px; color: var(--dl-text-muted); }
 
