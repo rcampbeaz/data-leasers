@@ -190,6 +190,22 @@ also have row-level security enabled, so a new table cannot arrive unguarded.
 only part of Supabase's own definition the policies use. Storage policies and the REST layer's treatment
 of the key are outside it.
 
+### Checking the seed
+
+`npm run check:seed` applies the migrations to PGlite and then calls the same `seed()` the command line
+calls, with a client that turns its Supabase calls into SQL: insert, upsert with a conflict target, delete
+and select with a filter, and the three `auth.admin` calls. It runs the seed twice, so the
+delete-then-insert path is exercised rather than described — the second run has to replace the first
+run's rows rather than collide with them. A company with no seed marker is put in the way before that
+second run and has to survive both it and the clear step, so the deletes are shown to stay inside the
+seed's own ids and markers. Every column, type, not-null rule, check constraint and conflict target the
+payloads touch is therefore proved before a project sees them.
+
+It is not PostgREST: grants and policies are never evaluated, so something PostgREST alone would refuse
+can still pass here, and the password is discarded because the harness's `auth.users` has no password
+column. What it does catch is what would fail first on staging — a column that has been renamed, a value a
+constraint refuses, an `onConflict` that names nothing unique.
+
 ### Staging walk-through
 
 `npm run seed` fills a staging project with the states this branch changed, so the console can be walked
@@ -201,11 +217,14 @@ send with a suppression. It needs `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_
 and refuses to write anything without `SEED_CONFIRM=yes`. Rows have fixed ids and seed markers, so a
 second run replaces its own rather than piling up. It sends nothing: every post and send is a row. The
 script ends by printing the walk-through order — the screens, and what to look at on each.
+`npm run check:seed` runs that same write path against a local database, so a payload that no longer fits
+the schema fails on a laptop instead of on the first staging run.
 
 ### Before a deploy
 
-`npm run check` runs all six — the migration record, the series itself, the date scan, the schema
-check, the clock's values, then the money table — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
+`npm run check` runs all seven — the migration record, the series itself, the seed's payloads against a
+local database, the date scan, the schema check, the clock's values, then the money table — and stops at
+whichever fails. None of them needs credentials or a network, so it is the same command on a
 laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
 than a laptop. Which part matters depends on what you are shipping:
