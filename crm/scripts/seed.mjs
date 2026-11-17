@@ -62,31 +62,44 @@ const DELIVERED_EMAIL = 'delivered@seed.bounce.test';
 const SWEEP_WARNING =
   'The publisher could not reach the provider (seed fixture). Retrying held posts is safe.';
 
+// A step that fails keeps its label, the database's own message and the hint together. Whoever ran the
+// seed decides what to do with that: the command line prints it and exits, the local check prints it and
+// closes its database. Neither has to guess from log lines what happened.
+export class StepFailure extends Error {
+  constructor(label, reason, hint) {
+    super(`${label}: ${reason}`);
+    this.label = label;
+    this.reason = reason;
+    this.hint = hint;
+  }
+}
+
+export const failureLines = (error) =>
+  error instanceof StepFailure
+    ? [`  FAIL ${error.label}`, `       ${error.reason}`, '', ...error.hint]
+    : [`  FAIL ${String(error?.message ?? error).split('\n')[0]}`];
+
 // The write path on its own, so a check can run it against a local database with a stubbed client.
 // `supabase` is anything with the same shape as the client this script uses in production.
 export async function seed({ supabase, email, password, log = console.log, failureHint }) {
   const today = phoenixDay();
   const delivered = addDays(today, -10);
 
-  // Any failure is reported as this script's own, with the hint that matters: a staging project that has
-  // not had the migrations applied will refuse these inserts, and that is the usual cause. A caller that
-  // knows better — the local check, where the migrations are applied — passes its own hint.
+  // The hint names the usual cause — a staging project that has not had the migrations applied — unless
+  // the caller knows better, which the local check does, because it has just applied them itself.
   const hint = failureHint ?? [
     'If this is a missing table or column, apply supabase/migrations in order to this project',
     'first: `npm run check:migrations` proves the series applies to an empty one.',
     'Nothing yet written by this run has been removed.',
   ];
+  // Progress only: a failure is thrown, so the caller decides whether that ends the run.
   const step = async (label, run) => {
     try {
       const result = await run();
       log(`  ok   ${label}`);
       return result;
     } catch (error) {
-      log(`  FAIL ${label}`);
-      log(`       ${String(error?.message ?? error).split('\n')[0]}`);
-      log('');
-      for (const line of hint) log(line);
-      process.exit(1);
+      throw new StepFailure(label, String(error?.message ?? error).split('\n')[0], hint);
     }
   };
 
@@ -498,7 +511,13 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  await seed({ supabase, email, password });
+  try {
+    await seed({ supabase, email, password });
+  } catch (error) {
+    for (const line of failureLines(error)) console.error(line);
+    process.exit(1);
+  }
+
   console.log(`\nSeeded. Sign in at /login as ${email} with the password from SEED_STAFF_PASSWORD.`);
   console.log('Nothing was sent to a provider or an inbox; every post and send here is a row.\n');
 

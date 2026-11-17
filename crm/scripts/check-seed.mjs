@@ -37,7 +37,7 @@ try {
   process.exit(1);
 }
 
-const { seed } = await import('./seed.mjs');
+const { seed, failureLines } = await import('./seed.mjs');
 
 // The parts of a Supabase project the migrations lean on. Nothing of the CRM's own schema is created
 // here, so everything the series needs it has to build itself.
@@ -254,34 +254,31 @@ const expected = {
   suppressions: 1,
 };
 
-// The seed reports each step through `log`. Successes stay quiet here, so this check prints one line
-// per assertion rather than fourteen; a failure is printed as it happens, because the seed exits there.
+// The seed reports progress through `log`, which stays quiet here so this prints one line per assertion
+// rather than fourteen. A step that fails comes back as a thrown StepFailure: that is printed, and the
+// database is closed before the check stops.
 const runSeed = async () => {
   const said = [];
-  await seed({
-    supabase,
-    email: 'walkthrough@dataleasers.test',
-    password: 'check-only',
-    failureHint: [
-      'This database has the migrations applied, so the seed is what to change: a column that no',
-      'longer exists, or a value the schema refuses.',
-    ],
-    log: (line) => {
-      said.push(line);
-      if (!line.startsWith('  ok')) console.error(line);
-    },
-  });
+  try {
+    await seed({
+      supabase,
+      email: 'walkthrough@dataleasers.test',
+      password: 'check-only',
+      failureHint: [
+        'This database has the migrations applied, so the seed is what to change: a column that no',
+        'longer exists, or a value the schema refuses.',
+      ],
+      log: (line) => said.push(line),
+    });
+  } catch (error) {
+    for (const line of failureLines(error)) console.error(line);
+    await db.close();
+    process.exit(1);
+  }
   return said;
 };
 
-let firstSteps = [];
-try {
-  firstSteps = await runSeed();
-} catch (error) {
-  console.error(`\nThe seed threw before finishing: ${String(error?.message ?? error)}`);
-  await db.close();
-  process.exit(1);
-}
+const firstSteps = await runSeed();
 const wrote = firstSteps.filter((line) => line.startsWith('  ok')).length;
 
 for (const [name, wanted] of Object.entries(expected)) {
@@ -314,8 +311,8 @@ await db.query(
   `insert into public.companies (name, stage, source) values ('Not the seed', 'New lead', 'manual')`,
 );
 
-const secondSteps = await runSeed();
-expect('a second run reports no failure', secondSteps.filter((line) => !line.startsWith('  ok')).length, 0);
+// A step that fails on the second run throws, which prints the reason and closes the database.
+await runSeed();
 
 for (const [name, wanted] of Object.entries(expected)) {
   expect(`second run: ${name}`, (await snapshot())[name], wanted);
