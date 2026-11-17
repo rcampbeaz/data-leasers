@@ -472,11 +472,12 @@ export async function retryPost(postId: string) {
     .eq('status', 'failed');
   if (linkError) redirect(`${path}?error=${encodeURIComponent('Could not queue the retry.')}`);
 
+  // scheduled_for is not touched: the post was meant to go out at that time, and a retry
+  // does not change the intent. The channels above carry the retry clock instead.
   const { error: postError } = await supabase
     .from('social_posts')
     .update({
       state: 'scheduled',
-      scheduled_for: nowIso,
       failure_notified_at: null,
       updated_at: nowIso,
     })

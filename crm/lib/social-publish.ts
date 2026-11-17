@@ -62,16 +62,40 @@ export async function publishDue(now: Date = new Date()): Promise<RunReport> {
     .eq('state', 'publishing')
     .lt('updated_at', new Date(now.getTime() - STALE_CLAIM_MINUTES * 60_000).toISOString());
 
-  const { data: due, error } = await supabase
+  // A post is due when its own time has passed and no channel is still waiting on a retry
+  // clock. Both halves are needed: scheduled_for is the record of when the post was meant
+  // to go out and is never moved, so on its own it would make a retrying post look due on
+  // every sweep. The waiting is read from the channel rows, where the retry clock lives.
+  const { data: candidates, error } = await supabase
     .from('social_posts')
-    .select('id')
+    .select('id, social_post_channels(status, next_attempt_at)')
     .eq('state', 'scheduled')
     .lte('scheduled_for', nowIso)
     .order('scheduled_for', { ascending: true })
-    .limit(RUN_LIMIT);
+    // Read more rows than one run will claim: a post waiting on a retry clock is filtered
+    // out below, and it should not take a slot from a post that is genuinely due. Retries
+    // clear within ten minutes, so this slack is not exceeded in practice.
+    .limit(RUN_LIMIT * 5);
   if (error) throw new Error('Could not read the due posts.');
 
-  const ids = (due ?? []).map((row) => (row as { id: string }).id);
+  type PendingChannel = { status: string; next_attempt_at: string | null };
+  const stillWaiting = (links: PendingChannel[]) =>
+    links.some(
+      (link) =>
+        (link.status === 'scheduled' || link.status === 'pending') &&
+        !!link.next_attempt_at &&
+        Date.parse(link.next_attempt_at) > now.getTime(),
+    );
+
+  const ids = (
+    (candidates ?? []) as unknown as {
+      id: string;
+      social_post_channels: PendingChannel[] | null;
+    }[]
+  )
+    .filter((post) => !stillWaiting(post.social_post_channels ?? []))
+    .map((post) => post.id)
+    .slice(0, RUN_LIMIT);
   if (ids.length === 0) {
     return { provider: provider.name, claimed: 0, published: 0, retrying: 0, failed: 0, emailsSent: 0, results: [] };
   }
@@ -131,7 +155,6 @@ async function publishPost(
   let published = 0;
   let failed = 0;
   let waiting = 0;
-  let earliestRetry: string | null = null;
 
   if (links.length === 0) {
     await supabase.from('social_posts').update({ state: 'failed', updated_at: nowIso }).eq('id', post.id);
@@ -156,7 +179,6 @@ async function publishPost(
     }
     if (link.next_attempt_at && Date.parse(link.next_attempt_at) > now.getTime()) {
       waiting++;
-      if (!earliestRetry || link.next_attempt_at < earliestRetry) earliestRetry = link.next_attempt_at;
       continue;
     }
 
@@ -251,7 +273,6 @@ async function publishPost(
 
     if (willRetry && next) {
       waiting++;
-      if (!earliestRetry || next < earliestRetry) earliestRetry = next;
     } else {
       failed++;
     }
@@ -263,9 +284,9 @@ async function publishPost(
 
   const patch: Record<string, unknown> = { state, updated_at: nowIso };
   if (state === 'published' || state === 'partial') patch.published_at = nowIso;
-  // A waiting retry moves the post's own clock, so the next sweep finds it without a
-  // second query across the channel rows.
-  if (state === 'scheduled') patch.scheduled_for = earliestRetry ?? nowIso;
+  // scheduled_for is deliberately left alone. It records when the post was meant to go
+  // out; a retry has its own clock on the channel rows, which the due query reads. Moving
+  // it would rewrite history and make the calendar jump every time an attempt slipped.
 
   await supabase.from('social_posts').update(patch).eq('id', post.id);
 
