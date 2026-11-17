@@ -402,7 +402,9 @@ export default async function MarketingPage({
               '0020_sweep_clears_its_own_warning.sql; this notice goes away on the next publishing run.'
             : 'The sweep that stops posts whose publishing run died is failing, so a held post stays held until somebody looks at it — it will not clear itself. Publishing itself is unaffected.'}
           {sweepFailure.at
-            ? ` Last failure ${new Date(sweepFailure.at).toLocaleString('en-US', {
+            ? ` ${sweepFailure.degraded ? 'Seen since' : 'Failing since'} ${new Date(
+                sweepFailure.at,
+              ).toLocaleString('en-US', {
                 timeZone: 'America/Phoenix',
                 dateStyle: 'medium',
                 timeStyle: 'short',

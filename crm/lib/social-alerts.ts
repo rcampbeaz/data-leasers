@@ -77,6 +77,11 @@ async function adminAddresses(): Promise<string[]> {
 //
 // Recording is best effort: whatever is wrong with the sweep, and whatever is wrong with this note,
 // the posts that are fine still have to go out this tick.
+//
+// It is also written only when what it says changes. A sweep stuck on the same error is not news, and a
+// row rewritten every few minutes to say the same thing is a write nobody reads. That costs one read on
+// a tick that is already failing; the healthy path takes no read, because it does not call this at all.
+//
 // degraded means the sweep is running but on the older two-argument signature — the database has the
 // code but not 0020 — so the console says the database is behind instead of saying the sweep is broken.
 export async function recordSweepFailure(
@@ -85,6 +90,16 @@ export async function recordSweepFailure(
 ): Promise<void> {
   try {
     const supabase = createIntakeClient();
+    const { data: existing } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', SWEEP_STATE_KEY)
+      .maybeSingle();
+    const current = existing?.value as { error?: unknown; degraded?: unknown } | null | undefined;
+    // `at` is left out of the comparison on purpose: it records when this message started, so
+    // refreshing it would make the row differ from itself on every tick and defeat the check.
+    if (current && current.error === message && (current.degraded === true) === degraded) return;
+
     const at = new Date().toISOString();
     await supabase.from('app_settings').upsert(
       { key: SWEEP_STATE_KEY, value: { error: message, at, ...(degraded ? { degraded: true } : {}) }, updated_at: at },
