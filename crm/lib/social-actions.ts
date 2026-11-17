@@ -489,7 +489,14 @@ export async function releasePost(postId: string) {
 
   const { error } = await supabase
     .from('social_posts')
-    .update({ state: 'scheduled', updated_at: nowIso })
+    .update({
+      state: 'scheduled',
+      // This post may have already emailed about a failure. Releasing it starts a new
+      // attempt, so the next failure has to be allowed to send its own message rather
+      // than being suppressed by the old stamp.
+      failure_notified_at: null,
+      updated_at: nowIso,
+    })
     .eq('id', postId)
     .eq('state', 'publishing');
   if (error) redirect(`${path}?error=${encodeURIComponent('Could not release the post.')}`);
