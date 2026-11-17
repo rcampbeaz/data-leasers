@@ -9,6 +9,7 @@ import {
   mediaKindFor,
   phoenixToUtc,
   type Issue,
+  type MediaLibraryItem,
   type Platform,
 } from '@/lib/social';
 import { createPost, updatePost } from '@/lib/social-actions';
@@ -92,9 +93,11 @@ export type ComposerPost = {
 export default function Composer({
   channels,
   post,
+  library,
 }: {
   channels: ChannelOption[];
   post?: ComposerPost;
+  library: MediaLibraryItem[];
 }) {
   const [body, setBody] = useState(post?.body ?? '');
   const [linkUrl, setLinkUrl] = useState(post?.linkUrl ?? '');
@@ -127,6 +130,7 @@ export default function Composer({
   const [rightsNote, setRightsNote] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, startUpload] = useTransition();
+  const [chosenId, setChosenId] = useState('');
 
   const mediaKind = mediaKindFor(mediaUrl.trim() || null);
   const hasLink = Boolean(linkUrl.trim()) || /https?:\/\//i.test(body);
@@ -173,6 +177,17 @@ export default function Composer({
     setSelected((current) =>
       current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
+  }
+
+  // Reuse rather than re-upload: a second copy of the same photograph would carry a second
+  // rights note, and the library would stop being a record of what we are licensed to use.
+  function useExisting() {
+    const item = library.find((entry) => entry.id === chosenId);
+    if (!item) return;
+    setMediaUrl(item.url);
+    setMediaAlt(item.altText);
+    setAsset({ id: item.id, rightsNote: item.rightsNote });
+    setChosenId('');
   }
 
   function upload() {
@@ -297,39 +312,71 @@ export default function Composer({
             </div>
           ) : (
             <div className="stack">
-              <label>
-                File
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
-                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                />
-              </label>
-              <label>
-                Media description
-                <input
-                  value={newAlt}
-                  onChange={(event) => setNewAlt(event.target.value)}
-                  placeholder="What the asset shows, for screen readers"
-                />
-              </label>
-              <label>
-                Rights note
-                <input
-                  value={rightsNote}
-                  onChange={(event) => setRightsNote(event.target.value)}
-                  placeholder="Where it came from and what it may be used for"
-                />
-              </label>
-              <button
-                className="btn"
-                type="button"
-                onClick={upload}
-                disabled={!file || uploading || !newAlt.trim() || !rightsNote.trim()}
-              >
-                {uploading ? 'Uploading…' : 'Upload media'}
-              </button>
-              {uploadError ? <p className="notice blocked">{uploadError}</p> : null}
+              {library.length > 0 ? (
+                <>
+                  <label>
+                    Use an asset already in the library
+                    <select
+                      value={chosenId}
+                      onChange={(event) => setChosenId(event.target.value)}
+                    >
+                      <option value="">Choose an asset…</option>
+                      {library.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.altText.slice(0, 70)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button className="btn" type="button" disabled={!chosenId} onClick={useExisting}>
+                    Use this asset
+                  </button>
+                  <p className="muted small">
+                    Reusing a file keeps one rights note for it, which is what makes the library
+                    worth auditing.
+                  </p>
+                </>
+              ) : null}
+
+              <details>
+                <summary className="muted small">Or upload a new file</summary>
+                <div className="stack" style={{ marginTop: 10 }}>
+                  <label>
+                    File
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+                      onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                  <label>
+                    Media description
+                    <input
+                      value={newAlt}
+                      onChange={(event) => setNewAlt(event.target.value)}
+                      placeholder="What the asset shows, for screen readers"
+                    />
+                  </label>
+                  <label>
+                    Rights note
+                    <input
+                      value={rightsNote}
+                      onChange={(event) => setRightsNote(event.target.value)}
+                      placeholder="Where it came from and what it may be used for"
+                    />
+                  </label>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={upload}
+                    disabled={!file || uploading || !newAlt.trim() || !rightsNote.trim()}
+                  >
+                    {uploading ? 'Uploading…' : 'Upload media'}
+                  </button>
+                  {uploadError ? <p className="notice blocked">{uploadError}</p> : null}
+                </div>
+              </details>
+
               <details>
                 <summary className="muted small">Or attach a public URL</summary>
                 <input
@@ -339,6 +386,7 @@ export default function Composer({
                   placeholder="https://…"
                 />
               </details>
+
               <p className="muted small">
                 Instagram and TikTok fetch the asset themselves, which is why the file is
                 uploaded rather than referenced. The rights note is the record of why this

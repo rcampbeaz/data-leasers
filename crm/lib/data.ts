@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CompanyState, DatasetStatus, Stage } from './pipeline';
+import type { MediaLibraryItem } from './social';
 
 export type StaffMember = { user_id: string; full_name: string; role: string };
 
@@ -53,6 +54,26 @@ export async function currentStaff(supabase: SupabaseClient): Promise<StaffMembe
     .eq('user_id', user.id)
     .maybeSingle();
   return (data as StaffMember | null) ?? null;
+}
+
+// The assets the composer can offer instead of another upload. Newest first, and capped:
+// a picker with hundreds of entries is not a shortcut.
+export async function loadMediaLibrary(supabase: SupabaseClient): Promise<MediaLibraryItem[]> {
+  const { data } = await supabase
+    .from('social_media')
+    .select('id, public_url, kind, alt_text, rights_note')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  return (
+    (data ?? []) as { id: string; public_url: string; kind: string; alt_text: string; rights_note: string }[]
+  ).map((row) => ({
+    id: row.id,
+    url: row.public_url,
+    kind: row.kind === 'video' ? 'video' : 'image',
+    altText: row.alt_text,
+    rightsNote: row.rights_note,
+  }));
 }
 
 export function todayIso(): string {

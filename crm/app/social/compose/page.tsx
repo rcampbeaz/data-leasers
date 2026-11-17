@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createStaffClient } from '@/lib/supabase';
-import { currentStaff } from '@/lib/data';
+import { currentStaff, loadMediaLibrary } from '@/lib/data';
 import Composer, { type ChannelOption } from './composer';
 
 export default async function ComposePage() {
@@ -15,6 +15,7 @@ export default async function ComposePage() {
     .order('platform');
 
   const channels = (data ?? []) as ChannelOption[];
+  const library = await loadMediaLibrary(supabase);
 
   return (
     <main className="page">
@@ -48,7 +49,7 @@ export default async function ComposePage() {
           back.
         </p>
       ) : (
-        <Composer channels={channels} />
+        <Composer channels={channels} library={library} />
       )}
     </main>
   );

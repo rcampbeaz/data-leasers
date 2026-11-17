@@ -5,6 +5,16 @@
 export const PLATFORMS = ['facebook', 'instagram', 'linkedin', 'tiktok'] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
+// An asset already uploaded, as the composer needs it to offer reuse rather than a second
+// upload of the same file. One file, one rights note.
+export type MediaLibraryItem = {
+  id: string;
+  url: string;
+  kind: 'image' | 'video';
+  altText: string;
+  rightsNote: string;
+};
+
 export const PLATFORM_LABELS: Record<Platform, string> = {
   facebook: 'Facebook',
   instagram: 'Instagram',

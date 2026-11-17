@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
-import { currentStaff } from '@/lib/data';
+import { currentStaff, loadMediaLibrary } from '@/lib/data';
 import { embeddedRows } from '@/lib/embed';
 import { PLATFORM_LABELS, utcToPhoenixInput, type Platform } from '@/lib/social';
 import Composer, { type ChannelOption, type ComposerPost } from '../../compose/composer';
@@ -71,6 +71,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
     .order('platform');
 
   const channels = (channelRows ?? []) as ChannelOption[];
+  const library = await loadMediaLibrary(supabase);
   const offered = new Set(channels.map((channel) => channel.id));
   const storedLinks = embeddedRows<StoredLink>(stored.social_post_channels);
 
@@ -153,7 +154,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           <Link href="/social/channels">Add a channel</Link> first.
         </p>
       ) : (
-        <Composer channels={channels} post={initial} />
+        <Composer channels={channels} post={initial} library={library} />
       )}
     </main>
   );
