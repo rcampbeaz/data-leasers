@@ -80,6 +80,27 @@ function channelLabel(channel: unknown): string {
   return channelSpec(row.platform)?.label ?? row.platform;
 }
 
+// A post in 'publishing' is a claim nobody has resolved. A normal send takes seconds, so the age of
+// the hold is the honest signal: minutes means the run is probably gone, which is the case the sweep
+// stops and emails about.
+function publishHold(claimedAt: unknown): string {
+  const at = typeof claimedAt === 'string' ? Date.parse(claimedAt) : Number.NaN;
+  const fallback =
+    'A publishing run is sending this post. If it never reports back, the sweep stops it and emails the admins.';
+  if (!Number.isFinite(at)) return fallback;
+
+  const minutes = Math.max(0, Math.round((Date.now() - at) / 60_000));
+  const age =
+    minutes < 1
+      ? 'less than a minute'
+      : minutes === 1
+        ? '1 minute'
+        : minutes < 120
+          ? `${minutes} minutes`
+          : `${Math.round(minutes / 60)} hours`;
+  return `Held by a publishing run for ${age}. If it never reports back, the sweep stops it and emails the admins.`;
+}
+
 function platformColor(platform: string): string {
   const i = CHANNELS.findIndex((c) => c.key === platform);
   return PALETTE[(i < 0 ? 0 : i) % PALETTE.length];
@@ -121,8 +142,14 @@ export default async function MarketingPage({
   const POST_COLUMNS =
     'id, status, scheduled_for, published_at, body, permalink, last_error, attempts, channel:social_channels(platform, display_name, status)';
 
-  const [{ data: channels }, { data: contents }, { data: stopped }, { data: posts }, { data: setting }] =
-    await Promise.all([
+  const [
+    { data: channels },
+    { data: contents },
+    { data: stopped },
+    { data: posts },
+    { data: claims },
+    { data: setting },
+  ] = await Promise.all([
       supabase
         .from('social_channels')
         .select('id, platform, display_name, status, token_expires_at, last_ok_at')
@@ -133,24 +160,29 @@ export default async function MarketingPage({
         .in('status', ['draft', 'approved'])
         .order('created_at', { ascending: false })
         .limit(10),
-      // A stopped post is not history. Nothing moves it without a person, so an age window would let
-      // it fall off the page and hide exactly the post that has to be dealt with — including one the
-      // sweep has just stopped. This query has no date bound at all.
+      // A stopped post is not history. Nothing moves it without a person or the sweep, so an age
+      // window would let it fall off the page and hide exactly the post that has to be dealt with.
+      // 'publishing' belongs here for the same reason: a claim whose run died sits in that state and
+      // is moved by nothing else, so before the sweep finds it the page is the only place it shows.
       supabase
         .from('social_posts')
         .select(POST_COLUMNS)
-        .in('status', ['failed', 'needs_manual'])
+        .in('status', ['failed', 'needs_manual', 'publishing'])
         .order('scheduled_for', { ascending: false })
         .limit(200),
-      // The window is for the rest: published, scheduled, cancelled and publishing rows, where old
-      // does mean finished with. The exclusion keeps a stopped post from appearing in both lists.
+      // The window is for the rest: published, scheduled and cancelled rows, where old does mean
+      // finished with. The exclusion keeps a stopped or held post from appearing in both lists.
       supabase
         .from('social_posts')
         .select(POST_COLUMNS)
         .gte('scheduled_for', windowStart)
-        .not('status', 'in', '("failed","needs_manual")')
+        .not('status', 'in', '("failed","needs_manual","publishing")')
         .order('scheduled_for', { ascending: false })
         .limit(500),
+      // claimed_at arrives with 0019, so it is read on its own and its failure is ignored: a database
+      // that has not had the migration yet still loads the page, it just cannot say how long a claim
+      // has been held. Deliberately not part of POST_COLUMNS, which would fail the whole queue.
+      supabase.from('social_posts').select('id, claimed_at').eq('status', 'publishing'),
       supabase.from('app_settings').select('value').eq('key', 'marketing').maybeSingle(),
     ]);
 
@@ -187,6 +219,9 @@ export default async function MarketingPage({
     ...((stopped ?? []) as unknown as PostRow[]),
     ...((posts ?? []) as unknown as PostRow[]),
   ];
+  const claimsById = new Map(
+    ((claims ?? []) as { id: string; claimed_at: string | null }[]).map((row) => [row.id, row.claimed_at]),
+  );
   const due = defaultSlot();
 
   // ---- figures -------------------------------------------------------------
@@ -647,7 +682,12 @@ export default async function MarketingPage({
                     <td className="wrap-cell">
                       {p.permalink ? <a href={p.permalink} target="_blank" rel="noreferrer">Open post</a> : null}
                       {p.last_error ? <span className="muted small"> {p.last_error}</span> : null}
-                      {!p.permalink && !p.last_error ? '-' : null}
+                      {/* Neither Retry nor Cancel applies to a send that may be in flight, so the row
+                          says what is happening and what happens next instead of offering a button. */}
+                      {p.status === 'publishing' ? (
+                        <span className="muted small"> {publishHold(claimsById.get(p.id))}</span>
+                      ) : null}
+                      {!p.permalink && !p.last_error && p.status !== 'publishing' ? '-' : null}
                     </td>
                     <td>
                       <div className="cell-actions">
