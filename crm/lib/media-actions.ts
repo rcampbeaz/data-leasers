@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
+import { embeddedRows } from '@/lib/embed';
 
 const MAX_BYTES = 25 * 1024 * 1024;
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -112,9 +113,9 @@ export async function removeAsset(mediaId: string) {
   const stored = asset as {
     id: string;
     storage_path: string;
-    social_posts: { id: string }[] | null;
+    social_posts: { id: string }[] | { id: string } | null;
   };
-  const used = stored.social_posts ?? [];
+  const used = embeddedRows<{ id: string }>(stored.social_posts);
   if (used.length > 0) {
     redirect(
       `${path}?error=${encodeURIComponent(

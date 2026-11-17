@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { removeAsset } from '@/lib/media-actions';
+import { embeddedRows } from '@/lib/embed';
 import { phoenixLabel } from '@/lib/social';
 
 type UsedBy = { id: string; state: string; scheduled_for: string | null; body: string };
@@ -15,7 +16,8 @@ type Asset = {
   alt_text: string;
   rights_note: string;
   created_at: string;
-  social_posts: UsedBy[] | null;
+  // Typed for both shapes: whoever reads it goes through embeddedRows().
+  social_posts: UsedBy[] | UsedBy | null;
 };
 
 const SAVED: Record<string, string> = {
@@ -47,7 +49,9 @@ export default async function MediaPage({
     .limit(200);
 
   const assets = (data ?? []) as unknown as Asset[];
-  const unused = assets.filter((asset) => (asset.social_posts ?? []).length === 0).length;
+  const unused = assets.filter(
+    (asset) => embeddedRows<UsedBy>(asset.social_posts).length === 0,
+  ).length;
 
   return (
     <main className="page">
@@ -92,7 +96,7 @@ export default async function MediaPage({
       ) : (
         <div className="asset-grid">
           {assets.map((asset) => {
-            const posts = asset.social_posts ?? [];
+            const posts = embeddedRows<UsedBy>(asset.social_posts);
             return (
               <section className="asset" key={asset.id}>
                 {asset.kind === 'video' ? (
