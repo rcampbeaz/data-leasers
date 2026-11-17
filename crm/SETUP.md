@@ -176,9 +176,23 @@ because they name another table's columns, and aliases, wildcards and JSON paths
 are not plain column names; writes (`insert`/`update` objects) are not judged at all, so this covers the
 commonest drift rather than being a schema type system.
 
+### Checking the policies
+
+`npm run check:policies` applies the series to PGlite, gives `anon`, `authenticated` and `service_role`
+the table privileges Supabase grants them by default — RLS is the perimeter, not `GRANT` — and then reads
+and writes as each of them. Anonymous and a signed-in non-staff user must see nothing in any table; a
+viewer reads companies but cannot create one; an introducer can; only an admin or reviewer reads the
+activity log, while any staff member may write their own audit row; and the service role, which the
+intake form and the publisher use, must not be stopped by a policy written for a person. Every table must
+also have row-level security enabled, so a new table cannot arrive unguarded.
+
+`auth.uid()` in this harness reads `request.jwt.claim.sub`, the setting Supabase fills from the JWT — the
+only part of Supabase's own definition the policies use. Storage policies and the REST layer's treatment
+of the key are outside it.
+
 ### Before a deploy
 
-`npm run check` runs all five — the migration record, the series itself, the date scan, the schema
+`npm run check` runs all six — the migration record, the series itself, the date scan, the schema
 check, the clock's values, then the money table — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
 laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
@@ -195,6 +209,9 @@ than a laptop. Which part matters depends on what you are shipping:
   it is the only thing that compares the pages with the migrations.
 - **Touching a fee or a money format:** `check:money` is the one that has to be green; `referralFee`
   works in whole cents and rounds once, and that check is where the cases live.
+- **Editing a policy, or adding a table:** `check:policies` is the one that has to be green; it is the
+  only thing that ever runs a query against the policies, and the only thing that notices a table
+  created without row-level security.
 
 `npm run preflight` is a different check, and the only one that needs the project and the environment:
 run it on the server after a deploy.
