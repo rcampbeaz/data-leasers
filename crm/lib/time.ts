@@ -99,9 +99,18 @@ export function phoenixYear(when: Time): string {
 
 // The year a stored calendar date already belongs to. Read off the value rather than through a zone:
 // 1 January has to be its own year, which a Phoenix conversion of a UTC midnight would move back.
-export function calendarYear(day: unknown): string {
+// A day, not an instant: an instant's year is phoenixYear, and a number is neither, so the type keeps
+// `calendarYear(Date.now())` from compiling — it used to reach .getTime() and throw at runtime.
+export function calendarYear(day: string | Date | null | undefined): string {
   if (day === null || day === undefined) return '';
-  const trimmed = typeof day === 'string' ? day.slice(0, 10) : calendarDate(day as Date).slice(0, 10);
+  // A Date is read the same way calendarDate reads one: as the UTC day it names, which is the day the
+  // database stored, not the day it happens to be on this server.
+  const trimmed =
+    typeof day === 'string'
+      ? day.slice(0, 10)
+      : Number.isNaN(day.getTime())
+        ? ''
+        : day.toISOString().slice(0, 10);
   return /^\d{4}-/.test(trimmed) ? trimmed.slice(0, 4) : '';
 }
 
