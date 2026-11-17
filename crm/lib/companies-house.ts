@@ -71,8 +71,6 @@ export const SIC_GROUPS: SicGroup[] = [
 // sectors the buyer described. Half weight, still worth a look.
 const ADJACENT_SIC = ['68320', '70229', '74909', '82990', '85590'];
 
-const CORE_CODES = new Set(SIC_GROUPS.flatMap((g) => g.codes));
-
 export function sicGroupFor(codes: string[] | undefined): SicGroup | null {
   if (!codes?.length) return null;
   for (const group of SIC_GROUPS) {

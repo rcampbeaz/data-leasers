@@ -67,7 +67,7 @@ export default async function TasksPage({
               <th>Due</th>
               <th>Task</th>
               <th>Company</th>
-              <th>Owner</th>
+              <th>Assigned to</th>
               <th></th>
             </tr>
           </thead>

@@ -3,7 +3,7 @@ import { calendarDate, phoenix, todayIso } from '@/lib/time';
 import { notFound } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { loadStaff } from '@/lib/data';
-import { STAGES, normalizeStage, suggestStage, type DatasetStatus, type Stage } from '@/lib/pipeline';
+import { STAGES, normalizeStage, suggestStage, type DatasetStatus } from '@/lib/pipeline';
 import {
   addActivity,
   addContact,

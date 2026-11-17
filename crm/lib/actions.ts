@@ -231,59 +231,78 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const supabase = await createStaffClient();
   const path = `/companies/${companyId}`;
 
-  const due = text(formData, 'nextActionDue', 10);
-  if (due && Number.isNaN(Date.parse(due))) fail(path, 'The due date is not valid.');
+  // The record is edited from two panels — owner and next action, then the profile — so
+  // a save writes only the fields its own form sent. Writing every column from whichever
+  // form arrived would clear the other panel's values on each save.
+  const patch: Record<string, unknown> = {};
+  const sent = (key: string) => formData.has(key);
+  const put = (column: string, key: string, max: number) => {
+    if (sent(key)) patch[column] = text(formData, key, max);
+  };
 
   // Whole numbers only, and fail loudly rather than silently storing NaN.
-  const whole = (key: string, min: number, max: number): number | null => {
+  const whole = (column: string, key: string, min: number, max: number) => {
+    if (!sent(key)) return;
     const raw = String(formData.get(key) ?? '').trim();
-    if (!raw) return null;
+    if (!raw) {
+      patch[column] = null;
+      return;
+    }
     const value = Number(raw);
     if (!Number.isInteger(value) || value < min || value > max) {
       fail(path, `Enter a whole number for ${key}.`);
     }
-    return value;
+    patch[column] = value;
   };
 
-  const country = text(formData, 'country', 2);
-  if (country && !/^[A-Za-z]{2}$/.test(country)) {
-    fail(path, 'The country must be a two-letter code, such as US.');
+  if (sent('nextActionDue')) {
+    const due = text(formData, 'nextActionDue', 10);
+    if (due && Number.isNaN(Date.parse(due))) fail(path, 'The due date is not valid.');
+    patch.next_action_due = due;
+  }
+
+  if (sent('country')) {
+    const country = text(formData, 'country', 2);
+    if (country && !/^[A-Za-z]{2}$/.test(country)) {
+      fail(path, 'The country must be a two-letter code, such as US.');
+    }
+    patch.country = country ? country.toUpperCase() : null;
   }
 
   // Staff countries drive the published eligibility rule, so they are normalised to
   // upper-case two-letter codes and de-duplicated on the way in.
-  const staffCountries = Array.from(
-    new Set(
-      String(formData.get('staffCountries') ?? '')
-        .split(',')
-        .map((code) => code.trim().toUpperCase())
-        .filter((code) => /^[A-Z]{2}$/.test(code)),
-    ),
-  ).slice(0, 20);
+  if (sent('staffCountries')) {
+    patch.staff_countries = Array.from(
+      new Set(
+        String(formData.get('staffCountries') ?? '')
+          .split(',')
+          .map((code) => code.trim().toUpperCase())
+          .filter((code) => /^[A-Z]{2}$/.test(code)),
+      ),
+    ).slice(0, 20);
+  }
 
-  const { error } = await supabase
-    .from('companies')
-    .update({
-      owner_id: text(formData, 'ownerId', 64),
-      introduced_by: text(formData, 'introducedBy', 64),
-      next_action: text(formData, 'nextAction', 300),
-      next_action_due: due,
-      legal_name: text(formData, 'legalName', 200),
-      website: text(formData, 'website', 300),
-      industry: text(formData, 'industry', 100),
-      employee_count: whole('employeeCount', 0, 1000000),
-      founded_year: whole('foundedYear', 1800, 2200),
-      registration_number: text(formData, 'registrationNumber', 100),
-      phone: text(formData, 'phone', 60),
-      address_line1: text(formData, 'addressLine1', 200),
-      address_line2: text(formData, 'addressLine2', 200),
-      city: text(formData, 'city', 120),
-      region: text(formData, 'region', 120),
-      postal_code: text(formData, 'postalCode', 30),
-      country: country ? country.toUpperCase() : null,
-      staff_countries: staffCountries,
-    })
-    .eq('id', companyId);
+  put('owner_id', 'ownerId', 64);
+  put('introduced_by', 'introducedBy', 64);
+  put('next_action', 'nextAction', 300);
+  put('legal_name', 'legalName', 200);
+  put('website', 'website', 300);
+  put('industry', 'industry', 100);
+  whole('employee_count', 'employeeCount', 0, 1000000);
+  whole('founded_year', 'foundedYear', 1800, 2200);
+  put('registration_number', 'registrationNumber', 100);
+  put('phone', 'phone', 60);
+  put('address_line1', 'addressLine1', 200);
+  put('address_line2', 'addressLine2', 200);
+  put('city', 'city', 120);
+  put('region', 'region', 120);
+  put('postal_code', 'postalCode', 30);
+
+  // A form that carried no field this action knows is a page out of step with the
+  // action; refusing is better than redirecting as though something was saved.
+  if (Object.keys(patch).length === 0) fail(path, 'That form did not contain anything to save.');
+
+  const { error } = await supabase.from('companies').update(patch).eq('id', companyId);
   if (error) fail(path, 'Could not save. Check the staff member selected and the profile fields.');
 
   refresh(companyId);

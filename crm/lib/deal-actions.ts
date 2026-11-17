@@ -310,16 +310,26 @@ export async function addAgreement(companyId: string, formData: FormData) {
   // company so an id from another record cannot be attached.
   const offerId = text(formData, 'offerId', 64);
   let linkedOffer: string | null = null;
+  let linkedBuyer: string | null = null;
   if (offerId) {
     const { data: offer } = await supabase
       .from('offers')
-      .select('id')
+      .select('id, buyer_id')
       .eq('id', offerId)
       .eq('company_id', companyId)
       .maybeSingle();
     if (!offer) fail(path, 'That offer is not recorded against this company.');
     linkedOffer = offer.id;
+    linkedBuyer = offer.buyer_id;
   }
+
+  // An agreement that names one buyer and settles another buyer's offer is a record
+  // that contradicts itself, so the two have to agree.
+  const chosenBuyer = text(formData, 'buyerId', 64);
+  if (linkedBuyer && chosenBuyer && chosenBuyer !== linkedBuyer) {
+    fail(path, 'That offer was made to a different buyer. Choose the buyer who made it, or no offer.');
+  }
+  const buyerId = chosenBuyer ?? linkedBuyer;
 
   const licenceMonths = int(formData, 'licenceMonths', 0, 120);
   const exclusivityMonths = int(formData, 'exclusivityMonths', 0, 120);
@@ -331,7 +341,7 @@ export async function addAgreement(companyId: string, formData: FormData) {
     .insert({
       company_id: companyId,
       offer_id: linkedOffer,
-      buyer_id: text(formData, 'buyerId', 64),
+      buyer_id: buyerId,
       licence_start: licenceStart,
       licence_end: licenceMonths ? addMonths(licenceStart, licenceMonths) : null,
       exclusivity_end: exclusivityMonths ? addMonths(licenceStart, exclusivityMonths) : null,

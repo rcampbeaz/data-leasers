@@ -67,27 +67,6 @@ export async function addStaff(formData: FormData) {
   redirect(path);
 }
 
-export async function changeRole(formData: FormData) {
-  const path = '/admin/staff';
-  const supabase = await createStaffClient();
-  const me = await currentStaff(supabase);
-  if (me?.role !== 'admin') fail(path, 'Only admins can change roles.');
-
-  const userId = String(formData.get('userId') ?? '');
-  const role = String(formData.get('role') ?? '');
-  if (!(ROLES as readonly string[]).includes(role)) fail(path, 'Choose a valid role.');
-  if (userId === me.user_id && role !== 'admin') {
-    fail(path, 'You cannot remove your own admin role. Ask another admin.');
-  }
-
-  const { error } = await supabase.from('crm_staff').update({ role }).eq('user_id', userId);
-  if (error) fail(path, 'Could not change the role.');
-
-  await logAudit(supabase, 'role_changed', userId, { role });
-  revalidatePath(path);
-  redirect(path);
-}
-
 const PROFILE_FIELDS = [
   'fullName', 'jobTitle', 'email', 'phone',
   'addressLine1', 'addressLine2', 'city', 'region', 'postcode', 'country', 'notes',

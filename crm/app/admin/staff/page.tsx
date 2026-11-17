@@ -2,7 +2,7 @@ import { createStaffClient } from '@/lib/supabase';
 import { phoenix } from '@/lib/time';
 import { currentStaff } from '@/lib/data';
 import { ROLE_LABELS, type Role } from '@/lib/nav';
-import { addStaff, changeRole, removeStaff, updateStaffProfile } from '@/lib/staff-actions';
+import { addStaff, removeStaff, updateStaffProfile } from '@/lib/staff-actions';
 
 type Row = {
   user_id: string;
