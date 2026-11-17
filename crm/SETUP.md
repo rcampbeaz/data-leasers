@@ -88,9 +88,10 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0019_social_claim_recovery.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0020_sweep_clears_its_own_warning.sql`. Each file is written to be safe on a database that already has it.
 
 `0019` adds `social_posts.claimed_at` and `sweep_stale_social_posts()`, which stops a post whose publishing run died mid-send. The publisher calls it before taking new work, moves any such post to `needs_manual` and emails the admins one message listing them, because a post may already be live on its channel and nobody can tell from here. The sweep is capped at 25 rows a tick, so a large backlog arrives in bounded batches rather than as a burst of mail. Check the account, then Retry or cancel it.
+`0020` replaces `sweep_stale_social_posts()` so a sweep that completes deletes the `marketing_sweep` record that the publisher leaves in `app_settings` when a sweep fails, which the Marketing page shows as a warning. Clearing it inside the sweep means a healthy tick writes nothing and a failing one cannot erase its own warning.
 
 `0018` creates the public `social-media` Storage bucket that post images are written to. If your
 project refuses bucket creation from SQL, create it by hand: **Storage > New bucket**, name it

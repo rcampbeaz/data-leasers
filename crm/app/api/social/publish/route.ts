@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createIntakeClient } from '@/lib/supabase';
-import { SWEEP_AFTER_MINUTES, publishPost, retryDelayMinutes, type Channel } from '@/lib/social';
 import {
-  alertAbandonedPosts,
-  alertStoppedPost,
-  clearSweepFailure,
-  recordSweepFailure,
-} from '@/lib/social-alerts';
+  SWEEP_AFTER_MINUTES,
+  SWEEP_STATE_KEY,
+  publishPost,
+  retryDelayMinutes,
+  type Channel,
+} from '@/lib/social';
+import { alertAbandonedPosts, alertStoppedPost, recordSweepFailure } from '@/lib/social-alerts';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,16 +46,18 @@ export async function POST(request: Request) {
   const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts', {
     // The same number the queue's note quotes, so the two cannot disagree.
     stale_after_minutes: SWEEP_AFTER_MINUTES,
+    // Clearing the warning is the sweep's own job: only the sweep finishing proves it works, and doing
+    // it there costs a healthy tick no extra statement and no read.
+    clear_state_key: SWEEP_STATE_KEY,
   });
 
   // Where the console can see it. The response below is read by whatever calls this route on a timer,
   // and nobody watches that; the Marketing page is where a person looks, and where the queue's note
   // says a held post will be stopped. Written best effort and never fatal: the posts that are fine
-  // still go out this tick.
+  // still go out this tick. Nothing is written when the sweep works — the sweep deletes the record
+  // itself in the same transaction.
   if (sweepError) {
     await recordSweepFailure(sweepError.message);
-  } else {
-    await clearSweepFailure();
   }
 
   const sweptResults: { id: string; outcome: string; detail?: string; alert?: string }[] = [];

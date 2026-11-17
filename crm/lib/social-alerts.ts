@@ -72,8 +72,11 @@ async function adminAddresses(): Promise<string[]> {
 // will be stopped. The publisher's response is the only other place the error shows, and a cron reads
 // it, so the failure is written where the console can put it in front of a person.
 //
-// Both of these are best effort. Whatever is wrong with the sweep, and whatever is wrong with this
-// note, the posts that are fine still have to go out this tick.
+// Clearing it is not done here. The sweep deletes the record in its own transaction (see 0020), so a
+// healthy tick writes nothing at all and a tick that fails cannot erase its own warning.
+//
+// Recording is best effort: whatever is wrong with the sweep, and whatever is wrong with this note,
+// the posts that are fine still have to go out this tick.
 export async function recordSweepFailure(message: string): Promise<void> {
   try {
     const supabase = createIntakeClient();
@@ -83,17 +86,6 @@ export async function recordSweepFailure(message: string): Promise<void> {
       .upsert({ key: SWEEP_STATE_KEY, value: { error: message, at }, updated_at: at }, { onConflict: 'key' });
   } catch {
     // Nothing to do here: the caller still reports the failure in its response.
-  }
-}
-
-// Cleared on the next sweep that works, so the console stops warning as soon as the problem is gone
-// rather than keeping a stale banner nobody can dismiss.
-export async function clearSweepFailure(): Promise<void> {
-  try {
-    const supabase = createIntakeClient();
-    await supabase.from('app_settings').delete().eq('key', SWEEP_STATE_KEY);
-  } catch {
-    // A stale warning is better than a publisher that stops sending.
   }
 }
 
