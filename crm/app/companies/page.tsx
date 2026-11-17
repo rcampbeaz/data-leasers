@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createStaffClient } from '@/lib/supabase';
 import { todayIso } from '@/lib/data';
+import { calendarDate } from '@/lib/time';
 
 export default async function CompaniesPage() {
   const supabase = await createStaffClient();
@@ -43,7 +44,7 @@ export default async function CompaniesPage() {
                     {c.close_reason ? <span className="muted"> {c.close_reason}</span> : null}
                   </td>
                   <td className="wrap-cell">{c.next_action ?? '-'}</td>
-                  <td className={overdue ? 'overdue' : ''}>{c.next_action_due ?? '-'}{overdue ? ' (overdue)' : ''}</td>
+                  <td className={overdue ? 'overdue' : ''}>{c.next_action_due ? calendarDate(c.next_action_due) : '-'}{overdue ? ' (overdue)' : ''}</td>
                 </tr>
               );
             })}

@@ -6,7 +6,7 @@
 // links, so completing one does not silently complete the other.
 
 import { OPEN_STATUSES, daysLeft } from './partner-report';
-import { phoenixDay } from './time';
+import { calendarDate, phoenixDay } from './time';
 
 export const CHASE_WINDOW_DAYS = 30;
 export const ESCALATION_WINDOW_DAYS = 7;
@@ -49,13 +49,13 @@ function phrase(days: number): string {
 }
 
 export function chaseTitle(companyName: string, days: number, deadline: string): string {
-  return `Referral deadline: ${companyName} — ${phrase(days)} (${String(deadline).slice(0, 10)})`.slice(0, 195);
+  return `Referral deadline: ${companyName} — ${phrase(days)} (${calendarDate(deadline)})`.slice(0, 195);
 }
 
 // A different opening so the two tasks are distinguishable in a list that is sorted by due date,
 // where both may be due today if the sweep first sees the referral late.
 export function escalationTitle(companyName: string, days: number, deadline: string): string {
-  return `Referral closing: ${companyName} — ${phrase(days)} (${String(deadline).slice(0, 10)})`.slice(0, 195);
+  return `Referral closing: ${companyName} — ${phrase(days)} (${calendarDate(deadline)})`.slice(0, 195);
 }
 
 // One plan per referral per window, and a reason for every task deliberately not created, so the

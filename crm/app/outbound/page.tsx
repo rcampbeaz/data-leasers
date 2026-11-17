@@ -1,5 +1,5 @@
 import { createStaffClient } from '@/lib/supabase';
-import { phoenix } from '@/lib/time';
+import { calendarDate, phoenix } from '@/lib/time';
 import { currentStaff } from '@/lib/data';
 import {
   BASIS_LABELS,
@@ -363,7 +363,7 @@ export default async function OutboundPage({
                   <td>{label(e.contact, 'email')}</td>
                   <td>{label(e.sequence)}</td>
                   <td>{e.current_position}</td>
-                  <td>{e.next_due_on ?? '—'}</td>
+                  <td>{e.next_due_on ? calendarDate(e.next_due_on) : '—'}</td>
                   <td>
                     <span className={`status ${e.status === 'completed' ? 'approved' : e.status === 'stopped' || e.status === 'replied' ? 'blocked' : 'review'}`}>
                       {e.status === 'pending_approval' ? 'needs approval' : e.status}

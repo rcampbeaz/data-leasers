@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { calendarMonth, phoenix, phoenixDay } from '@/lib/time';
+import { calendarDate, calendarMonth, phoenix, phoenixDay } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff, todayIso } from '@/lib/data';
 import { STAGES } from '@/lib/pipeline';
@@ -231,7 +231,7 @@ export default async function DashboardPage() {
                     <Link href={`/companies/${c.id}`}>{c.name}</Link>
                     {c.next_action ? ` - ${c.next_action}` : ''}{' '}
                     <span className={overdue ? 'overdue' : 'muted'}>
-                      {c.next_action_due}{overdue ? ' (overdue)' : ''}
+                      {calendarDate(c.next_action_due)}{overdue ? ' (overdue)' : ''}
                     </span>
                   </li>
                 );

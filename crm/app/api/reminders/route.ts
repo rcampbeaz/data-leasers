@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { phoenixDay } from '@/lib/time';
+import { calendarDate, phoenixDay } from '@/lib/time';
 import { createIntakeClient } from '@/lib/supabase';
 
 // Sends one email per overdue or due-today task, once. Called on a schedule from the VPS.
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         from,
         to: addresses,
         subject: `Follow-up due: ${task.title}`,
-        text: `${task.title}\nCompany: ${company?.name ?? 'Unknown'}\nDue: ${task.due_on}\n\nOpen in the CRM: ${link}`,
+        text: `${task.title}\nCompany: ${company?.name ?? 'Unknown'}\nDue: ${calendarDate(task.due_on)}\n\nOpen in the CRM: ${link}`,
       }),
     });
 

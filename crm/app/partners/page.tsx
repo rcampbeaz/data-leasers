@@ -92,7 +92,7 @@ export default async function PartnersPage({
     return (
       <div className="small">
         {label}: <strong>{task.done ? 'done' : 'open'}</strong>{' '}
-        <span className="muted">{task.due_on}</span>
+        <span className="muted">{calendarDate(task.due_on)}</span>
       </div>
     );
   };

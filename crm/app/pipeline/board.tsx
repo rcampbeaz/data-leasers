@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { dragMoveStage } from '@/lib/actions';
+import { calendarDate } from '@/lib/time';
 
 export type BoardCompany = {
   id: string;
@@ -104,7 +105,7 @@ export default function PipelineBoard({
                     {c.next_action ? <span className="small">{c.next_action}</span> : null}
                     {c.next_action_due ? (
                       <span className="small muted">
-                        Due {c.next_action_due}
+                        Due {calendarDate(c.next_action_due)}
                         {overdue ? ' (overdue)' : ''}
                       </span>
                     ) : null}

@@ -296,7 +296,7 @@ export default async function CompanyPage({
               {(introductions.data ?? []).map((intro) => (
                 <tr key={intro.id}>
                   <td>{buyerName(intro.buyer_id)}</td>
-                  <td>{intro.introduced_on}</td>
+                  <td>{calendarDate(intro.introduced_on)}</td>
                   <td>{staffName(intro.introduced_by)}</td>
                   <td className="wrap-cell">{intro.notes ?? '-'}</td>
                 </tr>
@@ -335,7 +335,7 @@ export default async function CompanyPage({
                   <td>{money(offer.amount, offer.currency)}</td>
                   <td>{offer.term_months ? `${offer.term_months} months` : '-'}</td>
                   <td>{offer.exclusivity_months ? `${offer.exclusivity_months} months` : '-'}</td>
-                  <td>{offer.offered_on}</td>
+                  <td>{calendarDate(offer.offered_on)}</td>
                   <td><span className="stage">{offer.status}</span></td>
                   <td>
                     <form action={setOfferStatus.bind(null, id, offer.id)} className="inline-form">
@@ -394,10 +394,10 @@ export default async function CompanyPage({
               {(agreements.data ?? []).map((agreement) => (
                 <tr key={agreement.id}>
                   <td>{buyerName(agreement.buyer_id)}</td>
-                  <td>{agreement.licence_start}</td>
-                  <td>{agreement.licence_end ?? '-'}</td>
-                  <td>{agreement.exclusivity_end ?? '-'}</td>
-                  <td>{agreement.deletion_due ?? '-'}</td>
+                  <td>{calendarDate(agreement.licence_start)}</td>
+                  <td>{agreement.licence_end ? calendarDate(agreement.licence_end) : '-'}</td>
+                  <td>{agreement.exclusivity_end ? calendarDate(agreement.exclusivity_end) : '-'}</td>
+                  <td>{agreement.deletion_due ? calendarDate(agreement.deletion_due) : '-'}</td>
                   <td>{agreement.audit_right ? 'Yes' : 'No'}</td>
                   <td><span className="stage">{agreement.status}</span></td>
                 </tr>
@@ -444,7 +444,7 @@ export default async function CompanyPage({
             {(documents.data ?? []).map((doc) => (
               <li key={doc.id}>
                 <strong>{doc.title}</strong> · {doc.kind}
-                {doc.signed_on ? ` · signed ${doc.signed_on}` : ''}
+                {doc.signed_on ? ` · signed ${calendarDate(doc.signed_on)}` : ''}
                 {doc.location ? <> · <a href={doc.location} target="_blank" rel="noreferrer">Open</a></> : null}
                 {' '}
                 <form action={removeDocument.bind(null, id, doc.id)} style={{ display: 'inline' }}>
