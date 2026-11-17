@@ -463,6 +463,16 @@ export async function scheduleContent(contentId: string, formData: FormData) {
     status: 'scheduled' as const,
   }));
 
+  // A cancelled row still holds its (content, channel) pair, and the table is uniquely constrained
+  // on it, so scheduling the same content to a channel it was cancelled from would be rejected.
+  // Cancelled rows can never send, so the pair is cleared for the channels being scheduled now.
+  await supabase
+    .from('social_posts')
+    .delete()
+    .eq('content_id', contentId)
+    .eq('status', 'cancelled')
+    .in('channel_id', rows.map((row) => row.channel_id));
+
   const { error } = await supabase.from('social_posts').insert(rows);
   if (error) fail('Could not schedule. One of these channels may already have this post.');
 
@@ -521,13 +531,45 @@ export async function retryPost(postId: string) {
 
 // A post that has stopped and asked for a person can only leave the queue this way, so
 // 'needs_manual' belongs here as well as the two states that are still moving on their own.
+// Cancelling is the way out the alert recommends when a channel has gone, so it has to leave the
+// content usable. Scheduling moves the content to 'scheduled' and nothing moved it back, which left
+// the content invisible on Ready to schedule with no way to schedule it again.
 export async function cancelPost(postId: string) {
   const { supabase } = await requireWriter();
-  await supabase
+
+  const { data: cancelled } = await supabase
     .from('social_posts')
     .update({ status: 'cancelled' })
     .eq('id', postId)
-    .in('status', ['scheduled', 'failed', 'needs_manual']);
+    .in('status', ['scheduled', 'failed', 'needs_manual'])
+    .select('id, content_id');
+  if (!cancelled || cancelled.length === 0) {
+    // Already published or already cancelled: leave the content's own state alone.
+    revalidatePath(PATH);
+    return;
+  }
+
+  const contentId = String((cancelled[0] as { content_id: string }).content_id);
+  const { data: siblings } = await supabase
+    .from('social_posts')
+    .select('status')
+    .eq('content_id', contentId)
+    .neq('id', postId);
+
+  const states = ((siblings ?? []) as { status: string }[]).map((row) => String(row.status));
+  const queued = states.some((s) => s === 'scheduled' || s === 'publishing');
+  const published = states.some((s) => s === 'published');
+
+  // Back to approved rather than draft: cancelling one channel does not withdraw the approval. A
+  // content with another channel still published cannot be scheduled as a whole again, so it is
+  // recorded as published instead of being offered as ready.
+  const next = queued ? 'scheduled' : published ? 'published' : 'approved';
+  await supabase
+    .from('social_contents')
+    .update({ status: next, updated_at: new Date().toISOString() })
+    .eq('id', contentId)
+    .in('status', ['scheduled', 'published']);
+
   revalidatePath(PATH);
 }
 
