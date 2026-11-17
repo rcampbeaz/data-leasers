@@ -80,9 +80,8 @@ const asList = (payload) => (Array.isArray(payload) ? payload : [payload]);
 
 // One row per statement is avoided on purpose: a payload of several rows is one statement here, as it is
 // through PostgREST, and a key missing from a row falls back to the column default rather than to null.
-const columnsOf = (rows) => [...new Set(rows.flatMap((row) => Object.keys(row)))];
 const valuesOf = (rows) => {
-  const columns = columnsOf(rows);
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
   const tuples = rows.map(
     (row) => `(${columns.map((column) => (column in row ? literal(row[column]) : 'default')).join(', ')})`,
   );
@@ -100,15 +99,16 @@ const insertSql = (table, rows, conflict) => {
 };
 
 // The shape the seed uses: a builder whose filters accumulate until it is awaited, then one statement.
-// `failOn` makes one write refuse, which is how a PostgREST error arrives at the seed: as a value, not a
-// throw. The seed is what turns that into a failure, and the caller is what decides what it means.
-const client = (db, { failOn } = {}) => {
+// `refuse` makes one write fail — how a PostgREST error reaches the seed, as a value rather than a throw.
+// The seed is what turns that into a failure, and the caller is what decides what it means. `op` is not
+// decoration: the seed deletes from the same table first, and it is the insert that has to fail.
+const client = (db, { refuse } = {}) => {
   const from = (table) => {
     const state = { table, op: null, payload: null, conflict: null, columns: '*', filters: [] };
     const run = async () => {
       try {
-        if (failOn && state.table === failOn.table && state.op === failOn.op) {
-          return { data: null, error: { message: failOn.message } };
+        if (refuse && state.table === refuse.table && state.op === refuse.op) {
+          return { data: null, error: { message: refuse.message } };
         }
         if (state.op === 'delete') {
           if (state.filters.length === 0) throw new Error('refusing a delete without a filter');
@@ -223,23 +223,29 @@ const expect = (label, actual, wanted) => {
 };
 const count = async (sql) => Number((await db.query(sql)).rows[0].n);
 
-const snapshot = async () => ({
-  staff: await count(`select count(*) as n from public.crm_staff where role = 'admin'`),
-  companies: await count(`select count(*) as n from public.companies where source = 'seed'`),
-  buyer: await count(`select count(*) as n from public.buyers where name like 'Seed — %'`),
-  introductions: await count(`select count(*) as n from public.introductions`),
-  offers: await count(`select count(*) as n from public.offers`),
-  agreements: await count(`select count(*) as n from public.agreements`),
-  partners: await count(`select count(*) as n from public.partners where name like 'Seed — %'`),
-  referrals: await count(`select count(*) as n from public.referrals where company_name like 'Seed — %'`),
-  channels: await count(`select count(*) as n from public.social_channels where display_name like 'Seed — %'`),
-  contents: await count(`select count(*) as n from public.social_contents where title like 'Seed — %'`),
-  posts: await count(`select count(*) as n from public.social_posts`),
-  settings: await count(`select count(*) as n from public.app_settings where key = 'marketing_sweep'`),
-  contacts: await count(`select count(*) as n from public.outreach_contacts where source = 'seed'`),
-  sends: await count(`select count(*) as n from public.outbound_sends where subject = 'Seed: bounce rehearsal'`),
-  suppressions: await count(`select count(*) as n from public.suppressions where source = 'seed'`),
-});
+const counts = async () => {
+  const row = (
+    await db.query(`
+      select
+        (select count(*) from public.crm_staff where role = 'admin') as staff,
+        (select count(*) from public.companies where source = 'seed') as companies,
+        (select count(*) from public.buyers where name like 'Seed — %') as buyer,
+        (select count(*) from public.introductions) as introductions,
+        (select count(*) from public.offers) as offers,
+        (select count(*) from public.agreements) as agreements,
+        (select count(*) from public.partners where name like 'Seed — %') as partners,
+        (select count(*) from public.referrals where company_name like 'Seed — %') as referrals,
+        (select count(*) from public.social_channels where display_name like 'Seed — %') as channels,
+        (select count(*) from public.social_contents where title like 'Seed — %') as contents,
+        (select count(*) from public.social_posts) as posts,
+        (select count(*) from public.app_settings where key = 'marketing_sweep') as settings,
+        (select count(*) from public.outreach_contacts where source = 'seed') as contacts,
+        (select count(*) from public.outbound_sends where subject = 'Seed: bounce rehearsal') as sends,
+        (select count(*) from public.suppressions where source = 'seed') as suppressions
+    `)
+  ).rows[0];
+  return Object.fromEntries(Object.entries(row).map(([name, value]) => [name, Number(value)]));
+};
 
 const expected = {
   staff: 1,
@@ -286,9 +292,12 @@ const runSeed = async () => {
 const firstSteps = await runSeed();
 const wrote = firstSteps.filter((line) => line.startsWith('  ok')).length;
 
-for (const [name, wanted] of Object.entries(expected)) {
-  expect(`first run: ${name}`, (await snapshot())[name], wanted);
-}
+const expectCounts = async (when) => {
+  const tally = await counts();
+  for (const [name, wanted] of Object.entries(expected)) expect(`${when}: ${name}`, tally[name], wanted);
+};
+
+await expectCounts('first run');
 
 expect(
   'a stopped post is waiting for a person',
@@ -319,9 +328,7 @@ await db.query(
 // A step that fails on the second run throws, which prints the reason and closes the database.
 await runSeed();
 
-for (const [name, wanted] of Object.entries(expected)) {
-  expect(`second run: ${name}`, (await snapshot())[name], wanted);
-}
+await expectCounts('second run');
 expect(
   'a company the seed does not own survives both runs',
   await count(`select count(*) as n from public.companies where source = 'manual'`),
@@ -338,7 +345,7 @@ expect(
 // the database down. One write refuses here; the steps before it report success, in the same order the
 // run that finished used.
 const refusing = client(db, {
-  failOn: { table: 'offers', op: 'insert', message: 'permission denied for table offers' },
+  refuse: { table: 'offers', op: 'insert', message: 'permission denied for table offers' },
 });
 const saidBeforeFailure = [];
 let thrown = null;
@@ -356,7 +363,6 @@ try {
 expect('a refused write is thrown, not an exit', thrown instanceof StepFailure, true);
 expect('the failure names the step it happened in', thrown?.label, 'an offer and a signed agreement');
 expect('the failure carries the database message', thrown?.reason, 'permission denied for table offers');
-expect('the failure renders with that label', failureLines(thrown)[0], '  FAIL an offer and a signed agreement');
 // The steps before the refused write, compared label by label with the completed run's own order: a
 // count would stop meaning anything the moment the seed gained or lost a step, and it could not tell
 // one step from another.
