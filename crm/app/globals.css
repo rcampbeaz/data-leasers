@@ -351,6 +351,28 @@ details.panel > summary { cursor: pointer; font-weight: 600; color: var(--dl-ele
   border-radius: var(--radius-sm);
 }
 
+/* ---------- media library ---------- */
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.asset {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 12px;
+  background: var(--dl-panel);
+  border: 1px solid var(--dl-line);
+  border-radius: var(--radius-md);
+}
+.asset-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--dl-line);
+  border-radius: var(--radius-sm);
+  background: var(--dl-gunmetal-deep);
+}
+.asset .list { margin: 0; }
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .two-col { grid-template-columns: 1fr; }

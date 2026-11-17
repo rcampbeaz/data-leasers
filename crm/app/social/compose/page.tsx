@@ -30,6 +30,7 @@ export default async function ComposePage() {
         <Link href="/social">Queue</Link>
         <Link href="/social/calendar">Calendar</Link>
         <Link href="/social/channels">Channels</Link>
+        <Link href="/social/media">Media</Link>
         <Link href="/social/compose" className="active">
           New post
         </Link>

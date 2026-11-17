@@ -65,6 +65,7 @@ export default async function ChannelsPage({
         <Link href="/social/channels" className="active">
           Channels
         </Link>
+        <Link href="/social/media">Media</Link>
         <Link href="/social/compose">New post</Link>
       </nav>
 

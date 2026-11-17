@@ -116,6 +116,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         <Link href="/social">Queue</Link>
         <Link href="/social/calendar">Calendar</Link>
         <Link href="/social/channels">Channels</Link>
+        <Link href="/social/media">Media</Link>
         <Link href="/social/compose">New post</Link>
       </nav>
 

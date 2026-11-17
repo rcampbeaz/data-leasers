@@ -2,7 +2,8 @@
 
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
-import { createStaffClient } from '@/lib/supabase';
+import { redirect } from 'next/navigation';
+import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -84,5 +85,64 @@ export async function uploadMedia(
   }
 
   revalidatePath('/social');
+  revalidatePath('/social/media');
   return { asset: { id: data.id, url, kind, altText, rightsNote } };
+}
+
+// Removing an asset is only allowed while no post points at it. The link is what carries the
+// rights note into a post, so deleting a used asset would quietly detach the record from
+// something already written — and the post would keep publishing an image nothing accounts
+// for.
+export async function removeAsset(mediaId: string) {
+  const path = '/social/media';
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || !['admin', 'introducer'].includes(me.role)) {
+    redirect(`${path}?error=${encodeURIComponent('Your role does not allow removing media.')}`);
+  }
+
+  const { data: asset, error: readError } = await supabase
+    .from('social_media')
+    .select('id, storage_path, social_posts(id)')
+    .eq('id', mediaId)
+    .maybeSingle();
+  if (readError) redirect(`${path}?error=${encodeURIComponent('Could not read the asset.')}`);
+  if (!asset) redirect(`${path}?error=${encodeURIComponent('That asset no longer exists.')}`);
+
+  const stored = asset as {
+    id: string;
+    storage_path: string;
+    social_posts: { id: string }[] | null;
+  };
+  const used = stored.social_posts ?? [];
+  if (used.length > 0) {
+    redirect(
+      `${path}?error=${encodeURIComponent(
+        `That asset is used by ${used.length} post${used.length === 1 ? '' : 's'}. Detach it there first.`,
+      )}`,
+    );
+  }
+
+  const { error: deleteError } = await supabase.from('social_media').delete().eq('id', mediaId);
+  if (deleteError) redirect(`${path}?error=${encodeURIComponent('Could not remove the asset.')}`);
+
+  // The row goes first: a file without a row is invisible and harmless, while a row without a
+  // file is a broken preview in the very list that is meant to be the audit.
+  const { error: storageError } = await supabase.storage
+    .from('social-media')
+    .remove([stored.storage_path]);
+
+  await createIntakeClient()
+    .from('audit_log')
+    .insert({
+      actor_id: me.user_id,
+      entity: 'social_media',
+      entity_id: mediaId,
+      action: 'removed',
+      detail: { storage_path: stored.storage_path, file_removed: !storageError },
+    });
+
+  revalidatePath('/social');
+  revalidatePath('/social/media');
+  redirect(`${path}?saved=${storageError ? 'removed-storage' : 'removed'}`);
 }
