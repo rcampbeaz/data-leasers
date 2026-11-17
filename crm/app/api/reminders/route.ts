@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { phoenixDay } from '@/lib/time';
 import { createIntakeClient } from '@/lib/supabase';
 
 // Sends one email per overdue or due-today task, once. Called on a schedule from the VPS.
@@ -17,7 +18,9 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createIntakeClient();
-  const today = new Date().toISOString().slice(0, 10);
+  // The console's day: after 5pm in Phoenix, UTC's date is already tomorrow and this job would
+  // remind people about tasks that are not due yet.
+  const today = phoenixDay(Date.now());
 
   const { data: tasks, error } = await supabase
     .from('tasks')

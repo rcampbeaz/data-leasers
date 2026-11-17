@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { phoenixDay } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { toCsv } from '@/lib/csv';
@@ -33,7 +34,7 @@ export async function GET() {
   });
 
   const body = toCsv(['received', 'name', 'email', 'company', 'role', 'note', 'source', 'stage'], rows);
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = phoenixDay(Date.now());
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

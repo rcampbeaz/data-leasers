@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { calendarMonth, phoenix } from '@/lib/time';
+import { calendarMonth, phoenix, phoenixDay } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff, todayIso } from '@/lib/data';
 import { STAGES } from '@/lib/pipeline';
@@ -25,10 +25,10 @@ export default async function DashboardPage() {
   const today = todayIso();
   const since = new Date(Date.now() - 365 * DAY).toISOString();
   const thirtyDaysAgo = Date.now() - 30 * DAY;
-  const weekAhead = new Date(Date.now() + 7 * DAY).toISOString().slice(0, 10);
-  const soonIso = new Date(Date.now() + 30 * DAY).toISOString().slice(0, 10);
+  const weekAhead = phoenixDay(Date.now() + 7 * DAY);
+  const soonIso = phoenixDay(Date.now() + 30 * DAY);
   const staleIso = new Date(Date.now() - 14 * DAY).toISOString();
-  const staleOfferIso = new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10);
+  const staleOfferIso = phoenixDay(Date.now() - 14 * DAY);
 
   const [
     leadsRes,

@@ -5,6 +5,8 @@
 // a date has until that date plus six months for the agreement to be signed. The deadline is
 // stored on the row, so a later change to the rule cannot rewrite an existing referral.
 
+import { calendarDate, phoenixDay } from './time';
+
 export type ReferralInput = {
   id: string;
   company_name: string;
@@ -27,10 +29,6 @@ export const BUCKET_LABELS: Record<Bucket, string> = {
   later: 'Later',
 };
 
-function utcDay(value: Date): number {
-  return Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
-}
-
 function parseDay(iso: string): number | null {
   const trimmed = String(iso ?? '').slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return null;
@@ -42,8 +40,9 @@ function parseDay(iso: string): number | null {
 // agree on how long is left.
 export function daysLeft(deadline: string, today: Date = new Date()): number | null {
   const due = parseDay(deadline);
-  if (due === null) return null;
-  return Math.round((due - utcDay(today)) / 86_400_000);
+  const from = parseDay(phoenixDay(today));
+  if (due === null || from === null) return null;
+  return Math.round((due - from) / 86_400_000);
 }
 
 export function bucketFor(days: number | null): Bucket {
@@ -106,7 +105,7 @@ export function buildPartnerReport(
     sections.push(`${BUCKET_LABELS[bucket]} (${inBucket.length})`);
     for (const row of inBucket) {
       sections.push(
-        `- ${row.company_name} · partner ${row.partnerName} · ${row.status} · deadline ${String(row.deadline_on).slice(0, 10)} (${describe(row.daysLeft)})`,
+        `- ${row.company_name} · partner ${row.partnerName} · ${row.status} · deadline ${calendarDate(row.deadline_on)} (${describe(row.daysLeft)})`,
       );
     }
     sections.push('');

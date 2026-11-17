@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { phoenixDay } from '@/lib/time';
 import { createIntakeClient } from '@/lib/supabase';
 import {
   complianceFooter,
@@ -125,7 +126,7 @@ export async function POST(request: Request) {
       if (hold) {
         const retry = new Date();
         retry.setDate(retry.getDate() + 1);
-        await finish('active', { next_due_on: retry.toISOString().slice(0, 10) });
+        await finish('active', { next_due_on: phoenixDay(retry) });
         results.push({ id: enrolment.id, outcome: 'held', detail: heldDomain });
         continue;
       }
@@ -189,7 +190,7 @@ export async function POST(request: Request) {
       const { error: taskError } = await admin.from('tasks').insert({
         company_id: companyId,
         title: rendered.subject,
-        due_on: new Date().toISOString().slice(0, 10),
+        due_on: phoenixDay(Date.now()),
         // Goes to whoever approved the enrolment, or to admins when that is unknown, which is what
         // the reminder job already does for an unassigned task.
         assigned_to: (enrolment.approved_by as string | null) ?? null,
@@ -208,7 +209,7 @@ export async function POST(request: Request) {
         });
         const retry = new Date();
         retry.setDate(retry.getDate() + 1);
-        await finish('active', { next_due_on: retry.toISOString().slice(0, 10) });
+        await finish('active', { next_due_on: phoenixDay(retry) });
         results.push({ id: enrolment.id, outcome: 'failed', detail: taskError.message.slice(0, 200) });
         continue;
       }
@@ -231,7 +232,7 @@ export async function POST(request: Request) {
 
       await finish(after ? 'active' : 'completed', {
         current_position: next.position,
-        next_due_on: after ? followingDue.toISOString().slice(0, 10) : null,
+        next_due_on: after ? phoenixDay(followingDue) : null,
       });
 
       results.push({ id: enrolment.id, outcome: 'task', detail: `step ${next.position}` });
@@ -287,7 +288,7 @@ export async function POST(request: Request) {
       }
       const retry = new Date();
       retry.setDate(retry.getDate() + 1);
-      await finish('active', { next_due_on: retry.toISOString().slice(0, 10) });
+      await finish('active', { next_due_on: phoenixDay(retry) });
       results.push({ id: enrolment.id, outcome: 'failed', detail: raw.slice(0, 200) });
       continue;
     }
@@ -321,7 +322,7 @@ export async function POST(request: Request) {
 
     await finish(remaining ? 'active' : 'completed', {
       current_position: next.position,
-      next_due_on: remaining ? due.toISOString().slice(0, 10) : null,
+      next_due_on: remaining ? phoenixDay(due) : null,
     });
 
     results.push({ id: enrolment.id, outcome: 'sent', detail: `step ${next.position}` });

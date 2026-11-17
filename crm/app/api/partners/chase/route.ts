@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { phoenixDay } from '@/lib/time';
 import { createIntakeClient } from '@/lib/supabase';
 import { CHASE_WINDOW_DAYS, planChaseTasks, type ReferralRow } from '@/lib/referral-chase';
 
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
 
   const supabase = createIntakeClient();
   const today = new Date();
-  const horizon = new Date(today.getTime() + CHASE_WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const horizon = phoenixDay(new Date(today.getTime() + CHASE_WINDOW_DAYS * 86_400_000));
 
   const { data: referralData, error: referralError } = await supabase
     .from('referrals')

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { phoenixDay } from './time';
 import { redirect } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
@@ -311,7 +312,7 @@ export async function enrolContact(formData: FormData) {
     contact_id: contactId,
     status: 'pending_approval',
     current_position: 0,
-    next_due_on: due.toISOString().slice(0, 10),
+    next_due_on: phoenixDay(due),
   });
   if (error) fail('Could not enrol. That contact may already be in this sequence.');
 

@@ -6,6 +6,7 @@
 // links, so completing one does not silently complete the other.
 
 import { OPEN_STATUSES, daysLeft } from './partner-report';
+import { phoenixDay } from './time';
 
 export const CHASE_WINDOW_DAYS = 30;
 export const ESCALATION_WINDOW_DAYS = 7;
@@ -58,9 +59,7 @@ export function escalationTitle(companyName: string, days: number, deadline: str
 }
 
 function isoDay(value: Date): string {
-  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()))
-    .toISOString()
-    .slice(0, 10);
+  return phoenixDay(value);
 }
 
 // One plan per referral per window, and a reason for every task deliberately not created, so the

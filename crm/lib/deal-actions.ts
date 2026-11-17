@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { phoenixDay } from '@/lib/time';
 import { redirect } from 'next/navigation';
 import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
@@ -194,7 +195,7 @@ export async function setOfferStatus(companyId: string, offerId: string, formDat
     .from('offers')
     .update({
       status,
-      decided_on: status === 'offered' ? null : new Date().toISOString().slice(0, 10),
+      decided_on: status === 'offered' ? null : phoenixDay(Date.now()),
     })
     .eq('id', offerId)
     .eq('company_id', companyId);
@@ -247,7 +248,7 @@ export async function registerReferral(formData: FormData) {
   if (!partnerId) fail(path, 'Choose the partner who made the referral.');
   if (!companyName) fail(path, 'Enter the company that was referred.');
 
-  const registeredOn = day(formData, 'registeredOn') ?? new Date().toISOString().slice(0, 10);
+  const registeredOn = day(formData, 'registeredOn') ?? phoenixDay(Date.now());
   const deadline = deadlineFor(registeredOn);
 
   const { data, error } = await supabase
@@ -288,7 +289,7 @@ export async function updateReferral(formData: FormData) {
   const feeRaw = String(formData.get('feeAmount') ?? '').replace(/[^0-9.]/g, '');
   const patch: Record<string, unknown> = { status };
   if (feeRaw) patch.fee_amount = Math.round(Number(feeRaw) * 100) / 100;
-  patch.paid_on = status === 'paid' ? (day(formData, 'paidOn') ?? new Date().toISOString().slice(0, 10)) : null;
+  patch.paid_on = status === 'paid' ? (day(formData, 'paidOn') ?? phoenixDay(Date.now())) : null;
 
   const { error } = await supabase.from('referrals').update(patch).eq('id', id);
   if (error) fail(path, 'Could not update the referral.');
@@ -322,7 +323,7 @@ export async function addAgreement(companyId: string, formData: FormData) {
       deletion_due: deletionDue,
       audit_right: String(formData.get('auditRight') ?? '') === 'on',
       status: 'signed',
-      signed_on: day(formData, 'signedOn') ?? new Date().toISOString().slice(0, 10),
+      signed_on: day(formData, 'signedOn') ?? phoenixDay(Date.now()),
       notes: text(formData, 'notes', 2000),
     })
     .select('id')
