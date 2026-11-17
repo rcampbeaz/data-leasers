@@ -22,19 +22,15 @@ export async function POST(request: Request) {
   const admin = createIntakeClient();
 
   // The kill switch. It is read at send time, not at schedule time, so switching it
-  // off stops a queue that is already full.
+  // off stops a queue that is already full. It is honoured after the sweep and before the claim:
+  // the pause means nothing new may be sent, not that a post already stuck may be left stuck.
   const { data: setting } = await admin
     .from('app_settings')
     .select('value')
     .eq('key', 'marketing')
     .maybeSingle();
   const controls = (setting?.value ?? {}) as { publishing_enabled?: boolean };
-  if (controls.publishing_enabled === false) {
-    return NextResponse.json(
-      { paused: true, message: 'Publishing is switched off in the Marketing console.' },
-      { status: 409 },
-    );
-  }
+  const paused = controls.publishing_enabled === false;
 
   // Anything a dead run abandoned stops here rather than being sent again. The sweep has already put
   // those rows in needs_manual; this announces them, because the post may be live on the channel and
@@ -81,6 +77,20 @@ export async function POST(request: Request) {
         alert,
       });
     }
+  }
+
+  // Nothing is claimed while publishing is off, so the queue stays exactly where it is — but the rows
+  // the sweep just resolved have been resolved, and the response says which.
+  if (paused) {
+    return NextResponse.json(
+      {
+        paused: true,
+        message: 'Publishing is switched off in the Marketing console.',
+        swept: sweptResults,
+        ...(sweepError ? { sweepError: sweepError.message } : {}),
+      },
+      { status: 409 },
+    );
   }
 
   const { data: claimed, error } = await admin.rpc('claim_social_posts', { batch_size: 10 });
