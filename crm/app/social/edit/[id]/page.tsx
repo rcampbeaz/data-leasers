@@ -13,7 +13,13 @@ type StoredPost = {
   media_alt: string | null;
   state: string;
   scheduled_for: string | null;
-  social_post_channels: { channel_id: string; body: string | null }[] | null;
+  social_post_channels:
+    | {
+        channel_id: string;
+        body: string | null;
+        social_channels: { platform: string; handle: string; active: boolean } | null;
+      }[]
+    | null;
 };
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +31,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const { data, error } = await supabase
     .from('social_posts')
     .select(
-      'id, body, link_url, media_url, media_alt, state, scheduled_for, social_post_channels(channel_id, body)',
+      'id, body, link_url, media_url, media_alt, state, scheduled_for, social_post_channels(channel_id, body, social_channels(platform, handle, active))',
     )
     .eq('id', id)
     .maybeSingle();
@@ -47,21 +53,15 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const offered = new Set(channels.map((channel) => channel.id));
   const storedLinks = stored.social_post_channels ?? [];
 
-  // A post keeps its channel rows when a channel is switched off. Anything inactive is
-  // left out of the selection below: it would otherwise be a ticked box with no visible
-  // checkbox, so every save would fail on a channel that cannot be unticked.
-  let dropped: { platform: string; handle: string }[] = [];
-  if (storedLinks.length > 0) {
-    const { data: referenced } = await supabase
-      .from('social_channels')
-      .select('id, platform, handle, active')
-      .in('id', storedLinks.map((link) => link.channel_id));
-    dropped = (
-      (referenced ?? []) as { id: string; platform: string; handle: string; active: boolean }[]
-    )
-      .filter((channel) => !channel.active)
-      .map((channel) => ({ platform: channel.platform, handle: channel.handle }));
-  }
+  // Each link arrives with its channel's platform, handle and active flag, so the notice
+  // below needs no second lookup. A post keeps its channel rows when a channel is
+  // switched off; anything inactive is left out of the selection, because it would
+  // otherwise be a ticked box with no visible checkbox and no save would get past it.
+  const dropped = storedLinks.flatMap((link) => {
+    const channel = link.social_channels;
+    if (!channel || channel.active) return [];
+    return [{ platform: channel.platform, handle: channel.handle }];
+  });
 
   const initial: ComposerPost = {
     id: stored.id,
