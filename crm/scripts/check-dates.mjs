@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Guards the console's clock in lib/ and app/, the way check:migrations guards it in the SQL.
+// Guards the console's clock in lib/, app/, components/ and scripts/, the way check:migrations
+// guards it in the SQL.
 //
 // Run with:  npm run check:dates
 //
@@ -38,6 +39,7 @@ const MIGRATIONS = join(ROOT, 'supabase', 'migrations');
 const UTC_DAY_ALLOWED = {
   'lib/time.ts': 'phoenixDay is the one place an instant becomes a day',
   'lib/deals.ts': 'addMonths and addDays do calendar arithmetic on ISO day strings',
+  'scripts/seed.mjs': 'addDays does the same, and the seed has to run without the app build',
 };
 
 const HELPERS = /calendarDate|calendarMonth|phoenix|daysLeft/;
@@ -69,15 +71,17 @@ const walk = (dir) =>
   readdirSync(dir).flatMap((name) => {
     const full = join(dir, name);
     if (name === 'node_modules' || name === '.next') return [];
+    // The checks describe these shapes in comments, which is not a date leaving the clock.
+    if (/^check-.*\.mjs$/.test(name)) return [];
     if (statSync(full).isDirectory()) return walk(full);
-    return /\.(?:ts|tsx)$/.test(name) ? [full] : [];
+    return /\.(?:ts|tsx|mjs)$/.test(name) ? [full] : [];
   });
 
 // One-line JSX interpolations and template placeholders are enough to see a raw value; anything longer
 // is an expression this scan does not try to judge.
 const INTERPOLATION = /\{([^{}\n]*)\}|\$\{([^{}\n]*)\}/g;
 
-for (const dir of ['lib', 'app']) {
+for (const dir of ['lib', 'app', 'components', 'scripts']) {
   for (const full of walk(join(ROOT, dir))) {
     const file = relative(ROOT, full).split('\\').join('/');
     const source = readFileSync(full, 'utf8');
@@ -117,7 +121,7 @@ for (const dir of ['lib', 'app']) {
 
 if (findings.length === 0) {
   console.log(
-    `No UTC day, no UTC month or year, and no raw date render in lib/ or app/ (${dateColumns.size} date columns checked).`,
+    `No UTC day, no UTC month or year, and no raw date render in lib/, app/, components/ or scripts/ (${dateColumns.size} date columns checked).`,
   );
   process.exit(0);
 }

@@ -22,8 +22,9 @@ _site/                        build output (gitignored) — the only thing that 
 
 ```bash
 npm install       # once (lockfile is generated with npm 10 to match CI)
-npm run build     # writes _site/
-npm run dev       # local server with live reload at http://localhost:8080
+npm run build      # writes _site/
+npm run dev        # local server with live reload at http://localhost:8080
+npm run check:links # after a build: every internal link resolves (CI runs this before uploading)
 ```
 
 ## Common edits

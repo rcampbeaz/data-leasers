@@ -224,11 +224,20 @@ script ends by printing the walk-through order — the screens, and what to look
 `npm run check:seed` runs that same write path against a local database, so a payload that no longer fits
 the schema fails on a laptop instead of on the first staging run.
 
+### Checking the environment contract
+
+`npm run check:env` compares the names the code reads with `crm/.env.example`, both ways: a name the
+running app reads that the template never mentions is how a server ends up unable to do something, and a
+name the template documents that nothing reads sends whoever sets up a server to configure nothing. It
+is why `FACEBOOK_PAGE_ID` and `FACEBOOK_PAGE_TOKEN` are in both places. Names read only by `scripts/`
+(`SEED_CONFIRM`, `SEED_STAFF_PASSWORD`) are operator flags and are exempt; `NODE_ENV` comes from the
+runtime. It proves the contract, not that any particular machine has the values — that is preflight.
+
 ### Before a deploy
 
-`npm run check` runs all seven — the migration record, the series itself, the seed's payloads against a
-local database, the date scan, the schema check, the clock's values, then the money table — and stops at
-whichever fails. None of them needs credentials or a network, so it is the same command on a
+`npm run check` runs all eight — the migration record, the series itself, the seed's payloads against a
+local database, the date scan, the schema check, the policies, the clock's values, the money table, then
+the environment contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
 laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
 than a laptop. Which part matters depends on what you are shipping:

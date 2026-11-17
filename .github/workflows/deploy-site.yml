@@ -54,6 +54,11 @@ jobs:
                    | sed -e 's|^https://dataleasers\.com/||' | sed -e 's|^$|index.html|')
           exit $fail
 
+      # Every internal link and asset is resolved against the build, so a page that was renamed fails
+      # here rather than 404ing on dataleasers.com after the upload.
+      - name: Check internal links
+        run: npm run check:links
+
       - name: Set up SSH key
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
