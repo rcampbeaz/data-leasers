@@ -19,6 +19,9 @@ export type PublishRequest = {
   // Stable per post and channel. A provider that supports idempotency should pass it
   // through so a retry after a timeout does not post twice.
   idempotencyKey: string;
+  // Aborts after 30 seconds. An adapter that makes a network call must pass this to it,
+  // or a hung request holds the post until the engine decides the run has died.
+  signal: AbortSignal;
 };
 
 export type PublishResult =

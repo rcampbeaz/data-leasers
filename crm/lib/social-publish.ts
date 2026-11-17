@@ -7,11 +7,12 @@ import { getProvider, type PublishResult, type SocialProvider } from './social-p
 // rows it is there to send.
 
 const MAX_ATTEMPTS = 3;
-// Waits before the second and third attempt at the same channel, in minutes.
+// One entry per retry, so the second attempt waits two minutes and the third ten.
 const RETRY_MINUTES = [2, 10];
-// A run that dies mid-flight leaves posts in 'publishing'. They go back to the queue once
-// they are old enough that no live run could still own them.
-const STALE_CLAIM_MINUTES = 15;
+const PROVIDER_TIMEOUT_MS = 30_000;
+// A claim is kept alive per channel (see touch() below), so this only has to be longer
+// than one provider call, not longer than a whole run.
+const STALE_CLAIM_MINUTES = 10;
 const RUN_LIMIT = 20;
 
 type Client = ReturnType<typeof createIntakeClient>;
@@ -48,6 +49,8 @@ export type RunReport = {
   retrying: number;
   failed: number;
   emailsSent: number;
+  // 'error' means the post was claimed but recording its result failed; it stays in
+  // 'publishing' until the stale sweep puts it back.
   results: { id: string; state: string }[];
 };
 
@@ -68,36 +71,38 @@ export async function publishDue(now: Date = new Date()): Promise<RunReport> {
   // every sweep. The waiting is read from the channel rows, where the retry clock lives.
   const { data: candidates, error } = await supabase
     .from('social_posts')
-    .select('id, social_post_channels(status, next_attempt_at)')
+    .select('id, social_post_channels(next_attempt_at)')
     .eq('state', 'scheduled')
     .lte('scheduled_for', nowIso)
     .order('scheduled_for', { ascending: true })
     // Read more rows than one run will claim: a post waiting on a retry clock is filtered
-    // out below, and it should not take a slot from a post that is genuinely due. Retries
-    // clear within ten minutes, so this slack is not exceeded in practice.
+    // out below, and it should not take a slot from a post that is genuinely due.
     .limit(RUN_LIMIT * 5);
   if (error) throw new Error('Could not read the due posts.');
-
-  type PendingChannel = { status: string; next_attempt_at: string | null };
-  const stillWaiting = (links: PendingChannel[]) =>
-    links.some(
-      (link) =>
-        (link.status === 'scheduled' || link.status === 'pending') &&
-        !!link.next_attempt_at &&
-        Date.parse(link.next_attempt_at) > now.getTime(),
-    );
 
   const ids = (
     (candidates ?? []) as unknown as {
       id: string;
-      social_post_channels: PendingChannel[] | null;
+      social_post_channels: { next_attempt_at: string | null }[] | null;
     }[]
   )
-    .filter((post) => !stillWaiting(post.social_post_channels ?? []))
+    .filter((post) =>
+      (post.social_post_channels ?? []).every(
+        (link) => !link.next_attempt_at || Date.parse(link.next_attempt_at) <= now.getTime(),
+      ),
+    )
     .map((post) => post.id)
     .slice(0, RUN_LIMIT);
   if (ids.length === 0) {
-    return { provider: provider.name, claimed: 0, published: 0, retrying: 0, failed: 0, emailsSent: 0, results: [] };
+    return {
+      provider: provider.name,
+      claimed: 0,
+      published: 0,
+      retrying: 0,
+      failed: 0,
+      emailsSent: 0,
+      results: [],
+    };
   }
 
   // The claim is the update's own return value: only rows still in 'scheduled' come back,
@@ -120,12 +125,19 @@ export async function publishDue(now: Date = new Date()): Promise<RunReport> {
   const results: { id: string; state: string }[] = [];
 
   for (const post of (claimed ?? []) as unknown as PostRow[]) {
-    const outcome = await publishPost(supabase, provider, post, now);
-    results.push({ id: post.id, state: outcome.state });
-    published += outcome.published;
-    retrying += outcome.retrying;
-    failed += outcome.failed;
-    if (outcome.emailed) emailsSent++;
+    try {
+      const outcome = await publishPost(supabase, provider, post, now);
+      results.push({ id: post.id, state: outcome.state });
+      published += outcome.published;
+      retrying += outcome.retrying;
+      failed += outcome.failed;
+      if (outcome.emailed) emailsSent++;
+    } catch {
+      // One post failing to record its result should not abandon the rest of the run. It
+      // stays claimed and the stale sweep will pick it up, already-published channels and
+      // all, because those are skipped on the second pass.
+      results.push({ id: post.id, state: 'error' });
+    }
   }
 
   return {
@@ -140,7 +152,20 @@ export async function publishDue(now: Date = new Date()): Promise<RunReport> {
 }
 
 async function setLink(supabase: Client, id: string, patch: Record<string, unknown>) {
-  await supabase.from('social_post_channels').update(patch).eq('id', id);
+  const { error } = await supabase.from('social_post_channels').update(patch).eq('id', id);
+  // Thrown, not swallowed: a write that failed here would otherwise leave the channel
+  // looking unsent and it would be sent again on the next sweep.
+  if (error) throw new Error('Could not record a channel result.');
+}
+
+// Keeps the claim fresh while a post is being worked on, so the stale sweep only reclaims
+// posts whose run has actually stopped. Without this the window would have to be as long
+// as the slowest possible run, which is what lets a live run and a reclaim overlap.
+async function touch(supabase: Client, postId: string) {
+  await supabase
+    .from('social_posts')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', postId);
 }
 
 async function publishPost(
@@ -156,16 +181,7 @@ async function publishPost(
   let failed = 0;
   let waiting = 0;
 
-  if (links.length === 0) {
-    await supabase.from('social_posts').update({ state: 'failed', updated_at: nowIso }).eq('id', post.id);
-    const emailed = await notifyFailure(
-      supabase,
-      { ...post, state: 'failed' },
-      ['The post has no channels, so nothing could be sent.'],
-      now,
-    );
-    return { state: 'failed', published: 0, retrying: 0, failed: 1, emailed };
-  }
+  if (links.length === 0) errors.push('The post has no channels, so nothing could be sent.');
 
   for (const link of links) {
     // A channel that already has an answer is not asked again.
@@ -221,6 +237,8 @@ async function publishPost(
       continue;
     }
 
+    await touch(supabase, post.id);
+
     let result: PublishResult;
     try {
       result = await provider.publish({
@@ -232,10 +250,11 @@ async function publishPost(
         mediaUrl: post.media_url,
         mediaAlt: post.media_alt,
         idempotencyKey: `${post.id}:${link.channel_id}`,
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       });
     } catch (error) {
-      // A provider that throws is treated as a retryable failure. The alternative is a
-      // post stuck in 'publishing' until the stale claim puts it back.
+      // A provider that throws or times out is a retryable failure. Letting it escape would
+      // leave the post in 'publishing' until the stale sweep put it back.
       result = {
         ok: false,
         error: error instanceof Error ? error.message : 'The provider threw without a message.',
@@ -258,10 +277,13 @@ async function publishPost(
       continue;
     }
 
+    // attempts is at most MAX_ATTEMPTS - 1 whenever a retry is scheduled, so the index is
+    // always inside RETRY_MINUTES.
     const attempts = link.attempts + 1;
     const willRetry = result.retryable && attempts < MAX_ATTEMPTS;
-    const backoff = RETRY_MINUTES[Math.min(attempts - 1, RETRY_MINUTES.length - 1)];
-    const next = willRetry ? new Date(now.getTime() + backoff * 60_000).toISOString() : null;
+    const next = willRetry
+      ? new Date(now.getTime() + RETRY_MINUTES[attempts - 1] * 60_000).toISOString()
+      : null;
 
     await setLink(supabase, link.id, {
       status: willRetry ? 'scheduled' : 'failed',
@@ -271,16 +293,13 @@ async function publishPost(
       provider: provider.name,
     });
 
-    if (willRetry && next) {
-      waiting++;
-    } else {
-      failed++;
-    }
+    if (willRetry) waiting++;
+    else failed++;
     errors.push(`${label}: ${result.error}`);
   }
 
   const state =
-    waiting > 0 ? 'scheduled' : failed === 0 ? 'published' : published > 0 ? 'partial' : 'failed';
+    waiting > 0 ? 'scheduled' : published === 0 ? 'failed' : failed === 0 ? 'published' : 'partial';
 
   const patch: Record<string, unknown> = { state, updated_at: nowIso };
   if (state === 'published' || state === 'partial') patch.published_at = nowIso;
@@ -288,11 +307,15 @@ async function publishPost(
   // out; a retry has its own clock on the channel rows, which the due query reads. Moving
   // it would rewrite history and make the calendar jump every time an attempt slipped.
 
-  await supabase.from('social_posts').update(patch).eq('id', post.id);
+  const { error: stateError } = await supabase
+    .from('social_posts')
+    .update(patch)
+    .eq('id', post.id);
+  if (stateError) throw new Error('Could not record the post state.');
 
   const emailed =
     state === 'failed' || state === 'partial'
-      ? await notifyFailure(supabase, { ...post, state }, errors, now)
+      ? await notifyFailure(supabase, post, state, errors, now)
       : false;
 
   return { state, published, retrying: waiting, failed, emailed };
@@ -303,7 +326,8 @@ async function publishPost(
 // minutes because Resend is having a bad day.
 async function notifyFailure(
   supabase: Client,
-  post: PostRow & { state: string },
+  post: PostRow,
+  state: string,
   errors: string[],
   now: Date,
 ): Promise<boolean> {
@@ -326,7 +350,7 @@ async function notifyFailure(
   }
 
   const text = [
-    `A social post ended up ${post.state}.`,
+    `A social post ended up ${state}.`,
     '',
     post.body.slice(0, 500),
     '',
@@ -343,7 +367,7 @@ async function notifyFailure(
     body: JSON.stringify({
       from,
       to,
-      subject: `Social post ${post.state}: ${(errors[0] ?? 'see the queue').slice(0, 90)}`,
+      subject: `Social post ${state}: ${(errors[0] ?? 'see the queue').slice(0, 90)}`,
       text,
     }),
   });
