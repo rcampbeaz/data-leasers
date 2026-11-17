@@ -133,8 +133,8 @@ export function phoenixYear(when: Time): string {
 }
 
 // The last `count` months, oldest first, ending with the console's current month.
-export function phoenixMonths(count: number, when: Time = Date.now()): string[] {
-  const current = phoenixMonth(when);
+export function phoenixMonths(count: number): string[] {
+  const current = phoenixMonth(Date.now());
   if (!current || count < 1) return [];
   return Array.from({ length: count }, (_, index) => shiftMonth(current, index + 1 - count));
 }
