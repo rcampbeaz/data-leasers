@@ -61,15 +61,27 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!channel || channel.status !== 'active') {
+      const detail = channel ? `Channel is ${channel.status}` : 'Channel is missing';
       await admin
         .from('social_posts')
         .update({
           status: 'needs_manual',
           last_error_code: 'channel_inactive',
-          last_error: channel ? `Channel is ${channel.status}` : 'Channel is missing',
+          last_error: detail,
         })
         .eq('id', post.id);
-      results.push({ id: post.id, outcome: 'needs_manual', detail: 'channel inactive' });
+
+      // Every way into needs_manual announces itself. This one is the quietest of them: nothing
+      // will happen to the post on any later run, and no provider was even called.
+      const alert = await alertStoppedPost({
+        platform: channel ? String(channel.platform) : 'unknown',
+        body: post.body,
+        code: 'channel_inactive',
+        detail,
+        channelStatus: channel ? String(channel.status) : 'missing',
+        scheduledFor: post.scheduled_for,
+      });
+      results.push({ id: post.id, outcome: 'needs_manual', detail, alert });
       continue;
     }
 

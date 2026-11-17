@@ -48,20 +48,31 @@ export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome>
     timeStyle: 'short',
   });
   const origin = process.env.CRM_ORIGIN ?? 'https://app.dataleasers.com';
-  const deadToken = post.channelStatus === 'needs_reauth';
+  // Retry refuses while the channel is not active, so the advice depends on why it stopped rather
+  // than offering a button that will only say no.
+  const missing = post.channelStatus === 'missing';
+  const inactive = post.channelStatus !== 'active';
 
   const text = [
     `A ${label} post stopped and is waiting for a person.`,
     '',
-    `Channel: ${label} — ${deadToken ? 'the token needs reconnecting' : post.channelStatus}`,
+    `Channel: ${label} — ${
+      missing
+        ? 'this channel is no longer connected'
+        : inactive
+          ? `the channel is ${post.channelStatus}`
+          : 'connected'
+    }`,
     `Was due: ${when} (Phoenix)`,
     `Reason: ${post.detail} (${post.code})`,
     '',
     `Post: ${post.body.slice(0, 400)}${post.body.length > 400 ? '…' : ''}`,
     '',
-    deadToken
-      ? 'Reconnect the channel with the provider, press Mark active on the Channels tab, then Retry the post.'
-      : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.',
+    missing
+      ? 'Connect the channel again on the Channels tab, then Retry the post.'
+      : inactive
+        ? 'Reconnect the channel with the provider, press Mark active on the Channels tab, then Retry the post.'
+        : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.',
     '',
     `Open the Marketing console: ${origin}/marketing`,
   ].join('\n');
