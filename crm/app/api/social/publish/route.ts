@@ -122,13 +122,18 @@ export async function POST(request: Request) {
       continue;
     }
 
+    // An ending that is not a retry has to leave the queue. claim_social_posts takes any 'failed'
+    // row whose next_retry_at is null or in the past, so a failure that can never fix itself — or
+    // one that has used the whole backoff ladder — would be claimed and sent again on every cron
+    // tick, forever, while the response claimed it had given up. 'needs_manual' is the state that
+    // stops and waits for a person.
     const delay = result.retryable ? retryDelayMinutes(post.attempts) : null;
     const nextRetry = delay === null ? null : new Date(Date.now() + delay * 60_000).toISOString();
 
     await admin
       .from('social_posts')
       .update({
-        status: 'failed',
+        status: delay === null ? 'needs_manual' : 'failed',
         last_error_code: result.code,
         last_error: result.message,
         next_retry_at: nextRetry,
@@ -136,7 +141,8 @@ export async function POST(request: Request) {
       .eq('id', post.id);
     results.push({
       id: post.id,
-      outcome: delay === null ? 'gave_up' : `retry_in_${delay}m`,
+      outcome:
+        delay === null ? (result.retryable ? 'gave_up' : 'not_retryable') : `retry_in_${delay}m`,
       detail: result.message,
     });
   }

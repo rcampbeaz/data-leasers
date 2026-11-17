@@ -472,13 +472,15 @@ export async function scheduleContent(contentId: string, formData: FormData) {
   redirect(`${PATH}?scheduled=1`);
 }
 
+// A post that has stopped and asked for a person can only leave the queue this way, so
+// 'needs_manual' belongs here as well as the two states that are still moving on their own.
 export async function cancelPost(postId: string) {
   const { supabase } = await requireWriter();
   await supabase
     .from('social_posts')
     .update({ status: 'cancelled' })
     .eq('id', postId)
-    .in('status', ['scheduled', 'failed']);
+    .in('status', ['scheduled', 'failed', 'needs_manual']);
   revalidatePath(PATH);
 }
 

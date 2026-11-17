@@ -610,7 +610,10 @@ export default async function MarketingPage({
                       {!p.permalink && !p.last_error ? '-' : null}
                     </td>
                     <td>
-                      {canWrite && (p.status === 'scheduled' || p.status === 'failed') ? (
+                      {canWrite &&
+                      (p.status === 'scheduled' ||
+                        p.status === 'failed' ||
+                        p.status === 'needs_manual') ? (
                         <form action={cancelPost.bind(null, p.id)}>
                           <button className="btn danger" type="submit">Cancel</button>
                         </form>
