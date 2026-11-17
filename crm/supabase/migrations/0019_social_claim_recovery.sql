@@ -78,8 +78,13 @@ revoke all on function public.claim_social_posts(integer) from authenticated;
 -- alerts on each sweep: a cap means one bounded message and a bounded amount of work before new posts
 -- are claimed, with the remainder picked up on the next tick a few minutes later.
 
+-- Earlier drafts of this file used an interval argument, or an integer one with a default. Drop by
+-- signature rather than relying on create-or-replace: replace cannot change an argument's type, and it
+-- refuses outright if an input parameter was renamed, so a database that ran one of those drafts would
+-- otherwise fail here or end up with two overloads for PostgREST to choose between.
 drop function if exists public.sweep_stale_social_posts(interval);
 drop function if exists public.sweep_stale_social_posts(interval, integer);
+drop function if exists public.sweep_stale_social_posts(integer, integer);
 
 create or replace function public.sweep_stale_social_posts(
   stale_after_minutes integer,
@@ -91,6 +96,13 @@ security definer
 set search_path = public
 as $$
 begin
+  -- A null or non-positive threshold would stop rows from runs that are still alive, which is the one
+  -- thing this must never do. Refuse instead of letting greatest() quietly turn it into a minute.
+  if stale_after_minutes is null or stale_after_minutes < 1 then
+    raise exception 'sweep_stale_social_posts needs a threshold of at least one minute, got %',
+      stale_after_minutes;
+  end if;
+
   return query
   update public.social_posts p
      set status = 'needs_manual',
@@ -110,7 +122,7 @@ begin
           )
         )
       order by coalesce(claimed_at, scheduled_for)
-      limit greatest(max_rows, 1)
+      limit greatest(coalesce(max_rows, 1), 1)
       for update skip locked
    )
   returning p.*;
@@ -120,3 +132,7 @@ $$;
 revoke all on function public.sweep_stale_social_posts(integer, integer) from public;
 revoke all on function public.sweep_stale_social_posts(integer, integer) from anon;
 revoke all on function public.sweep_stale_social_posts(integer, integer) from authenticated;
+
+-- Both functions were replaced and one signature changed, so the REST layer's cached schema is stale
+-- until it reloads. Without this, the publisher's first calls after the migration can 404 on the RPC.
+notify pgrst, 'reload schema';
