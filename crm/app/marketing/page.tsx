@@ -80,24 +80,24 @@ function channelLabel(channel: unknown): string {
   return channelSpec(row.platform)?.label ?? row.platform;
 }
 
-// A post in 'publishing' is a claim nobody has resolved. A normal send takes seconds, so the age of
-// the hold is the honest signal: minutes means the run is probably gone, which is the case the sweep
-// stops and emails about.
+// A post in 'publishing' is a claim nobody has resolved yet, and most of them are a send that is
+// simply happening: the claim is taken, the provider is called, the row is updated, all in seconds.
+// Only the age of the hold separates that from a run that died, so the age decides the wording.
+// A couple of minutes is well past any normal send and still short enough that nobody sits on a dead
+// one wondering.
+const STUCK_AFTER_MINUTES = 2;
+
 function publishHold(claimedAt: unknown): string {
   const at = typeof claimedAt === 'string' ? Date.parse(claimedAt) : Number.NaN;
-  const fallback =
-    'A publishing run is sending this post. If it never reports back, the sweep stops it and emails the admins.';
-  if (!Number.isFinite(at)) return fallback;
+  const sendingNow =
+    'Sending now. If the run never reports back, the sweep stops it and emails the admins.';
+  if (!Number.isFinite(at)) return sendingNow;
 
-  const minutes = Math.max(0, Math.round((Date.now() - at) / 60_000));
+  const minutes = Math.max(0, (Date.now() - at) / 60_000);
+  if (minutes < STUCK_AFTER_MINUTES) return sendingNow;
+
   const age =
-    minutes < 1
-      ? 'less than a minute'
-      : minutes === 1
-        ? '1 minute'
-        : minutes < 120
-          ? `${minutes} minutes`
-          : `${Math.round(minutes / 60)} hours`;
+    minutes < 120 ? `${Math.round(minutes)} minutes` : `${Math.round(minutes / 60)} hours`;
   return `Held by a publishing run for ${age}. If it never reports back, the sweep stops it and emails the admins.`;
 }
 
