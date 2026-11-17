@@ -15,9 +15,12 @@
 // Nothing here is printed back: the password is written to the project, never echoed. The key is read
 // from the environment and never shown either.
 //
-// Everything it creates has a fixed id or a seed marker, so a second run replaces its own rows rather
-// than piling up. It writes no provider credentials and sends nothing: the social posts are rows in a
-// state, and the outbound sends are records of sends that never happened.
+// Everything it creates has a fixed id or a seed marker. A run clears its own rows by that marker and
+// then inserts plainly, so the write path never depends on a table's unique index: only the staff row,
+// its profile and the sweep record are upserted, because there the key itself is being replaced.
+//
+// It writes no provider credentials and sends nothing: the social posts are rows in a state, and the
+// outbound sends are records of sends that never happened.
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -183,6 +186,8 @@ await step('staff profile row', () =>
 );
 
 // 2. Clear what a previous run left, children first, so the seed stays replaceable and never grows.
+// Each table below is cleared by the seed's own marker — a fixed id, or the address or subject it
+// writes — and then filled with a plain insert. Nothing here asks a table what its unique index is.
 await step('clear the previous seed', async () => {
   const removals = [
     supabase.from('social_posts').delete().in('id', [POST_QUEUED, POST_STOPPED, POST_DEAD]),
@@ -209,14 +214,14 @@ await step('clear the previous seed', async () => {
 await step('one buyer', () =>
   must(
     'buyers',
-    supabase.from('buyers').upsert({ id: BUYER, name: 'Seed — Meridian Capital', kind: 'program' }),
+    supabase.from('buyers').insert({ id: BUYER, name: 'Seed — Meridian Capital', kind: 'program' }),
   ),
 );
 
 await step('two companies', () =>
   must(
     'companies',
-    supabase.from('companies').upsert([
+    supabase.from('companies').insert([
       {
         id: COMPANY_A,
         name: 'Seed — Northwind Analytics',
@@ -242,7 +247,7 @@ await step('two companies', () =>
 await step('introductions to the buyer', () =>
   must(
     'introductions',
-    supabase.from('introductions').upsert([
+    supabase.from('introductions').insert([
       {
         id: INTRODUCTION_A,
         company_id: COMPANY_A,
@@ -264,7 +269,7 @@ await step('introductions to the buyer', () =>
 await step('an offer and a signed agreement', async () => {
   await must(
     'offers',
-    supabase.from('offers').upsert({
+    supabase.from('offers').insert({
       id: OFFER,
       company_id: COMPANY_A,
       buyer_id: BUYER,
@@ -276,7 +281,7 @@ await step('an offer and a signed agreement', async () => {
   );
   await must(
     'agreements',
-    supabase.from('agreements').upsert({
+    supabase.from('agreements').insert({
       id: AGREEMENT,
       company_id: COMPANY_A,
       offer_id: OFFER,
@@ -296,7 +301,7 @@ await step('an offer and a signed agreement', async () => {
 await step('a partner with two referrals', async () => {
   await must(
     'partners',
-    supabase.from('partners').upsert({
+    supabase.from('partners').insert({
       id: PARTNER,
       name: 'Seed — Beacon Introductions',
       email: 'beacon@seed.partner.test',
@@ -308,7 +313,7 @@ await step('a partner with two referrals', async () => {
   );
   await must(
     'referrals',
-    supabase.from('referrals').upsert([
+    supabase.from('referrals').insert([
       {
         id: REFERRAL_AT_RISK,
         partner_id: PARTNER,
@@ -335,7 +340,7 @@ await step('a partner with two referrals', async () => {
 await step('two channels', () =>
   must(
     'social_channels',
-    supabase.from('social_channels').upsert([
+    supabase.from('social_channels').insert([
       {
         id: CHANNEL_LIVE,
         platform: 'linkedin',
@@ -361,7 +366,7 @@ await step('two channels', () =>
 await step('three pieces of content', () =>
   must(
     'social_contents',
-    supabase.from('social_contents').upsert([
+    supabase.from('social_contents').insert([
       {
         id: CONTENT_QUEUED,
         title: 'Seed — queued',
@@ -396,7 +401,7 @@ await step('three pieces of content', () =>
 await step('a queued post, a stopped post and a post on a dead channel', () =>
   must(
     'social_posts',
-    supabase.from('social_posts').upsert([
+    supabase.from('social_posts').insert([
       {
         id: POST_QUEUED,
         content_id: CONTENT_QUEUED,
@@ -451,13 +456,10 @@ await step('a sweep warning', () =>
 await step('contacts, two sends and a suppression', async () => {
   await must(
     'outreach_contacts',
-    supabase.from('outreach_contacts').upsert(
-      [
-        { email: BOUNCED_EMAIL, basis: 'opt_out_only', source: 'seed', status: 'active' },
-        { email: DELIVERED_EMAIL, basis: 'opt_out_only', source: 'seed', status: 'active' },
-      ],
-      { onConflict: 'email' },
-    ),
+    supabase.from('outreach_contacts').insert([
+      { email: BOUNCED_EMAIL, basis: 'opt_out_only', source: 'seed', status: 'active' },
+      { email: DELIVERED_EMAIL, basis: 'opt_out_only', source: 'seed', status: 'active' },
+    ]),
   );
   const contacts = await supabase
     .from('outreach_contacts')
@@ -489,15 +491,12 @@ await step('contacts, two sends and a suppression', async () => {
   );
   await must(
     'suppressions',
-    supabase.from('suppressions').upsert(
-      {
-        email: BOUNCED_EMAIL,
-        reason: 'bounced',
-        note: 'Seed fixture: the mailbox does not exist.',
-        source: 'seed',
-      },
-      { onConflict: 'email' },
-    ),
+    supabase.from('suppressions').insert({
+      email: BOUNCED_EMAIL,
+      reason: 'bounced',
+      note: 'Seed fixture: the mailbox does not exist.',
+      source: 'seed',
+    }),
   );
 });
 
