@@ -123,6 +123,18 @@ It proves the series builds on an empty database, not that it behaves: policies 
 evaluated, `auth.uid()` is a stub, and nothing calls storage. Apply each new file to the real project
 in the SQL Editor as before.
 
+### Checking the console's clock
+
+`npm run check:dates` reads `lib/` and `app/` and refuses two things: a day built from UTC — a
+`toISOString().slice(0, 10)`, a `split('T')[0]`, a `getUTCDate()` — and a stored date rendered without
+`calendarDate`. The column names come from `supabase/migrations/`, so a date column added there is
+covered without touching the script. No credentials, no network, no build.
+
+It exits non-zero and prints the file, line and rule for each place, so a route that formats its own
+date cannot quietly undo 0021 and 0022. A month or a year taken from UTC is counted at the end of the
+run rather than failed: those affect keys, chart labels and a company's age, not a stored day. An
+`<input type="date">` is exempt, because that control's value is `YYYY-MM-DD` by definition.
+
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
 - **Offers and agreements** are recorded on the company page. An agreement stores the licence end, the exclusivity end, and a deletion date 120 days after delivery.
