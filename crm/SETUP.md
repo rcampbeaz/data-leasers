@@ -88,7 +88,7 @@ Reminders cover tasks only. Next-action dates on a company are shown in the CRM 
 - **Locked out of the staff list:** run the SQL in step 4 again with the correct email, using the SQL Editor (this bypasses the app).
 
 ## Schema updates
-Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0022_phoenix_date_defaults.sql`. Each file is written to be safe on a database that already has it.
+Run every file in `supabase/migrations/` in order, in the SQL Editor, when a new one is added: `0001_init.sql` through `0022_phoenix_date_defaults.sql`. Run each new file once: the ones that create a policy or add a constraint stop with "already exists" if run a second time, so re-pasting an old file does nothing rather than breaking anything. The newest files — 0019 onwards — are written to run again safely.
 
 `0019` adds `social_posts.claimed_at` and `sweep_stale_social_posts()`, which stops a post whose publishing run died mid-send. The publisher calls it before taking new work, moves any such post to `needs_manual` and emails the admins one message listing them, because a post may already be live on its channel and nobody can tell from here. The sweep is capped at 25 rows a tick, so a large backlog arrives in bounded batches rather than as a burst of mail. Check the account, then Retry or cancel it.
 
