@@ -36,10 +36,37 @@ export async function POST(request: Request) {
     );
   }
 
-  // Anything a dead run abandoned comes back before new work is taken, so a post cannot be lost to a
-  // crash between being claimed and an outcome being recorded. A sweep that fails is reported but does
-  // not stop publishing: before 0019 is applied the rest of the queue should still go out.
+  // Anything a dead run abandoned stops here rather than being sent again. The sweep has already put
+  // those rows in needs_manual; this announces them, because the post may be live on the channel and
+  // only a person can check. A sweep that fails is reported but does not stop publishing: before 0019
+  // is applied the rest of the queue should still go out.
   const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts');
+
+  const sweptResults: { id: string; outcome: string; detail?: string; alert?: string }[] = [];
+  for (const post of (swept ?? []) as {
+    id: string;
+    channel_id: string;
+    body: string;
+    scheduled_for: string;
+    last_error: string | null;
+  }[]) {
+    const { data: channel } = await admin
+      .from('social_channels')
+      .select('platform, status')
+      .eq('id', post.channel_id)
+      .maybeSingle();
+
+    const detail = post.last_error ?? 'A publishing run died before recording an outcome.';
+    const alert = await alertStoppedPost({
+      platform: channel ? String(channel.platform) : 'unknown',
+      body: post.body,
+      code: 'abandoned_run',
+      detail,
+      channelStatus: channel ? String(channel.status) : 'missing',
+      scheduledFor: post.scheduled_for,
+    });
+    sweptResults.push({ id: post.id, outcome: 'needs_manual', detail, alert });
+  }
 
   const { data: claimed, error } = await admin.rpc('claim_social_posts', { batch_size: 10 });
   if (error) {
@@ -189,7 +216,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     claimed: posts.length,
-    swept: (swept ?? []).length,
+    swept: sweptResults,
     ...(sweepError ? { sweepError: sweepError.message } : {}),
     results,
   });

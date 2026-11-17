@@ -48,19 +48,28 @@ revoke all on function public.claim_social_posts(integer) from public;
 revoke all on function public.claim_social_posts(integer) from anon;
 revoke all on function public.claim_social_posts(integer) from authenticated;
 
--- Returns an abandoned row to the queue as though the claim had never been made: the attempt it spent
--- is handed back, because nothing was recorded either way, and claimed_at is cleared so the next
--- claim starts a fresh clock.
+-- An abandoned row goes to 'needs_manual', NOT back into the queue.
 --
--- This cannot know whether the provider accepted the post before the run died, and no test can. For an
--- aggregator that honours the Idempotency-Key the publisher sends (the post id) a second send is
--- harmless; the direct Facebook call carries no such key, so a post that did reach Meta may go out
--- twice. The threshold is therefore generous — a run that finished normally is never swept — and the
--- sweep is for the case where the alternative is losing the post altogether.
+-- There is no way to find out whether the provider accepted the post before the run died. The two
+-- endings look identical from here: no row update either way. Idempotency does not settle it either,
+-- because the aggregator is only one of the paths — publishPost calls the Facebook Graph API directly
+-- with the page token, and Graph has no idempotency key, so a second send is a second post on the
+-- client's public page.
 --
--- A row claimed before this migration was applied has no claimed_at. Those are genuinely stuck, so they
--- are swept too once their scheduled_for is older than the threshold: the run that claimed them has
--- certainly finished, one way or the other.
+-- A longer threshold does not make re-sending safe. Time is not evidence that the send failed: a
+-- crashed run can leave the post accepted and unrecorded within milliseconds, and the slowest, most
+-- suspicious deaths of all — a hung socket, a killed container mid-request — are precisely the ones
+-- where the provider most likely did accept it and only the response was lost. Any threshold that
+-- catches a dead run catches this case too.
+--
+-- So the sweep stops the post where a person is looking at it. That costs one click: Retry zeroes
+-- attempts and puts the row back in the queue for the next tick. Sending it again costs a duplicate
+-- on the client's account that only they can delete. The attempt stays spent, because it did happen.
+--
+-- The threshold then only has to keep the sweep away from a run that is still working: 15 minutes
+-- against a send that normally takes seconds. A row claimed before this migration was applied has no
+-- claimed_at, so scheduled_for is used as its clock instead — by then the claiming run has certainly
+-- finished, one way or the other.
 create or replace function public.sweep_stale_social_posts(stale_after interval default '15 minutes')
 returns setof public.social_posts
 language plpgsql
@@ -70,11 +79,11 @@ as $$
 begin
   return query
   update public.social_posts p
-     set status = 'scheduled',
-         attempts = greatest(p.attempts - 1, 0),
+     set status = 'needs_manual',
          claimed_at = null,
-         last_error_code = 'abandoned',
-         last_error = 'A publishing run died before recording an outcome; the sweep returned this post to the queue.'
+         next_retry_at = null,
+         last_error_code = 'abandoned_run',
+         last_error = 'The publishing run died before recording an outcome. The post may already be live on the channel.'
    where p.status = 'publishing'
      and (
        p.claimed_at < now() - stale_after
