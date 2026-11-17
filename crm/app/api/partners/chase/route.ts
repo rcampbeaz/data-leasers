@@ -20,8 +20,8 @@ export async function POST(request: Request) {
   if (given !== secret) return NextResponse.json({ error: 'unauthorised' }, { status: 401 });
 
   const supabase = createIntakeClient();
-  const today = new Date();
-  const horizon = phoenixDay(new Date(today.getTime() + CHASE_WINDOW_DAYS * 86_400_000));
+  const today = phoenixDay(Date.now());
+  const horizon = phoenixDay(Date.now() + CHASE_WINDOW_DAYS * 86_400_000);
 
   const { data: referralData, error: referralError } = await supabase
     .from('referrals')

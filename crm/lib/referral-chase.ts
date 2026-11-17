@@ -58,18 +58,15 @@ export function escalationTitle(companyName: string, days: number, deadline: str
   return `Referral closing: ${companyName} — ${phrase(days)} (${String(deadline).slice(0, 10)})`.slice(0, 195);
 }
 
-function isoDay(value: Date): string {
-  return phoenixDay(value);
-}
-
 // One plan per referral per window, and a reason for every task deliberately not created, so the
 // sweep's response says what it did rather than just how many rows it touched.
 export function planChaseTasks(
   rows: ReferralRow[],
-  opts: { today?: Date } = {},
+  opts: { today?: string } = {},
 ): { create: ChasePlan[]; skipped: ChaseSkip[] } {
-  const today = opts.today ?? new Date();
-  const dueOn = isoDay(today);
+  // An ISO day, not an instant, for the same reason as daysLeft.
+  const today = opts.today ?? phoenixDay(Date.now());
+  const dueOn = today;
   const create: ChasePlan[] = [];
   const skipped: ChaseSkip[] = [];
 

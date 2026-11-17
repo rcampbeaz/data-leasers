@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { phoenixDay } from '@/lib/time';
+import { phoenixDay } from './time';
 import { redirect } from 'next/navigation';
 import { createIntakeClient, createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';

@@ -36,11 +36,13 @@ function parseDay(iso: string): number | null {
   return Number.isFinite(time) ? time : null;
 }
 
-// Whole days, counted from midnight UTC, so a report run in the morning and one run in the evening
-// agree on how long is left.
-export function daysLeft(deadline: string, today: Date = new Date()): number | null {
+// Whole days between two ISO days, so a report run in the morning and one run in the evening agree
+// on how long is left. Both arguments are days, not instants: pass '2026-11-17', never a Date. A
+// Date at UTC midnight is already the previous day in Phoenix, and turning an instant into a day
+// here would quietly do the wrong thing for a caller who meant a date.
+export function daysLeft(deadline: string, today: string = phoenixDay(Date.now())): number | null {
   const due = parseDay(deadline);
-  const from = parseDay(phoenixDay(today));
+  const from = parseDay(today);
   if (due === null || from === null) return null;
   return Math.round((due - from) / 86_400_000);
 }
@@ -75,9 +77,9 @@ function describe(days: number | null): string {
 // a lapsed one is already a known loss rather than something to chase this week.
 export function buildPartnerReport(
   rows: ReferralInput[],
-  opts: { today?: Date } = {},
+  opts: { today?: string } = {},
 ): PartnerReport {
-  const today = opts.today ?? new Date();
+  const today = opts.today ?? phoenixDay(Date.now());
   const counts: Record<Bucket, number> = { overdue: 0, week: 0, month: 0, later: 0 };
 
   const open = rows

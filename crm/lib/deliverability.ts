@@ -6,7 +6,7 @@
 // which is why the page says where those rows come from rather than implying the numbers are
 // complete.
 
-import { calendarMonth } from '@/lib/time';
+import { calendarMonth } from './time';
 
 export type Verdict = 'ok' | 'watch' | 'stop';
 

@@ -1,5 +1,5 @@
 import { SWEEP_STATE_KEY, channelSpec, retryAdvice } from '@/lib/social';
-import { phoenix } from '@/lib/time';
+import { phoenix } from './time';
 import { createIntakeClient } from '@/lib/supabase';
 
 // One email per post that stops for good. A post whose sending run died is not one of these: it goes
