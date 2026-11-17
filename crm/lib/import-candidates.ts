@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
+import { calendarYear } from './time';
 import {
   buildSearchQuery,
   companyNumberKey,
@@ -69,7 +70,7 @@ export async function runCompaniesHouseImport(formData: FormData) {
   if (groups.length === 0) fail('Choose at least one sector to search.');
 
   const beforeYear = Number(formData.get('incorporatedBefore') ?? 0);
-  const thisYear = new Date().getUTCFullYear();
+  const thisYear = Number(calendarYear(Date.now()));
   if (!Number.isInteger(beforeYear) || beforeYear < 1900 || beforeYear > thisYear) {
     fail(`Enter an incorporation year between 1900 and ${thisYear}.`);
   }
@@ -176,9 +177,8 @@ export async function acceptCandidate(candidateId: string) {
     redirect(`${PATH}?duplicate=1`);
   }
 
-  const foundedYear = candidate.incorporated_on
-    ? new Date(candidate.incorporated_on as string).getUTCFullYear()
-    : null;
+  const founded = calendarYear(candidate.incorporated_on);
+  const foundedYear = founded ? Number(founded) : null;
 
   const { data: company, error } = await supabase
     .from('companies')

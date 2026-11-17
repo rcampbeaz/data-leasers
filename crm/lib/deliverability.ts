@@ -6,7 +6,7 @@
 // which is why the page says where those rows come from rather than implying the numbers are
 // complete.
 
-import { calendarMonth } from './time';
+import { calendarMonth, phoenixMonths } from './time';
 
 export type Verdict = 'ok' | 'watch' | 'stop';
 
@@ -40,20 +40,18 @@ export function monthLabel(key: string): string {
   return calendarMonth(key);
 }
 
-// Oldest first, so a chart reads left to right.
+// Oldest first, so a chart reads left to right, and ending on the console's month.
 export function recentMonths(count: number, today: Date = new Date()): string[] {
-  const keys: string[] = [];
-  for (let i = count - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1));
-    keys.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`);
-  }
-  return keys;
+  return phoenixMonths(count, today);
 }
 
+// Counted in months, not through a Date: the argument is already a calendar month, and a Date would
+// need a zone to say which month one step from it is.
 export function shiftMonth(key: string, delta: number): string {
   const [year, month] = key.split('-').map(Number);
-  const d = new Date(Date.UTC(year, month - 1 + delta, 1));
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+  if (!year || !month) return String(key);
+  const months = year * 12 + (month - 1) + delta;
+  return `${Math.floor(months / 12)}-${String((months % 12) + 1).padStart(2, '0')}`;
 }
 
 export function isMonthKey(value: unknown): value is string {

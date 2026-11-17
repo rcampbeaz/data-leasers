@@ -73,6 +73,38 @@ export function phoenixDay(when: Time): string {
   return phoenixKey(when).date;
 }
 
+// A month key: "2026-11", for bucketing a series or naming an object. A bucket is the console's month,
+// not UTC's, or the last seven hours of a month are counted in the next one.
+export function phoenixMonth(when: Time): string {
+  return phoenixKey(when).date.slice(0, 7);
+}
+
+// The last `count` months, oldest first, ending with the console's current month.
+export function phoenixMonths(count: number, when: Time = Date.now()): string[] {
+  const current = phoenixMonth(when);
+  if (!current || count < 1) return [];
+  const [year, month] = current.split('-').map(Number);
+  const keys: string[] = [];
+  for (let back = count - 1; back >= 0; back -= 1) {
+    const at = new Date(Date.UTC(year, month - 1 - back, 1));
+    keys.push(`${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, '0')}`);
+  }
+  return keys;
+}
+
+// The year of an instant on the console's clock — for "won this year", which is the buyer's year.
+export function phoenixYear(when: Time): string {
+  return phoenixKey(when).date.slice(0, 4);
+}
+
+// The year a stored calendar date already belongs to. Read off the value rather than through a zone:
+// 1 January has to be its own year, which a Phoenix conversion of a UTC midnight would move back.
+export function calendarYear(day: unknown): string {
+  if (day === null || day === undefined) return '';
+  const trimmed = typeof day === 'string' ? day.slice(0, 10) : calendarDate(day as Date).slice(0, 10);
+  return /^\d{4}-/.test(trimmed) ? trimmed.slice(0, 4) : '';
+}
+
 export function phoenixClock(when: Time): string {
   return phoenixKey(when).clock;
 }

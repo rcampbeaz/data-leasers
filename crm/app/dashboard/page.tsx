@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { calendarDate, calendarMonth, phoenix, phoenixDay } from '@/lib/time';
+import { calendarDate, calendarMonth, phoenix, phoenixDay, phoenixMonth, phoenixMonths, phoenixYear } from '@/lib/time';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff, todayIso } from '@/lib/data';
 import { STAGES } from '@/lib/pipeline';
@@ -7,16 +7,9 @@ import { BarChart, DonutChart, LineChart } from '@/components/charts';
 
 const DAY = 24 * 60 * 60 * 1000;
 
-// Last 12 calendar months, oldest first, as "Mon YY" labels.
+// Last 12 calendar months on the console's clock, oldest first, as "Mon YY" labels.
 function lastMonths(count: number) {
-  const now = new Date();
-  const months: { key: string; label: string }[] = [];
-  for (let i = count - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-    months.push({ key, label: calendarMonth(key, '2-digit') });
-  }
-  return months;
+  return phoenixMonths(count).map((key) => ({ key, label: calendarMonth(key, '2-digit') }));
 }
 
 export default async function DashboardPage() {
@@ -91,8 +84,9 @@ export default async function DashboardPage() {
   // KPIs
   const newLeads30 = leads.filter((l) => new Date(l.created_at).getTime() >= thirtyDaysAgo).length;
   const openCompanies = companies.filter((c) => c.stage !== 'Closed').length;
+  const thisYear = phoenixYear(Date.now());
   const wonThisYear = companies.filter(
-    (c) => c.close_reason === 'Won' && c.closed_at && new Date(c.closed_at).getUTCFullYear() === new Date().getUTCFullYear(),
+    (c) => c.close_reason === 'Won' && c.closed_at && phoenixYear(c.closed_at) === thisYear,
   ).length;
   const overdueTasks = tasks.filter((t) => t.due_on < today).length;
   const dueThisWeek = tasks.filter((t) => t.due_on >= today && t.due_on <= weekAhead).length;
@@ -102,8 +96,7 @@ export default async function DashboardPage() {
   const months = lastMonths(12);
   const leadCounts = new Map(months.map((m) => [m.key, 0]));
   for (const l of leads) {
-    const d = new Date(l.created_at);
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    const key = phoenixMonth(l.created_at);
     if (leadCounts.has(key)) leadCounts.set(key, (leadCounts.get(key) ?? 0) + 1);
   }
   const leadSeries = months.map((m) => ({ label: m.label, value: leadCounts.get(m.key) ?? 0 }));

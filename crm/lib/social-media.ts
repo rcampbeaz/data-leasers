@@ -4,6 +4,8 @@
 // that expires before the post goes out. Keeping validation here means the same rules are applied
 // whether an image arrives from the composer or gets attached to an agent draft.
 
+import { phoenixMonth, phoenixYear } from './time';
+
 export const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 
 // Raster only. An SVG is a document that can carry script, and no social network accepts one anyway.
@@ -52,8 +54,8 @@ export function mediaObjectPath(
   now: Date = new Date(),
   random: () => number = Math.random,
 ): string {
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const year = phoenixYear(now);
+  const month = phoenixMonth(now).slice(5);
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\..+$/, '');
   const noise = Math.floor(random() * 1e6).toString(36).padStart(4, '0');
   return `posts/${year}/${month}/${stamp}-${noise}.${ext}`;

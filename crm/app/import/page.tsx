@@ -3,6 +3,7 @@ import { importLeads } from '@/lib/admin-actions';
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
 import { SIC_GROUPS } from '@/lib/companies-house';
+import { calendarYear, phoenixYear } from '@/lib/time';
 import {
   acceptCandidate,
   rejectCandidate,
@@ -146,8 +147,8 @@ export default async function ImportPage({
                   type="number"
                   name="incorporatedBefore"
                   min={1900}
-                  max={new Date().getUTCFullYear()}
-                  defaultValue={new Date().getUTCFullYear() - 10}
+                  max={Number(phoenixYear(Date.now()))}
+                  defaultValue={Number(phoenixYear(Date.now())) - 10}
                   required
                 />
               </label>
@@ -233,7 +234,7 @@ export default async function ImportPage({
                             </div>
                           ) : null}
                         </td>
-                        <td>{c.incorporated_on ? new Date(c.incorporated_on).getUTCFullYear() : '-'}</td>
+                        <td>{c.incorporated_on ? calendarYear(c.incorporated_on) : '-'}</td>
                         <td>{c.industry ?? (c.sic_codes?.join(', ') || '-')}</td>
                         <td>{c.locality ?? c.region ?? '-'}</td>
                         <td>

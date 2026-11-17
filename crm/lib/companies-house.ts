@@ -5,6 +5,8 @@
 // candidate and compares it with keys built the same way from the companies already in the
 // CRM, so there is one implementation rather than two that can drift.
 
+import { calendarYear } from './time';
+
 export type ChAddress = {
   address_line_1?: string;
   address_line_2?: string;
@@ -156,13 +158,13 @@ export function scoreCompany(item: ChCompany, opts: { today?: Date } = {}): Scor
     reasons.push('No incorporation date');
   } else if (years >= 15) {
     score += 25;
-    reasons.push(`Incorporated ${created!.getUTCFullYear()} (${years} years)`);
+    reasons.push(`Incorporated ${calendarYear(item.date_of_creation)} (${years} years)`);
   } else if (years >= 10) {
     score += 20;
-    reasons.push(`Incorporated ${created!.getUTCFullYear()} (${years} years)`);
+    reasons.push(`Incorporated ${calendarYear(item.date_of_creation)} (${years} years)`);
   } else if (years >= 5) {
     score += 12;
-    reasons.push(`Incorporated ${created!.getUTCFullYear()} (${years} years)`);
+    reasons.push(`Incorporated ${calendarYear(item.date_of_creation)} (${years} years)`);
   } else {
     score += 5;
     reasons.push(`Recent incorporation (${years} years)`);

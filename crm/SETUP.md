@@ -125,15 +125,20 @@ in the SQL Editor as before.
 
 ### Checking the console's clock
 
-`npm run check:dates` reads `lib/` and `app/` and refuses two things: a day built from UTC — a
-`toISOString().slice(0, 10)`, a `split('T')[0]`, a `getUTCDate()` — and a stored date rendered without
-`calendarDate`. The column names come from `supabase/migrations/`, so a date column added there is
-covered without touching the script. No credentials, no network, no build.
+`npm run check:dates` reads `lib/` and `app/` and refuses three things: a day built from UTC — a
+`toISOString().slice(0, 10)`, a `split('T')[0]`, a `getUTCDate()`; a month or a year built from UTC
+with `getUTCMonth` or `getUTCFullYear`; and a stored date rendered without `calendarDate`. The column
+names come from `supabase/migrations/`, so a date column added there is covered without touching the
+script. No credentials, no network, no build.
 
 It exits non-zero and prints the file, line and rule for each place, so a route that formats its own
-date cannot quietly undo 0021 and 0022. A month or a year taken from UTC is counted at the end of the
-run rather than failed: those affect keys, chart labels and a company's age, not a stored day. An
-`<input type="date">` is exempt, because that control's value is `YYYY-MM-DD` by definition.
+date cannot quietly undo 0021 and 0022. A month or a year taken from UTC fails too, because the
+boundary is one level up as well: a month key built from UTC names next month during
+the last seven hours of a month, which is enough to put a row in the wrong chart bucket, date an object
+in the wrong folder or age a company by a year. `phoenixMonth` and `phoenixMonths` give a bucket on the
+console's clock, `phoenixYear` the year an instant falls in, and `calendarYear` the year a stored date
+already belongs to. An `<input type="date">` is exempt, because that control's value is `YYYY-MM-DD` by
+definition.
 
 ### Before a deploy
 

@@ -10,14 +10,17 @@
 //      Phoenix it is tomorrow. lib/time.ts is where an instant may become a day, and lib/deals.ts does
 //      deliberate UTC arithmetic on ISO day strings (adding months, adding days); every other day comes
 //      from phoenixDay.
-//   2. A date-only column rendered raw. A stored day is a calendar date with no zone, so it is shown
+//   2. A month or a year taken from UTC — getUTCFullYear, getUTCMonth. A month key built that way names
+//      next month during the last seven hours of a month, and a year is off on 1 January.
+//   3. A date-only column rendered raw. A stored day is a calendar date with no zone, so it is shown
 //      with calendarDate and never as an ISO string. The column names are read from the migrations, so
 //      a date column added there is covered without touching this file. An <input type="date"> is
 //      exempt, because that control's value is YYYY-MM-DD by definition.
 //
-// What it does not judge: a month or a year taken from UTC. Those affect keys, chart labels and a
-// company's age rather than a stored day, and they are counted at the end of the run rather than
-// failed — a month key is only a month out in the last seven hours of a month, and no day is written.
+// A month or a year taken from UTC is refused for the same reason one level up: a month key built from
+// UTC names the next month during the last seven hours of a month, which is enough to put a row in the
+// wrong bucket on a chart or to age a company by a year. phoenixMonth and phoenixYear answer those, and
+// a stored calendar date's year comes from calendarYear, which reads the value rather than converting it.
 //
 // This is a scan, not an analysis: it matches the shapes the code actually uses, so a day assembled
 // across several statements can slip past it. A timestamptz is an instant and belongs in UTC; this
@@ -40,7 +43,6 @@ const UTC_DAY_ALLOWED = {
 const HELPERS = /calendarDate|calendarMonth|phoenix|daysUntil|daysLeft/;
 
 const findings = [];
-const calendarParts = new Map();
 const report = (file, line, rule, source) =>
   findings.push({ file, line, rule, source: source.trim().slice(0, 120) });
 
@@ -91,7 +93,7 @@ for (const dir of ['lib', 'app']) {
         report(file, at, 'a day field read from UTC', line);
       }
       if (UTC_CALENDAR.test(line) && !allowed) {
-        calendarParts.set(file, (calendarParts.get(file) ?? 0) + 1);
+        report(file, at, 'a month or year taken from UTC', line);
       }
       if (LOCALE.test(line) && file !== 'lib/time.ts') {
         report(file, at, 'locale formatting outside the helper', line);
@@ -113,14 +115,10 @@ for (const dir of ['lib', 'app']) {
   }
 }
 
-const parts = [...calendarParts.values()].reduce((a, b) => a + b, 0);
-const note =
-  parts === 0
-    ? ''
-    : `\nNot judged: ${parts} place${parts === 1 ? '' : 's'} take a month or a year from UTC (${[...calendarParts.keys()].join(', ')}). Those affect keys, labels or an age, not a stored day.\n`;
-
 if (findings.length === 0) {
-  console.log(`No UTC day and no raw date render in lib/ or app/ (${dateColumns.size} date columns checked).${note}`);
+  console.log(
+    `No UTC day, no UTC month or year, and no raw date render in lib/ or app/ (${dateColumns.size} date columns checked).`,
+  );
   process.exit(0);
 }
 
@@ -129,7 +127,7 @@ for (const finding of findings) {
   console.error(`  ${finding.file}:${finding.line}  ${finding.rule}`);
   console.error(`      ${finding.source}`);
 }
-console.error('\nA day-only value comes from phoenixDay in lib/time.ts, and a stored date is shown');
-console.error('with calendarDate. Both live in lib/time.ts; the database stores instants in UTC.');
-console.error(note);
+console.error('\nA day comes from phoenixDay, a month from phoenixMonth, a year of an instant from');
+console.error('phoenixYear, and a stored date is shown with calendarDate: all in lib/time.ts. The database');
+console.error('stores instants in UTC, so every day, month and year the console shows comes from there.');
 process.exit(1);
