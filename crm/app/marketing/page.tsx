@@ -689,7 +689,11 @@ export default async function MarketingPage({
                     <td className="wrap-cell">{p.body.slice(0, 140)}{p.body.length > 140 ? '…' : ''}</td>
                     <td className="wrap-cell">
                       {p.permalink ? <a href={p.permalink} target="_blank" rel="noreferrer">Open post</a> : null}
-                      {p.last_error ? <span className="muted small"> {p.last_error}</span> : null}
+                      {/* The advice names the channel state and what to do about it, so the short
+                          error says the same thing a second time. One line per row. */}
+                      {p.last_error && !retryBlocked ? (
+                        <span className="muted small"> {p.last_error}</span>
+                      ) : null}
                       {/* Neither Retry nor Cancel applies to a send that may be in flight, so the row
                           says what is happening and what happens next instead of offering a button. */}
                       {p.status === 'publishing' ? (
