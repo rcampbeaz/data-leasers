@@ -58,6 +58,13 @@ export function channelSpec(key: string): ChannelSpec | undefined {
   return CHANNELS.find((c) => c.key === key);
 }
 
+// How long a publishing claim may stand before the sweep treats it as a dead run.
+//
+// The publisher passes this value to sweep_stale_social_posts and the queue's note reads it, so the note
+// cannot promise a threshold the sweep does not use. The migration has a default of its own for manual
+// calls, but the app never relies on it. Changing it here changes both halves.
+export const SWEEP_AFTER_MINUTES = 15;
+
 // What has to happen before a stopped post can be sent again, from its channel's status.
 //
 // This is the single answer to that question. retryPost refuses on it, and both stop messages write

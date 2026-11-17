@@ -1,6 +1,13 @@
 import { createStaffClient } from '@/lib/supabase';
 import { currentStaff } from '@/lib/data';
-import { CHANNELS, channelSpec, providerConfigured, retryAdvice, retryRoute } from '@/lib/social';
+import {
+  CHANNELS,
+  SWEEP_AFTER_MINUTES,
+  channelSpec,
+  providerConfigured,
+  retryAdvice,
+  retryRoute,
+} from '@/lib/social';
 import {
   addChannel,
   attachImage,
@@ -85,13 +92,11 @@ function channelLabel(channel: unknown): string {
 // Only the age of the hold separates that from a run that died, so the age decides the wording.
 // A couple of minutes is well past any normal send and still short enough that nobody sits on a dead
 // one wondering.
+//
+// Such a row has no button of its own — Retry and Cancel both refuse a send that may be in flight — so
+// this note is the only thing telling the reader what happens next; the threshold it quotes is the
+// sweep's own, from SWEEP_AFTER_MINUTES, rather than a second copy of the number.
 const STUCK_AFTER_MINUTES = 2;
-
-// The sweep's default threshold in 0019_social_claim_recovery.sql. This row has no button of its own —
-// Retry and Cancel both refuse a send that may be in flight — so the note is the only thing telling
-// the reader what happens next, and it is worth naming the step that is actually coming rather than
-// leaving it conditional. Keep this equal to the migration's default.
-const SWEEP_AFTER_MINUTES = 15;
 
 function publishHold(claimedAt: unknown): string {
   const at = typeof claimedAt === 'string' ? Date.parse(claimedAt) : Number.NaN;

@@ -67,18 +67,22 @@ revoke all on function public.claim_social_posts(integer) from authenticated;
 -- on the client's account that only they can delete. The attempt stays spent, because it did happen.
 --
 -- The threshold then only has to keep the sweep away from a run that is still working: 15 minutes
--- against a send that normally takes seconds. A row claimed before this migration was applied has no
--- claimed_at, so scheduled_for is used as its clock instead — by then the claiming run has certainly
--- finished, one way or the other.
+-- against a send that normally takes seconds. The publisher passes it explicitly, from
+-- SWEEP_AFTER_MINUTES in lib/social.ts, which is also what the queue's note reads — the default here is
+-- for calling the function by hand, and the app does not depend on it.
+--
+-- A row claimed before this migration was applied has no claimed_at, so scheduled_for is used as its
+-- clock instead — by then the claiming run has certainly finished, one way or the other.
 --
 -- It is capped at 25 rows per call. One outage can abandon a hundred posts at once, and the publisher
 -- alerts on each sweep: a cap means one bounded message and a bounded amount of work before new posts
 -- are claimed, with the remainder picked up on the next tick a few minutes later.
 
 drop function if exists public.sweep_stale_social_posts(interval);
+drop function if exists public.sweep_stale_social_posts(interval, integer);
 
 create or replace function public.sweep_stale_social_posts(
-  stale_after interval default '15 minutes',
+  stale_after_minutes integer default 15,
   max_rows integer default 25
 )
 returns setof public.social_posts
@@ -99,8 +103,11 @@ begin
        from public.social_posts
       where status = 'publishing'
         and (
-          claimed_at < now() - stale_after
-          or (claimed_at is null and scheduled_for < now() - stale_after)
+          claimed_at < now() - make_interval(mins => greatest(stale_after_minutes, 1))
+          or (
+            claimed_at is null
+            and scheduled_for < now() - make_interval(mins => greatest(stale_after_minutes, 1))
+          )
         )
       order by coalesce(claimed_at, scheduled_for)
       limit greatest(max_rows, 1)
@@ -110,6 +117,6 @@ begin
 end;
 $$;
 
-revoke all on function public.sweep_stale_social_posts(interval, integer) from public;
-revoke all on function public.sweep_stale_social_posts(interval, integer) from anon;
-revoke all on function public.sweep_stale_social_posts(interval, integer) from authenticated;
+revoke all on function public.sweep_stale_social_posts(integer, integer) from public;
+revoke all on function public.sweep_stale_social_posts(integer, integer) from anon;
+revoke all on function public.sweep_stale_social_posts(integer, integer) from authenticated;

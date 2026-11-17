@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createIntakeClient } from '@/lib/supabase';
-import { publishPost, retryDelayMinutes, type Channel } from '@/lib/social';
+import { SWEEP_AFTER_MINUTES, publishPost, retryDelayMinutes, type Channel } from '@/lib/social';
 import { alertAbandonedPosts, alertStoppedPost } from '@/lib/social-alerts';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +36,10 @@ export async function POST(request: Request) {
   // those rows in needs_manual; this announces them, because the post may be live on the channel and
   // only a person can check. A sweep that fails is reported but does not stop publishing: before 0019
   // is applied the rest of the queue should still go out.
-  const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts');
+  const { data: swept, error: sweepError } = await admin.rpc('sweep_stale_social_posts', {
+    // The same number the queue's note quotes, so the two cannot disagree.
+    stale_after_minutes: SWEEP_AFTER_MINUTES,
+  });
 
   const sweptResults: { id: string; outcome: string; detail?: string; alert?: string }[] = [];
   const sweptPosts = (swept ?? []) as {
