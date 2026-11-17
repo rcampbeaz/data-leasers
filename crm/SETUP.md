@@ -105,6 +105,19 @@ project refuses bucket creation from SQL, create it by hand: **Storage > New buc
 exactly `social-media`, and mark it public. A private bucket would store the file and then fail at the
 provider, because the provider fetches the image itself.
 
+### Checking the series still applies
+
+`npm run check:migrations` applies every file in `supabase/migrations/` in order to a throwaway
+in-memory Postgres (PGlite), after creating the objects Supabase provides that the files assume:
+`auth.users`, `auth.uid()`, `storage.buckets` and the three roles. It prints each file as it applies,
+stops at the first one that errors, and exits non-zero — so a reordered, renamed or edited file is
+caught here rather than in the SQL Editor. Run `npm install` once first; it needs no project, no
+network and no credentials.
+
+It proves the series builds on an empty database, not that it behaves: policies are created but never
+evaluated, `auth.uid()` is a stub, and nothing calls storage. Apply each new file to the real project
+in the SQL Editor as before.
+
 ## Deals, buyers and referrals (0007)
 - **Buyers** are added on the Buyers page. A company cannot move to "Introduced to buyer" until an introduction to one is recorded.
 - **Offers and agreements** are recorded on the company page. An agreement stores the licence end, the exclusivity end, and a deletion date 120 days after delivery.
