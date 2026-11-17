@@ -58,6 +58,39 @@ export function channelSpec(key: string): ChannelSpec | undefined {
   return CHANNELS.find((c) => c.key === key);
 }
 
+// What has to happen before a stopped post can be sent again, from its channel's status.
+//
+// This is the single answer to that question. retryPost refuses on it, and both stop messages write
+// their advice from it, so an email cannot offer a button the action will not honour. It lives here,
+// beside the channel table, because four places have now disagreed about it at different times.
+export type RetryRoute = 'retry' | 'reconnect' | 'mark_active';
+
+export function retryRoute(channelStatus: string | null | undefined): RetryRoute {
+  // A channel row that has gone is the same dead end as one that was never connected: the post still
+  // points at an id that cannot send, so nothing can be retried out of it.
+  if (!channelStatus || channelStatus === 'missing') return 'reconnect';
+  return channelStatus === 'active' ? 'retry' : 'mark_active';
+}
+
+// The sentence that goes with the answer above, in the voice the reader gets either way.
+// checkFirst is the one thing that is not about the channel: a post whose sending run died may
+// already be live, so looking at the account comes before any button.
+export function retryAdvice(
+  channelStatus: string | null | undefined,
+  opts: { checkFirst?: boolean } = {},
+): string {
+  switch (retryRoute(channelStatus)) {
+    case 'reconnect':
+      return 'The account this post was queued for is no longer connected, and the post still points at the channel that has gone, so Retry cannot help. Connect the account again on the Channels tab, then cancel this post and schedule the content to the new channel.';
+    case 'mark_active':
+      return `Retry refuses until the channel is active, and this one is ${channelStatus}. Reconnect it with the provider, press Mark active on the Channels tab, then Retry the post.`;
+    default:
+      return opts.checkFirst
+        ? 'The run died before it could record what happened, so open the account and look first: if the post is there, cancel it in the console; if it is not, press Retry and it goes back in the queue.'
+        : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.';
+  }
+}
+
 export type Lint = { level: 'block' | 'warn'; message: string };
 
 // The claims the site deliberately does not make. These are warnings, not blocks:

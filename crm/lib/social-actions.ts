@@ -11,6 +11,8 @@ import {
   channelSpec,
   lintPost,
   phoenixInputToUtc,
+  retryAdvice,
+  retryRoute,
   type Channel,
 } from '@/lib/social';
 
@@ -502,16 +504,15 @@ export async function retryPost(postId: string) {
 
   // The commonest reason a post is sitting here is a dead token, so check the channel first.
   // Retrying into a channel that still needs reconnecting only spends another attempt to reach
-  // the same ending.
+  // the same ending. The question and the explanation both come from lib/social, which is also where
+  // the stop messages get theirs.
   const { data: channel } = await supabase
     .from('social_channels')
     .select('status')
     .eq('id', post.channel_id)
     .maybeSingle();
-  if (!channel) fail('That channel no longer exists, so this post cannot be retried.');
-  if (channel.status !== 'active') {
-    fail('That channel needs reconnecting first. Retry once it is active again.');
-  }
+  const status = channel ? String(channel.status) : null;
+  if (retryRoute(status) !== 'retry') fail(retryAdvice(status));
 
   const { error } = await supabase
     .from('social_posts')

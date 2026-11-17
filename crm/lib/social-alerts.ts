@@ -1,4 +1,4 @@
-import { channelSpec } from '@/lib/social';
+import { channelSpec, retryAdvice } from '@/lib/social';
 import { createIntakeClient } from '@/lib/supabase';
 
 // One email per post that stops for good. A post whose sending run died is not one of these: it goes
@@ -94,8 +94,8 @@ async function sendMail(subject: string, text: string): Promise<AlertOutcome> {
 
 export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome> {
   const name = label(post.platform);
-  // Retry refuses while the channel is not active, so the advice depends on why it stopped rather
-  // than offering a button that will only say no.
+  // Describing the channel, not advising on it: the advice comes from retryAdvice, so it cannot
+  // offer a step that Retry refuses.
   const missing = post.channelStatus === 'missing';
   const inactive = post.channelStatus !== 'active';
 
@@ -114,11 +114,7 @@ export async function alertStoppedPost(post: StoppedPost): Promise<AlertOutcome>
     '',
     `Post: ${post.body.slice(0, 400)}${post.body.length > 400 ? '…' : ''}`,
     '',
-    missing
-      ? 'The account this post was queued for is no longer connected, and the post still points at the channel that has gone, so Retry cannot help. Connect the account again on the Channels tab, then cancel this post and schedule the content to the new channel.'
-      : inactive
-        ? 'Reconnect the channel with the provider, press Mark active on the Channels tab, then Retry the post.'
-        : 'Press Retry on the post once the cause has been fixed. Nothing else will send it.',
+    retryAdvice(post.channelStatus),
     '',
     `Open the Marketing console: ${consoleUrl()}`,
   ].join('\n');
@@ -135,17 +131,12 @@ export async function alertAbandonedPosts(posts: AbandonedPost[]): Promise<Alert
   const entries = posts.map((post, index) => {
     const name = label(post.platform);
     const body = post.body.length > 300 ? `${post.body.slice(0, 300)}…` : post.body;
-    // Retry refuses while the channel is not active, so the step for each post depends on its own
-    // channel: one digest can hold a post on a revoked token and a post whose channel is fine, and
-    // telling both to press Retry sends the first into a button that only says no. Same three cases
-    // as the single-post advice, and the same checks retryPost makes.
+    // One digest can hold a post on a revoked token and a post whose channel is fine, so the step is
+    // per entry — and it comes from the same decision retryPost makes, rather than a second copy of
+    // it that can drift.
     const missing = post.channelStatus === 'missing';
     const inactive = post.channelStatus !== 'active';
-    const nextStep = missing
-      ? 'Its channel is no longer connected, so Retry cannot help: connect the account again on the Channels tab, then cancel this post and schedule the content to the new channel.'
-      : inactive
-        ? `Its channel is ${post.channelStatus}, and Retry refuses until it is active: reconnect it with the provider, press Mark active on the Channels tab, then Retry — after checking the account.`
-        : 'Open the account and look: if the post is there, cancel it in the console; if it is not, press Retry and it goes back in the queue.';
+    const nextStep = retryAdvice(post.channelStatus, { checkFirst: true });
     return [
       `${index + 1}. ${name} — ${
         missing
