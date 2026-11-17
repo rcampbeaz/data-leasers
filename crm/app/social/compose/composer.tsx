@@ -11,7 +11,7 @@ import {
   type Issue,
   type Platform,
 } from '@/lib/social';
-import { createPost } from '@/lib/social-actions';
+import { createPost, updatePost } from '@/lib/social-actions';
 
 export type ChannelOption = {
   id: string;
@@ -73,15 +73,44 @@ function Chrome({ platform }: { platform: Platform }) {
   );
 }
 
-export default function Composer({ channels }: { channels: ChannelOption[] }) {
-  const [body, setBody] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
-  const [mediaUrl, setMediaUrl] = useState('');
-  const [mediaAlt, setMediaAlt] = useState('');
-  const [when, setWhen] = useState('');
-  const [selected, setSelected] = useState<string[]>([]);
-  const [customised, setCustomised] = useState<Record<string, boolean>>({});
-  const [overrides, setOverrides] = useState<Record<string, string>>({});
+// What an existing post hands back to the composer. The same component serves a new
+// post and an edit, so the checks cannot differ between the two.
+export type ComposerPost = {
+  id: string;
+  body: string;
+  linkUrl: string | null;
+  mediaUrl: string | null;
+  mediaAlt: string | null;
+  // Phoenix local time, already in the shape a datetime-local input wants.
+  scheduledFor: string | null;
+  channels: { channelId: string; body: string | null }[];
+};
+
+export default function Composer({
+  channels,
+  post,
+}: {
+  channels: ChannelOption[];
+  post?: ComposerPost;
+}) {
+  const [body, setBody] = useState(post?.body ?? '');
+  const [linkUrl, setLinkUrl] = useState(post?.linkUrl ?? '');
+  const [mediaUrl, setMediaUrl] = useState(post?.mediaUrl ?? '');
+  const [mediaAlt, setMediaAlt] = useState(post?.mediaAlt ?? '');
+  const [when, setWhen] = useState(post?.scheduledFor ?? '');
+  const [selected, setSelected] = useState<string[]>(
+    post?.channels.map((channel) => channel.channelId) ?? [],
+  );
+  const [customised, setCustomised] = useState<Record<string, boolean>>(
+    Object.fromEntries(
+      (post?.channels ?? []).map((channel) => [channel.channelId, channel.body !== null]),
+    ),
+  );
+  const [overrides, setOverrides] = useState<Record<string, string>>(
+    Object.fromEntries(
+      (post?.channels ?? []).map((channel) => [channel.channelId, channel.body ?? '']),
+    ),
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -136,7 +165,7 @@ export default function Composer({ channels }: { channels: ChannelOption[] }) {
     if (blocked || pending) return;
     setError(null);
     startTransition(async () => {
-      const result = await createPost({
+      const draft = {
         body,
         linkUrl: linkUrl.trim() || null,
         mediaUrl: mediaUrl.trim() || null,
@@ -146,7 +175,8 @@ export default function Composer({ channels }: { channels: ChannelOption[] }) {
           channelId: id,
           body: customised[id] ? (overrides[id] ?? '') : null,
         })),
-      });
+      };
+      const result = post ? await updatePost(post.id, draft) : await createPost(draft);
       if (result?.error) setError(result.error);
     });
   }
@@ -303,7 +333,7 @@ export default function Composer({ channels }: { channels: ChannelOption[] }) {
           ) : null}
           {error ? <p className="notice blocked">{error}</p> : null}
           <button className="btn" type="button" onClick={submit} disabled={blocked || pending}>
-            {pending ? 'Saving…' : when ? 'Schedule post' : 'Save draft'}
+            {pending ? 'Saving…' : post ? 'Save changes' : when ? 'Schedule post' : 'Save draft'}
           </button>
           <p className="muted small" style={{ marginTop: 10 }}>
             Saving records the post and its channels. Nothing is sent to a platform yet: publishing

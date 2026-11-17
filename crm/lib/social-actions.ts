@@ -53,15 +53,23 @@ async function audit(
 
 export type CreatePostResult = { error: string } | void;
 
-// Called from the composer in the browser, so a validation failure comes back as a
-// message beside the form instead of a redirect that would throw the draft away.
-export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
-  const supabase = await createStaffClient();
-  const me = await currentStaff(supabase);
-  if (!me || !['admin', 'introducer'].includes(me.role)) {
-    return { error: 'Your role does not allow posting.' };
-  }
+type CheckedDraft = {
+  body: string;
+  linkUrl: string | null;
+  mediaUrl: string | null;
+  mediaAlt: string | null;
+  scheduledFor: string | null;
+  // The override only, or null to mean "use the post body".
+  channels: { channelId: string; body: string | null }[];
+};
 
+// Everything a post must satisfy before it is stored or scheduled, in one place.
+// createPost and updatePost both call this, which is what stops the two paths from
+// drifting apart the way the queue and the composer did.
+async function checkDraft(
+  supabase: Awaited<ReturnType<typeof createStaffClient>>,
+  draft: PostDraft,
+): Promise<{ error: string } | CheckedDraft> {
   const body = draft.body.trim();
   if (!body) return { error: 'Write the post before saving it.' };
   if (charCount(body) > 10_000) return { error: 'That is too long to store as one post.' };
@@ -101,22 +109,52 @@ export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
   });
   if (errors.length > 0) return { error: errors[0] };
 
-  let scheduledFor: string | null = null;
-  if (draft.scheduledFor) {
-    scheduledFor = phoenixToUtc(draft.scheduledFor);
-    if (!scheduledFor) return { error: 'That is not a date and time I can read.' };
-    if (Date.parse(scheduledFor) < Date.now() - 60_000) {
-      return { error: 'That time has already passed. Choose a later time, or save it as a draft.' };
-    }
+  const scheduledFor = draft.scheduledFor ? phoenixToUtc(draft.scheduledFor) : null;
+  if (draft.scheduledFor && !scheduledFor) {
+    return { error: 'That is not a date and time I can read.' };
   }
+  if (scheduledFor && Date.parse(scheduledFor) < Date.now() - 60_000) {
+    return { error: 'That time has already passed. Choose a later time, or save it as a draft.' };
+  }
+
+  // An override is only stored when it actually differs, so a later edit to the
+  // master copy still reaches every channel that was left alone.
+  return {
+    body,
+    linkUrl: draft.linkUrl?.trim() || null,
+    mediaUrl: draft.mediaUrl?.trim() || null,
+    mediaAlt: draft.mediaAlt?.trim() || null,
+    scheduledFor,
+    channels: wanted.map((channel) => {
+      const override = channel.body?.trim();
+      return {
+        channelId: channel.channelId,
+        body: override && override !== body ? override : null,
+      };
+    }),
+  };
+}
+
+// Called from the composer in the browser, so a validation failure comes back as a
+// message beside the form instead of a redirect that would throw the draft away.
+export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || !['admin', 'introducer'].includes(me.role)) {
+    return { error: 'Your role does not allow posting.' };
+  }
+
+  const checked = await checkDraft(supabase, draft);
+  if ('error' in checked) return checked;
+  const { body, linkUrl, mediaUrl, mediaAlt, scheduledFor, channels } = checked;
 
   const { data: post, error: insertError } = await supabase
     .from('social_posts')
     .insert({
       body,
-      link_url: draft.linkUrl?.trim() || null,
-      media_url: draft.mediaUrl?.trim() || null,
-      media_alt: draft.mediaAlt?.trim() || null,
+      link_url: linkUrl,
+      media_url: mediaUrl,
+      media_alt: mediaAlt,
       state: scheduledFor ? 'scheduled' : 'draft',
       scheduled_for: scheduledFor,
       created_by: me.user_id,
@@ -125,17 +163,12 @@ export async function createPost(draft: PostDraft): Promise<CreatePostResult> {
     .single();
   if (insertError || !post) return { error: 'Could not save the post.' };
 
-  // An override is only stored when it actually differs, so a later edit to the
-  // master copy still reaches every channel that was left alone.
-  const rows = wanted.map((channel) => {
-    const override = channel.body?.trim();
-    return {
-      post_id: post.id,
-      channel_id: channel.channelId,
-      body: override && override !== body ? override : null,
-      status: scheduledFor ? 'scheduled' : 'pending',
-    };
-  });
+  const rows = channels.map((channel) => ({
+    post_id: post.id,
+    channel_id: channel.channelId,
+    body: channel.body,
+    status: scheduledFor ? 'scheduled' : 'pending',
+  }));
 
   const { error: childError } = await supabase.from('social_post_channels').insert(rows);
   if (childError) {
@@ -304,4 +337,83 @@ export async function addChannel(formData: FormData) {
   await audit(me.user_id, 'social_channel', data.id, 'added', { platform, handle });
   refresh();
   redirect(`${path}?saved=channel`);
+}
+
+// Editing a post that has not gone out yet. It runs the same checks as creating one,
+// and replaces the channel set rather than merging it, so unticking a channel really
+// does take the post off that channel.
+export async function updatePost(postId: string, draft: PostDraft): Promise<CreatePostResult> {
+  const supabase = await createStaffClient();
+  const me = await currentStaff(supabase);
+  if (!me || !['admin', 'introducer'].includes(me.role)) {
+    return { error: 'Your role does not allow editing a post.' };
+  }
+
+  const { data: existing, error: readError } = await supabase
+    .from('social_posts')
+    .select('id, state')
+    .eq('id', postId)
+    .maybeSingle();
+  if (readError) {
+    return { error: 'Could not read the post. Check that 0009_social.sql has been run.' };
+  }
+  if (!existing) return { error: 'That post no longer exists.' };
+  const state = (existing as { state: string }).state;
+  if (state !== 'draft' && state !== 'scheduled') {
+    return { error: `A ${state} post cannot be edited. Write a new one instead.` };
+  }
+
+  const checked = await checkDraft(supabase, draft);
+  if ('error' in checked) return checked;
+
+  const { error: updateError } = await supabase
+    .from('social_posts')
+    .update({
+      body: checked.body,
+      link_url: checked.linkUrl,
+      media_url: checked.mediaUrl,
+      media_alt: checked.mediaAlt,
+      state: checked.scheduledFor ? 'scheduled' : 'draft',
+      scheduled_for: checked.scheduledFor,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', postId)
+    .in('state', ['draft', 'scheduled']);
+  if (updateError) return { error: 'Could not save the changes.' };
+
+  const rows = checked.channels.map((channel) => ({
+    post_id: postId,
+    channel_id: channel.channelId,
+    body: channel.body,
+    status: checked.scheduledFor ? 'scheduled' : 'pending',
+  }));
+
+  const { error: upsertError } = await supabase
+    .from('social_post_channels')
+    .upsert(rows, { onConflict: 'post_id,channel_id' });
+  if (upsertError) return { error: 'Could not save the channels for this post.' };
+
+  // An upsert adds and updates but never removes, so a channel that was unticked has
+  // to be deleted explicitly or the post stays queued for it.
+  const { data: current, error: listError } = await supabase
+    .from('social_post_channels')
+    .select('id, channel_id')
+    .eq('post_id', postId);
+  if (!listError) {
+    const keep = new Set(rows.map((row) => row.channel_id));
+    const drop = ((current ?? []) as { id: string; channel_id: string }[])
+      .filter((row) => !keep.has(row.channel_id))
+      .map((row) => row.id);
+    if (drop.length > 0) {
+      await supabase.from('social_post_channels').delete().in('id', drop);
+    }
+  }
+
+  await audit(me.user_id, 'social_post', postId, 'edited', {
+    state: checked.scheduledFor ? 'scheduled' : 'draft',
+    channels: rows.length,
+  });
+
+  refresh();
+  redirect('/social?saved=updated');
 }

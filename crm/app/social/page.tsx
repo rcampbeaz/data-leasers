@@ -26,6 +26,7 @@ const SAVED: Record<string, string> = {
   scheduled: 'Post scheduled.',
   draft: 'Draft saved.',
   moved: 'Post moved.',
+  updated: 'Changes saved.',
   cancelled: 'Post cancelled.',
   deleted: 'Draft deleted.',
 };
@@ -151,6 +152,7 @@ export default async function SocialPage({
                   </td>
                   <td>{canWrite ? <Move row={post} /> : null}</td>
                   <td>
+                    {canWrite ? <Link href={`/social/edit/${post.id}`}>Edit</Link> : null}
                     {canWrite ? (
                       <form action={cancelPost.bind(null, post.id)}>
                         <button className="link-button" type="submit">
@@ -189,6 +191,7 @@ export default async function SocialPage({
                   </td>
                   <td>{canWrite ? <Move row={post} /> : null}</td>
                   <td>
+                    {canWrite ? <Link href={`/social/edit/${post.id}`}>Edit</Link> : null}
                     {canWrite ? (
                       <form action={deletePost.bind(null, post.id)}>
                         <button className="link-button" type="submit">
