@@ -183,7 +183,8 @@ drift on both sides rather than being a schema type system.
 columns the migrations create, along with the table itself. It exists because a write was the one drift
 nothing looked at. A payload naming a column no migration has fails in the screen the person is using, at
 the moment they save; a payload that has quietly stopped carrying a field looks like a save that worked.
-Neither shows up in a type check or a build.
+Neither shows up in a type check or a build. That second shape is what `check:company-save` below pins for
+the one action where it went wrong.
 
 It reads object literals written in place — shorthand (`{ status }`), quoted keys, an array of rows
 (`insert([{...}])`), and a comment between two keys are all understood. It cannot read an object built
@@ -192,6 +193,27 @@ rather than silently passed, so the summary always says how many writes were jud
 could not be read. `VERBOSE_WRITES=1 npm run check:writes` lists the ones it skipped. Both it and
 `check:schema` read the migrations through `scripts/schema-shape.mjs`, so a new way of writing a migration
 has to be understood once.
+
+### Checking what a company save writes
+
+`npm run check:company-save` pins the rule that one panel on the company page cannot clear the other. Both
+panels post to `updateCompany`, so a save writes only the fields its own form sent: an absent field is left
+alone, an empty input still clears its own column. That mapping lives in `lib/company-fields.ts` for
+exactly this reason — it has no imports, so the check loads it with the same loader the clock and money
+checks use, and it exercises the function the action calls rather than a copy of it.
+
+It runs thirty-six cases: the owner panel writes its four columns and none of the profile's, the profile
+panel the other way round, a profile saved, then an owner, then the same profile again comes back
+unchanged, empty inputs clear their own column, and the validation the panels rely on still refuses a
+three-letter country, a fractional headcount, a year before 1800, an unreadable due date and a form with
+nothing recognisable in it. It also asserts the premise rather than assuming it: every field it sends is
+still a field on the page, so renaming an input fails here instead of leaving the test guarding a form
+that no longer exists, and both panels still post to the same action, so splitting them fails here rather
+than quietly passing over a rule that stopped mattering.
+
+This is the class `check:writes` cannot see — the payload is well formed, it simply carries columns the
+form never sent. Writing these cases found a second bug of the same shape: the country was truncated to
+two characters before the pattern saw it, so "USA" was accepted as "US" rather than refused.
 
 ### Checking the policies
 
@@ -255,9 +277,9 @@ that a machine has the values — that is preflight.
 
 ### Before a deploy
 
-`npm run check` runs all nine — the migration record, the series itself, the seed's payloads against a
-local database, the date scan, the schema check, the write check, the policies, the clock's values, the
-money table, then the environment contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
+`npm run check` runs all ten — the migration record, the series itself, the seed's payloads against a
+local database, the date scan, the schema check, the write check, the company-save check, the policies,
+the clock's values, the money table, then the environment contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
 laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
 than a laptop. Which part matters depends on what you are shipping:
@@ -273,6 +295,9 @@ than a laptop. Which part matters depends on what you are shipping:
   it is the only thing that compares what the pages read with the migrations.
 - **Writing a row — an `insert`, `update` or `upsert`:** `check:writes` is the one that has to be green;
   it is the only thing that compares what a payload names with the columns the migrations create.
+- **Changing what a form saves, or which fields a panel carries:** `check:company-save` is the one that
+  has to be green; it is the only thing that proves a save carries what the person typed and nothing
+  else, and `check:writes` cannot see a column the form stopped sending.
 - **Touching a fee or a money format:** `check:money` is the one that has to be green; `referralFee`
   works in whole cents and rounds once, and that check is where the cases live.
 - **Editing a policy, or adding a table:** `check:policies` is the one that has to be green; it is the
