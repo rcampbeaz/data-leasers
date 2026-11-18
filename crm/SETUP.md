@@ -173,8 +173,25 @@ migrations define. A page that asks for a column no migration creates fails at r
 error, which after the schema fallback can look like a degraded database rather than a missing column;
 this catches it before a deploy and needs no project. Nested relations like `buyers(name)` are skipped
 because they name another table's columns, and aliases, wildcards and JSON paths are skipped because they
-are not plain column names; writes (`insert`/`update` objects) are not judged at all, so this covers the
-commonest drift rather than being a schema type system.
+are not plain column names; writes are judged by `check:writes` below. Together they cover the commonest
+drift on both sides rather than being a schema type system.
+
+### Checking the writes
+
+`npm run check:writes` is the other half of the schema check: it reads every `.from('table').insert({...})`,
+`.update({...})` and `.upsert({...})` in `lib/`, `app/` and `scripts/`, and checks each key against the
+columns the migrations create, along with the table itself. It exists because a write was the one drift
+nothing looked at. A payload naming a column no migration has fails in the screen the person is using, at
+the moment they save; a payload that has quietly stopped carrying a field looks like a save that worked.
+Neither shows up in a type check or a build.
+
+It reads object literals written in place — shorthand (`{ status }`), quoted keys, an array of rows
+(`insert([{...}])`), and a comment between two keys are all understood. It cannot read an object built
+elsewhere and passed by name (`.update(patch)`), a spread, or a computed key; those are counted and named
+rather than silently passed, so the summary always says how many writes were judged and how many names
+could not be read. `VERBOSE_WRITES=1 npm run check:writes` lists the ones it skipped. Both it and
+`check:schema` read the migrations through `scripts/schema-shape.mjs`, so a new way of writing a migration
+has to be understood once.
 
 ### Checking the policies
 
@@ -238,9 +255,9 @@ that a machine has the values — that is preflight.
 
 ### Before a deploy
 
-`npm run check` runs all eight — the migration record, the series itself, the seed's payloads against a
-local database, the date scan, the schema check, the policies, the clock's values, the money table, then
-the environment contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
+`npm run check` runs all nine — the migration record, the series itself, the seed's payloads against a
+local database, the date scan, the schema check, the write check, the policies, the clock's values, the
+money table, then the environment contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
 laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
 than a laptop. Which part matters depends on what you are shipping:
@@ -253,7 +270,9 @@ than a laptop. Which part matters depends on what you are shipping:
   console's expected days, months and instants are written down. A deliberate change to one of them
   means changing the expectation here as well as the helper.
 - **Adding or renaming a column, or changing a query:** `check:schema` is the one that has to be green;
-  it is the only thing that compares the pages with the migrations.
+  it is the only thing that compares what the pages read with the migrations.
+- **Writing a row — an `insert`, `update` or `upsert`:** `check:writes` is the one that has to be green;
+  it is the only thing that compares what a payload names with the columns the migrations create.
 - **Touching a fee or a money format:** `check:money` is the one that has to be green; `referralFee`
   works in whole cents and rounds once, and that check is where the cases live.
 - **Editing a policy, or adding a table:** `check:policies` is the one that has to be green; it is the

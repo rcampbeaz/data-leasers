@@ -11,68 +11,21 @@
 // reads rows too. The check scripts themselves are skipped, because they describe these very shapes.
 // `.rpc('name')` is checked against the functions the migrations define.
 //
-// What it does not check: writes. An `insert({...})` or `update({...})` object is not judged here, nor
-// are select strings that are built at runtime, embed another table (`buyers(name)`), rename a column
-// (`alias:column`) or read a JSON path. Those are skipped rather than guessed at, so this is a check
-// against the commonest drift, not a schema type system.
+// What it does not check: select strings that are built at runtime, embed another table
+// (`buyers(name)`), rename a column (`alias:column`) or read a JSON path. Those are skipped rather than
+// guessed at, so this is a check against the commonest drift, not a schema type system. Writes are the
+// other half and live in check:writes, which judges the keys of an `insert({...})`/`update({...})`.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSchema } from './schema-shape.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const MIGRATIONS = join(ROOT, 'supabase', 'migrations');
 
-const NOT_A_COLUMN = new Set([
-  'constraint',
-  'primary',
-  'unique',
-  'check',
-  'foreign',
-  'exclude',
-  'like',
-]);
-
-const tables = new Map();
-const functions = new Set();
-
-for (const file of readdirSync(MIGRATIONS).filter((name) => name.endsWith('.sql'))) {
-  const lines = readFileSync(join(MIGRATIONS, file), 'utf8').split('\n');
-  let current = null;
-  let altering = null;
-  for (const line of lines) {
-    const table = line.match(/^create table if not exists public\.([a-z_][a-z0-9_]*)\s*\(/i);
-    if (table) {
-      current = table[1];
-      tables.set(current, new Set());
-      continue;
-    }
-    if (current) {
-      if (/^\s*\)\s*;/.test(line)) {
-        current = null;
-        continue;
-      }
-      const column = line.trim().match(/^([a-z_][a-z0-9_]*)\s+[a-z]/i);
-      if (column && !NOT_A_COLUMN.has(column[1].toLowerCase())) tables.get(current).add(column[1]);
-      continue;
-    }
-    // A column added later is usually one statement spread over several lines, with one clause each.
-    const alter = line.match(/^alter table public\.([a-z_][a-z0-9_]*)/i);
-    if (alter) {
-      altering = alter[1];
-      if (!tables.has(altering)) tables.set(altering, new Set());
-    }
-    if (altering) {
-      const add = line.match(/add column if not exists\s+([a-z_][a-z0-9_]*)/i);
-      if (add) tables.get(altering).add(add[1]);
-      if (/;\s*$/.test(line)) altering = null;
-      continue;
-    }
-    const fn = line.match(/^create or replace function public\.([a-z_][a-z0-9_]*)\s*\(/i);
-    if (fn) functions.add(fn[1]);
-  }
-}
+const { tables, functions } = readSchema(MIGRATIONS);
 
 // The check scripts are skipped: they contain the very shapes this looks for, in a header comment and
 // in their own regular expressions. scripts/seed.mjs is not a check and is scanned like the app.
