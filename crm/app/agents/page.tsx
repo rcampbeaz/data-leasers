@@ -70,21 +70,25 @@ export default async function AgentsPage({
         <section className="panel">
           <h2>Run an agent</h2>
           <form action={runLeadTriage} className="form-row">
-            <select name="leadId" required>
-              <option value="">Choose a lead</option>
-              {(leads ?? []).map((l) => (
-                <option key={l.id} value={l.id}>{l.company}</option>
-              ))}
-            </select>
+            <label>Lead
+              <select name="leadId" required>
+                <option value="">Choose a lead</option>
+                {(leads ?? []).map((l) => (
+                  <option key={l.id} value={l.id}>{l.company}</option>
+                ))}
+              </select>
+            </label>
             <button className="btn" type="submit">Triage lead</button>
           </form>
           <form action={runFollowUpDraft} className="form-row">
-            <select name="companyId" required>
-              <option value="">Choose a company</option>
-              {(companies ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <label>Company
+              <select name="companyId" required>
+                <option value="">Choose a company</option>
+                {(companies ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
             <button className="btn" type="submit">Draft follow-up</button>
           </form>
         </section>

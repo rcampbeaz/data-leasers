@@ -146,9 +146,14 @@ export async function setTaskDone(formData: FormData) {
   redirect(path);
 }
 
-// Erasure on request. Admin only. Removes the person's enquiry and contact records.
-// Company records stay, because they describe the business and its data rights,
-// but any link to the erased enquiry is cleared. Only counts are logged.
+// Erasure on request. Admin only. Removes the person's enquiry, their contact rows on a company,
+// and the outbound prospect record for the address. Company records stay, because they describe the
+// business and its data rights, but any link to the erased enquiry is cleared. Only counts are
+// logged: the email address is what is being forgotten, so it does not go into the log either.
+//
+// A row on the suppression list is deliberately kept. It is the record that says this address must
+// not be mailed, it holds nothing but the address, and deleting it would let the next import put
+// the person back in a sequence.
 export async function eraseByEmail(formData: FormData) {
   const path = '/privacy-requests';
   const me = await requireRole(['admin'], path);
@@ -173,6 +178,16 @@ export async function eraseByEmail(formData: FormData) {
   }
 
   const { data: contacts } = await admin.from('contacts').delete().ilike('email', pattern).select('id');
+
+  // The outbound prospect record: name, role, country, where the address came from, and the token
+  // on the unsubscribe link. Deleted rather than anonymised, because nothing financial hangs off it
+  // — the enrolments go with it by cascade, and the send log keeps what was sent with the contact
+  // reference cleared, so the record of what went out survives without the person in it.
+  const { data: outreach } = await admin
+    .from('outreach_contacts')
+    .delete()
+    .ilike('email', pattern)
+    .select('id');
 
   // A referral partner is an outside person too. Their row is anonymised rather
   // than deleted, because the referrals hang off it and carry the fee history.
@@ -200,6 +215,7 @@ export async function eraseByEmail(formData: FormData) {
   await audit(me.user_id, 'erasure', me.user_id, 'erased', {
     leads: leadIds.length,
     contacts: (contacts ?? []).length,
+    outreach: (outreach ?? []).length,
     drafts: draftCount,
     partners: partnerCount,
   });

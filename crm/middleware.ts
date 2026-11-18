@@ -29,6 +29,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // Configuration before anything else. Without these two, createServerClient below throws inside
+  // the middleware, so every route answers 500 — including /login, which is the one page that could
+  // have explained the problem. A deployment missing its environment is a setup problem: say so on
+  // one page instead of looking like an outage on every page.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return path.startsWith('/setup')
+      ? NextResponse.next({ request })
+      : NextResponse.rewrite(new URL('/setup', request.url));
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

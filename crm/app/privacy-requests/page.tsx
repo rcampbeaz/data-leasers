@@ -16,10 +16,12 @@ export default async function PrivacyRequestsPage({
       <header className="page-head">
         <h1>Privacy requests</h1>
         <p className="muted">
-          Erase a person&apos;s enquiry and contact records when they ask. Company records are kept, and the link to
-          the erased enquiry is cleared. A referral partner found under the same address is anonymised rather than
-          deleted, so the fee history on their referrals survives. The erasure is logged with counts only, not the
-          email address. Check the request with counsel before acting on anything unusual.
+          Erase a person&apos;s enquiry, their contact rows on a company, and the outbound prospect record for the
+          address when they ask. Company records are kept, and the link to the erased enquiry is cleared. A referral
+          partner found under the same address is anonymised rather than deleted, so the fee history on their
+          referrals survives. A do-not-mail entry is kept if they had one: it holds the address and nothing else,
+          and removing it would let the next import start mailing them again. The erasure is logged with counts only,
+          not the email address. Check the request with counsel before acting on anything unusual.
         </p>
       </header>
 

@@ -245,7 +245,9 @@ export default async function DeliverabilityPage({
           The hourly sweep holds a domain when its complaint rate is at or above 0.1% over the last
           30 days and it has sent at least 50 messages in that window — enough volume for the rate
           to mean something. A hold stops new mail to that domain; contacts stay in the pipeline and
-          resume when it is released. A released domain is left alone by the sweep for a week.
+          resume when it is released. A released domain is left alone by the sweep for a week. The
+          reason a domain was held stays with the hold; an explanation for releasing it is written to
+          the activity log with your name against it.
         </p>
         {holdError ? (
           <p className="notice blocked">Holds could not load. Has migration <code>0013</code> been run?</p>
@@ -268,7 +270,13 @@ export default async function DeliverabilityPage({
                   <td>
                     {canRelease ? (
                       <form action={releaseDomainHold.bind(null, h.domain)} className="inline-form">
-                        <input name="note" placeholder="Why release it" aria-label="Why release it" maxLength={400} />
+                        <input
+                          name="note"
+                          placeholder="Why release it"
+                          aria-label="Why release it"
+                          maxLength={400}
+                          required
+                        />
                         <button className="btn" type="submit">Release</button>
                       </form>
                     ) : null}

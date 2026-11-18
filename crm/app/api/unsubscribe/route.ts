@@ -34,8 +34,14 @@ export async function POST(request: Request) {
 
   const outcome = await unsubscribeByToken(token);
 
-  return new NextResponse(outcome.ok ? 'unsubscribed' : 'invalid token', {
-    status: outcome.ok ? 200 : 400,
+  // A bad token is the client's mistake and will not improve: 400. A write that did not complete
+  // is worth retrying, so it answers 5xx rather than telling the mail client the person is
+  // unsubscribed when they are not.
+  const status = outcome.ok ? 200 : outcome.reason === 'invalid' ? 400 : 500;
+  const body = outcome.ok ? 'unsubscribed' : outcome.reason === 'invalid' ? 'invalid token' : 'could not unsubscribe';
+
+  return new NextResponse(body, {
+    status,
     headers: {
       'content-type': 'text/plain; charset=utf-8',
       'cache-control': 'no-store',

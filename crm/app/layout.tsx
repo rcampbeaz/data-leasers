@@ -12,6 +12,17 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nothing in this shell can be read without a project to read it from, and the constructor throws
+  // when the environment is missing — which would take down the very page the middleware serves to
+  // explain that. The signed-out shell is all /setup needs, so the CRM chrome steps aside.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return (
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    );
+  }
+
   const supabase = await createStaffClient();
   const staff = await currentStaff(supabase);
 

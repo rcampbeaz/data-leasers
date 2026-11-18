@@ -217,6 +217,24 @@ This is the class `check:writes` cannot see — the payload is well formed, it s
 form never sent. Writing these cases found a second bug of the same shape: the country was truncated to
 two characters before the pattern saw it, so "USA" was accepted as "US" rather than refused.
 
+### Checking the actions and the labels
+
+`npm run check:actions` finds every exported server action — an `export async function` in a module that
+begins with `'use server'` — and requires its name to appear somewhere other than its own declaration and
+the import that brought it in. A form, an href, a cron route or another action counts; an import on its
+own does not, which is what makes the check useful. Nothing calls a server action by name at runtime, so
+renaming the form leaves the action exported, valid and doing nothing, and the compiler is satisfied. That
+is how `changeRole` sat in `lib/staff-actions.ts` with no caller until it was found by reading. Actions
+exported as const arrow functions, and the question of whether a form passes the arguments the action
+expects, are outside it — the type checker answers the second.
+
+`npm run check:forms` reads every `<input>`, `<select>` and `<textarea>` in `app/` and `components/` and
+requires a name a screen reader can read: the control inside a `<label>`, an `aria-label`, a separate
+label pointing at its `id`, or `type="hidden"`, which has nothing to announce. The tag is read to its
+closing `>` outside braces and quotes, so a `defaultValue` containing an angle bracket does not end it
+early. The field passes on this branch rewrote most forms, and that is exactly when a control loses the
+word that used to sit beside it. It found two selects with no label at all when it was written.
+
 ### Checking the policies
 
 `npm run check:policies` applies the series to PGlite, gives `anon`, `authenticated` and `service_role`
@@ -277,12 +295,17 @@ and a name either list keeps after nothing reads it is an error too. Names read 
 (`SEED_CONFIRM`, `SEED_STAFF_PASSWORD`) are operator flags and are exempt. It proves the contract, not
 that a machine has the values — that is preflight.
 
+A deployment missing `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` does not fail as an
+outage on every route: the middleware serves `/setup` instead, and that page lists the variables and what
+each one is for.
+
 ### Before a deploy
 
-`npm run check` runs all ten — the migration record, the series itself, the seed's payloads against a
-local database, the date scan, the schema check, the write check, the company-save check, the policies,
-the clock's values, the money table, then the environment contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same command on a
-laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
+`npm run check` runs all twelve — the migration record, the series itself, the seed's payloads against a
+local database, the date scan, the schema check, the write check, the company-save check, the action
+callers, the form labels, the policies, the clock's values, the money table, then the environment
+contract — and stops at whichever fails. None of them needs credentials or a network, so it is the same
+command on a laptop and in CI. The deploy workflow runs `npm ci`, `npx tsc --noEmit` and `npm run check` on every push
 to `main` that touches `crm/`, before it copies anything to the server, so these fail a deploy rather
 than a laptop. Which part matters depends on what you are shipping:
 
@@ -300,6 +323,10 @@ than a laptop. Which part matters depends on what you are shipping:
 - **Changing what a form saves, or which fields a panel carries:** `check:company-save` is the one that
   has to be green; it is the only thing that proves a save carries what the person typed and nothing
   else, and `check:writes` cannot see a column the form stopped sending.
+- **Adding, renaming or deleting a server action:** `check:actions` is the one that has to be green; it
+  is the only thing that notices an exported action nothing calls.
+- **Adding or moving a form field:** `check:forms` is the one that has to be green; a control that lost
+  its label is silent to a screen reader and looks fine on screen.
 - **Touching a fee or a money format:** `check:money` is the one that has to be green; `referralFee`
   works in whole cents and rounds once, and that check is where the cases live.
 - **Editing a policy, or adding a table:** `check:policies` is the one that has to be green; it is the

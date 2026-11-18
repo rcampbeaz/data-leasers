@@ -29,10 +29,10 @@ export default async function CompanyPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; offer?: string }>;
 }) {
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, offer: offerPrefill } = await searchParams;
   const supabase = await createStaffClient();
 
   const { data: company } = await supabase
@@ -59,7 +59,7 @@ export default async function CompanyPage({
     supabase.from('activities').select('id, kind, body, call_at, created_at').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('datasets').select('id, name, status, status_reason').eq('company_id', id).order('created_at'),
     supabase.from('tasks').select('id, title, due_on, done, assigned_to').eq('company_id', id).order('due_on'),
-    supabase.from('stage_history').select('from_stage, to_stage, changed_at').eq('company_id', id).order('changed_at', { ascending: false }),
+    supabase.from('stage_history').select('from_stage, to_stage, changed_at, changed_by').eq('company_id', id).order('changed_at', { ascending: false }),
     loadStaff(supabase),
     supabase.from('buyers').select('id, name, active').order('name'),
     supabase
@@ -104,6 +104,12 @@ export default async function CompanyPage({
     const offer = (offers.data ?? []).find((o) => o.id === offerId);
     return offer ? `${money(offer.amount, offer.currency)} on ${calendarDate(offer.offered_on)}` : '-';
   };
+
+  // "Use in agreement" carries the offer id, so the agreement form opens on that offer's buyer and
+  // term instead of asking for them again — and the buyer who made it is the buyer who signs.
+  // Nothing is written until the form is submitted: an agreement recorded by a stray click would be
+  // a signed term nobody can take back from this page.
+  const prefill = (offers.data ?? []).find((o) => o.id === offerPrefill);
 
   const updateCompanyWithId = updateCompany.bind(null, id);
   const addActivityWithId = addActivity.bind(null, id);
@@ -365,6 +371,11 @@ export default async function CompanyPage({
                       </select>
                       <button className="btn" type="submit">Set</button>
                     </form>
+                    {offer.status === 'accepted' ? (
+                      <div className="muted small">
+                        <Link href={`/companies/${id}?offer=${offer.id}`}>Use in agreement</Link>
+                      </div>
+                    ) : null}
                   </td>
                 </tr>
               ))}
@@ -427,15 +438,23 @@ export default async function CompanyPage({
             </tbody>
           </table>
         )}
+        {prefill ? (
+          <p className="notice review">
+            Filled from the accepted offer: {buyerName(prefill.buyer_id)} ·{' '}
+            {money(prefill.amount, prefill.currency)}
+            {prefill.term_months ? ` · ${prefill.term_months} months` : ''}. Check the start date
+            before recording.
+          </p>
+        ) : null}
         <form action={addAgreementWithId} className="form-grid">
           <label>Buyer
-            <select name="buyerId" aria-label="Buyer" defaultValue="">
+            <select name="buyerId" aria-label="Buyer" defaultValue={prefill?.buyer_id ?? ''}>
               <option value="">Choose a buyer</option>
               {buyerList.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </label>
           <label>Offer it accepts (optional)
-            <select name="offerId" defaultValue="">
+            <select name="offerId" defaultValue={prefill?.id ?? ''}>
               <option value="">No offer recorded</option>
               {(offers.data ?? []).map((o) => (
                 <option key={o.id} value={o.id}>
@@ -448,10 +467,20 @@ export default async function CompanyPage({
             <input type="date" name="licenceStart" required defaultValue={todayIso()} />
           </label>
           <label>Licence term (months)
-            <input name="licenceMonths" inputMode="numeric" maxLength={3} />
+            <input
+              name="licenceMonths"
+              inputMode="numeric"
+              maxLength={3}
+              defaultValue={prefill?.term_months ?? ''}
+            />
           </label>
           <label>Exclusivity (months)
-            <input name="exclusivityMonths" inputMode="numeric" maxLength={3} />
+            <input
+              name="exclusivityMonths"
+              inputMode="numeric"
+              maxLength={3}
+              defaultValue={prefill?.exclusivity_months ?? ''}
+            />
           </label>
           <label>Delivered on
             <input type="date" name="deliveredOn" />
@@ -585,7 +614,10 @@ export default async function CompanyPage({
         {(history.data ?? []).length === 0 ? <p className="muted">No changes yet.</p> : (
           <ul className="list small">
             {(history.data ?? []).map((h, i) => (
-              <li key={i}>{h.from_stage ?? 'Start'} to {h.to_stage} · {phoenix(h.changed_at, { dateStyle: 'medium', timeStyle: 'short' })}</li>
+              <li key={i}>
+                {h.from_stage ?? 'Start'} to {h.to_stage} ·{' '}
+                {phoenix(h.changed_at, { dateStyle: 'medium', timeStyle: 'short' })} · {staffName(h.changed_by)}
+              </li>
             ))}
           </ul>
         )}
