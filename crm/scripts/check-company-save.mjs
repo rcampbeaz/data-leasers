@@ -14,9 +14,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadLib } from './load-lib.mjs';
+import { readSchema } from './schema-shape.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { companyPatch } = await loadLib('company-fields.ts', 'check:company-save');
+const { tables } = readSchema(resolve(HERE, '..', 'supabase', 'migrations'));
 
 // The page's own field names, so a rename there fails here rather than quietly emptying the test.
 const page = readFileSync(resolve(HERE, '..', 'app', 'companies', '[id]', 'page.tsx'), 'utf8');
@@ -79,27 +81,33 @@ const patchOf = (entries) => {
   return result.ok ? result.patch : { error: result.error };
 };
 
-// The owner panel on its own: its four columns, and nothing from the profile.
+// The owner panel on its own: its four columns and nothing from the profile. The exact key list is the
+// assertion — a column the panel did not send is either in it or not, so a case per column would fail
+// only when this one already has, and say less while doing it.
 const owner = patchOf({ ownerId: 'u1', introducedBy: 'u2', nextAction: 'Call the CFO', nextActionDue: '2026-12-01' });
-same('the owner panel writes its own four columns', Object.keys(owner).sort(), OWNER_COLUMNS.slice().sort());
-for (const column of PROFILE_COLUMNS) {
-  same(`the owner panel does not write ${column}`, column in owner, false);
-}
+same('the owner panel writes its own four columns and no others', Object.keys(owner).sort(), OWNER_COLUMNS.slice().sort());
 
-// The profile panel on its own: every profile column, and neither the owner nor the next action.
+// The profile panel on its own, the other way round.
 const profile = patchOf({ ...filled(PROFILE_FIELDS), employeeCount: '40', foundedYear: '1998', country: 'US' });
-same('the profile panel writes every profile column', Object.keys(profile).sort(), PROFILE_COLUMNS.slice().sort());
-for (const column of OWNER_COLUMNS) {
-  same(`the profile panel does not write ${column}`, column in profile, false);
-}
+same('the profile panel writes every profile column and no others', Object.keys(profile).sort(), PROFILE_COLUMNS.slice().sort());
 
-// The save that started this: a profile, then an owner, then the profile again. If either save wrote
-// the other panel's columns, the second read would differ from the first.
-const firstProfile = patchOf({ legalName: 'Acme Ltd', city: 'Phoenix', staffCountries: 'US' });
-const ownerAfter = patchOf({ ownerId: 'u1' });
-const secondProfile = patchOf({ legalName: 'Acme Ltd', city: 'Phoenix', staffCountries: 'US' });
-same('a profile save survives an owner save between it', firstProfile, secondProfile);
-same('the owner save in between carried only its own field', Object.keys(ownerAfter), ['owner_id']);
+// The invariant behind both, stated once: the panels cannot clear each other because they write no
+// column in common. This is the case that has to survive a new field being added to either panel.
+same(
+  'the two panels write no column in common',
+  Object.keys(owner).filter((column) => column in profile),
+  [],
+);
+
+// And the columns the two lists above name have to be columns the migrations create, or the mapping is
+// being tested against a schema that does not exist. check:writes cannot see this payload: the action
+// hands it an object built here, not one written in place.
+const companyColumns = tables.get('companies') ?? new Set();
+same(
+  'every column the test expects is created by the migrations',
+  [...OWNER_COLUMNS, ...PROFILE_COLUMNS].filter((column) => !companyColumns.has(column)),
+  [],
+);
 
 // An empty input still clears its own column: absent means untouched, empty means cleared.
 same('an emptied legal name is cleared', patchOf({ legalName: '' }).legal_name, null);

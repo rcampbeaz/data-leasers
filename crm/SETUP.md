@@ -202,14 +202,16 @@ alone, an empty input still clears its own column. That mapping lives in `lib/co
 exactly this reason — it has no imports, so the check loads it with the same loader the clock and money
 checks use, and it exercises the function the action calls rather than a copy of it.
 
-It runs thirty-six cases: the owner panel writes its four columns and none of the profile's, the profile
-panel the other way round, a profile saved, then an owner, then the same profile again comes back
-unchanged, empty inputs clear their own column, and the validation the panels rely on still refuses a
-three-letter country, a fractional headcount, a year before 1800, an unreadable due date and a form with
-nothing recognisable in it. It also asserts the premise rather than assuming it: every field it sends is
-still a field on the page, so renaming an input fails here instead of leaving the test guarding a form
-that no longer exists, and both panels still post to the same action, so splitting them fails here rather
-than quietly passing over a rule that stopped mattering.
+It runs eighteen cases: the owner panel writes its four columns and no others, the profile panel the same
+the other way round, and the two panels write no column in common — the invariant that has to survive a
+field being added to either panel. Empty inputs still clear their own column, and the validation the
+panels rely on still refuses a three-letter country, a fractional headcount, a year before 1800, an
+unreadable due date and a form with nothing recognisable in it. The column names it compares against are
+read back from the migrations, so the test cannot agree with a mapping the database would refuse. It also
+asserts the premise rather than assuming it: every field it sends is still a field on the page, so renaming
+an input fails here instead of leaving the test guarding a form that no longer exists, and both panels
+still post to the same action, so splitting them fails here rather than quietly passing over a rule that
+stopped mattering.
 
 This is the class `check:writes` cannot see — the payload is well formed, it simply carries columns the
 form never sent. Writing these cases found a second bug of the same shape: the country was truncated to

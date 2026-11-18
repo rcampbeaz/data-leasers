@@ -6,8 +6,10 @@
 // written as null. The distinction matters: an empty input still clears its own column, an absent field
 // touches nothing.
 //
-// This lives apart from the action, with no imports, so check:company-save can load it and prove that
-// from a form on its own. Keep it dependency-free; the loader fails with a sentence if it stops being so.
+// This lives apart from the action, with no imports, so check:company-save can load it and prove what a
+// form on its own produces. That is also why the four-line trim-and-clip below is written here rather than
+// imported from the action's own helper. Keep the module dependency-free; the loader fails, with a
+// sentence saying where, the moment it is not.
 
 export type CompanyPatchResult =
   | { ok: true; patch: Record<string, unknown> }
@@ -16,12 +18,12 @@ export type CompanyPatchResult =
 export function companyPatch(form: FormData): CompanyPatchResult {
   const patch: Record<string, unknown> = {};
   const sent = (key: string) => form.has(key);
-  const text = (key: string, max: number): string | null => {
+  const read = (key: string, max: number): string | null => {
     const value = String(form.get(key) ?? '').trim();
     return value ? value.slice(0, max) : null;
   };
   const put = (column: string, key: string, max: number) => {
-    if (sent(key)) patch[column] = text(key, max);
+    if (sent(key)) patch[column] = read(key, max);
   };
 
   // Whole numbers only, and fail loudly rather than silently storing NaN.
@@ -41,7 +43,7 @@ export function companyPatch(form: FormData): CompanyPatchResult {
   };
 
   if (sent('nextActionDue')) {
-    const due = text('nextActionDue', 10);
+    const due = read('nextActionDue', 10);
     if (due && Number.isNaN(Date.parse(due))) return { ok: false, error: 'The due date is not valid.' };
     patch.next_action_due = due;
   }
