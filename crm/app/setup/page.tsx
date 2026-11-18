@@ -1,7 +1,13 @@
 // Reached only when the middleware finds no Supabase project to talk to. It imports nothing from
 // lib/, because everything there needs the very configuration that is missing.
+//
+// It is also a real URL, so a configured console has to answer it by sending the person to the sign-in
+// page rather than telling them the console is not set up. Reading the environment is what makes it
+// dynamic; it costs nothing, because the page is one table of text.
 
-export const dynamic = 'force-static';
+import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 
 type Variable = { name: string; what: string };
 
@@ -64,6 +70,10 @@ function Table({ rows }: { rows: Variable[] }) {
 }
 
 export default function SetupPage() {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    redirect('/login');
+  }
+
   return (
     <main className="page">
       <header className="page-head">
